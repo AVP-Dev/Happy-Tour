@@ -1,1 +1,18 @@
-.vercel
+# Gitignore для проектов Next.js
+# /node_modules
+node_modules/
+
+# .env файлы для локальной разработки (они не должны быть в репозитории)
+.env.local
+.env.*.local
+
+# Кэш Next.js
+.next/
+
+# Логи npm/yarn
+npm-debug.log*
+yarn-error.log
+
+# Другие временные файлы или файлы IDE, если есть
+.DS_Store # macOS
+.vscode/ # VS Code настройки (по желанию)

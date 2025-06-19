@@ -1,0 +1,114 @@
+.footer {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 40px 0;
+}
+
+.footer_content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Выравнивание элементов по верху */
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Стили для контейнера логотипа в футере */
+.footer_logo_container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: inherit;
+    gap: 10px;
+}
+
+/* Стили для изображения логотипа в футере */
+.footer_logo_image {
+    height: 40px;
+}
+
+/* Стили для текста логотипа в футере (без подчеркивания) */
+.footer_logo_text {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--white-color);
+    text-decoration: none;
+}
+
+.footer_copyright {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer_social {
+    display: flex;
+    gap: 15px;
+}
+
+.social_link {
+    color: white;
+    font-size: 1.2rem;
+    transition: var(--transition);
+}
+
+.social_link:hover {
+    color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+.footer_links {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column; /* Размещение элементов в столбик */
+    justify-content: flex-end; /* Выравнивание по нижнему краю, если есть свободное место */
+    align-items: flex-end; /* Выравнивание элементов по правому краю */
+    gap: 8px; /* Отступ между элементами в столбике */
+}
+
+.footer_link {
+    color: white;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer_link:hover {
+    color: var(--primary-color);
+}
+
+/* Стили для новой надписи */
+.disclaimer_text {
+    font-size: 0.85rem; /* Немного уменьшенный размер шрифта для дисклеймера */
+    color: rgba(255, 255, 255, 0.7); /* Слегка приглушенный цвет */
+    margin-top: 10px; /* Отступ сверху от последних ссылок */
+    text-align: right; /* Выравнивание текста по правому краю */
+    max-width: 300px; /* Ограничение ширины для лучшей читаемости */
+}
+
+
+@media (max-width: 768px) {
+    .footer_content {
+        flex-direction: column;
+        text-align: center;
+        align-items: center; /* Центрирование элементов на мобильных */
+    }
+
+    .footer_links {
+        justify-content: center;
+        align-items: center; /* Центрирование ссылок и дисклеймера на мобильных */
+        text-align: center; /* Центрирование текста дисклеймера на мобильных */
+    }
+
+    .footer_logo_image {
+        height: 30px;
+    }
+
+    .footer_logo_text {
+        font-size: 1.5rem;
+    }
+
+    .disclaimer_text {
+        text-align: center; /* Центрирование текста дисклеймера на мобильных */
+        margin-top: 15px; /* Увеличенный отступ на мобильных */
+    }
+}

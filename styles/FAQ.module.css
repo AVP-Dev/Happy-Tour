@@ -1,0 +1,56 @@
+.faq_container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq_item {
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eee;
+}
+
+.faq_question {
+    padding: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 1rem;
+    font-family: inherit;
+    color: inherit;
+}
+
+.faq_question:hover {
+    background-color: #f8f9fa;
+}
+
+.icon {
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-left: 15px;
+}
+
+/* Обертка для ответа, которую мы анимируем */
+.faq_answer_wrapper {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out;
+}
+
+/* Класс 'open' добавляется, когда элемент активен */
+.faq_answer_wrapper.open {
+    max-height: 500px; /* Достаточно большое значение для любого ответа */
+    transition: max-height 0.5s ease-in-out;
+}
+
+.faq_answer_content {
+    padding: 0 20px 20px 20px;
+    border-top: 1px solid #eee;
+}

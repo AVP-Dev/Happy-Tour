@@ -1,0 +1,65 @@
+/* /styles/Notification.module.css */
+.notification {
+    padding: 30px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.iconSuccess {
+    color: #28a745; /* Зеленый цвет успеха */
+}
+
+.iconError {
+    color: #dc3545; /* Красный цвет ошибки */
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 10px 0 0;
+}
+
+.message {
+    font-size: 1.1rem;
+    color: #6c757d;
+    line-height: 1.6;
+    max-width: 400px;
+}
+
+/* Переопределяем базовый класс .btn для наших кнопок */
+.btnSuccess {
+    background-color: #28a745 !important;
+    color: white !important;
+    border-color: #28a745 !important;
+}
+
+.btnSuccess:hover {
+    background-color: #218838 !important;
+    border-color: #218838 !important;
+}
+
+.btnError {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+}
+
+.btnError:hover {
+    background-color: #c82333 !important;
+    border-color: #c82333 !important;
+}

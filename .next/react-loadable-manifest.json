@@ -1,0 +1,44 @@
+{
+  "../components/Layout.js -> ./FloatingContact": {
+    "id": "../components/Layout.js -> ./FloatingContact",
+    "files": [
+      "static/chunks/components_FloatingContact_js.js"
+    ]
+  },
+  "index.js -> ../components/AnimateOnScroll": {
+    "id": "index.js -> ../components/AnimateOnScroll",
+    "files": [
+      "static/chunks/components_AnimateOnScroll_js.js"
+    ]
+  },
+  "index.js -> ../components/FAQ": {
+    "id": "index.js -> ../components/FAQ",
+    "files": [
+      "static/chunks/components_FAQ_js.js"
+    ]
+  },
+  "index.js -> ../components/Modal": {
+    "id": "index.js -> ../components/Modal",
+    "files": [
+      "static/chunks/components_Modal_js.js"
+    ]
+  },
+  "index.js -> ../components/Notification": {
+    "id": "index.js -> ../components/Notification",
+    "files": [
+      "static/chunks/components_Notification_js.js"
+    ]
+  },
+  "index.js -> ../components/ReviewForm": {
+    "id": "index.js -> ../components/ReviewForm",
+    "files": [
+      "static/chunks/components_ReviewForm_js.js"
+    ]
+  },
+  "index.js -> ../components/TourvisorWidget": {
+    "id": "index.js -> ../components/TourvisorWidget",
+    "files": [
+      "static/chunks/components_TourvisorWidget_js.js"
+    ]
+  }
+}

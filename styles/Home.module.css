@@ -1,0 +1,231 @@
+/*
+    ВАЖНОЕ ПРИМЕЧАНИЕ:
+    Проблема со стилями на сервере, скорее всего, вызвана этими путями к изображениям.
+    Абсолютные пути типа `url('/img/...')` могут не работать на production-сервере,
+    если сайт находится не в корне домена или настроена специфическая маршрутизация для статики.
+
+    РЕШЕНИЕ:
+    1. В Next.js поместите папку 'img' внутрь папки 'public' в корне вашего проекта.
+    2. Убедитесь, что пути в `url()` указаны правильно относительно папки 'public', то есть `url('/img/image.webp')`.
+    3. Если это не помогает, лучшей практикой будет импортировать изображения прямо в ваших React-компонентах:
+       `import toursBg from '../public/img/tours-lagoon-bungalows.webp';`
+       А затем передавать переменную `toursBg` в стили.
+       Это гарантирует, что сборщик (webpack) правильно обработает путь.
+*/
+
+.reviews_section, .faq_section, .contacts_section, .search_tours, .tours_section, .tours_section_wrapper, .tourvisor_section { /* Добавлен .tourvisor_section */
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    isolation: isolate;
+}
+
+.reviews_section::before, .faq_section::before, .contacts_section::before, .search_tours::before, .tours_section_wrapper::before, .tourvisor_section::before { /* Добавлен .tourvisor_section::before */
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+
+/* Стили для секции Турвизора */
+.tourvisor_section {
+    padding: 50px 0; /* Отступы для секции */
+    background-color: #f8f9fa; /* Светлый фон, чтобы виджет был виден */
+    z-index: 1; /* Поднимаем секцию выше фоновых наложений */
+    min-height: 400px; /* Минимальная высота, чтобы виджет не схлопывался */
+    display: flex; /* Используем flexbox для центрирования содержимого */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.tourvisor_section .container {
+    position: relative;
+    z-index: 2; /* Убедимся, что содержимое контейнера выше фона секции */
+}
+
+.tours_section_wrapper {
+    /* ПРОВЕРЬТЕ ЭТОТ ПУТЬ */
+    background-image: url('/img/tours-lagoon-bungalows.webp');
+    padding: 25px 0;
+}
+.tours_section_wrapper::before {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+.tours_section_wrapper .container {
+    position: relative;
+    z-index: 1;
+}
+
+.tours_section_wrapper .section-title {
+     color: var(--primary-color) !important;
+}
+
+.reviews_section {
+    /* ПРОВЕРЬТЕ ЭТОТ ПУТЬ */
+    background-image: url('/img/reviews-happy-couple.webp');
+    text-align: center;
+}
+.reviews_section::before {
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
+.faq_section {
+    /* ПРОВЕРЬТЕ ЭТОТ ПУТЬ */
+    background-image: url('/img/faq-clouds-minimal.webp');
+}
+.faq_section::before {
+     background-color: rgba(255, 255, 255, 0.9);
+}
+
+.contacts_section {
+    /* ПРОВЕРЬТЕ ЭТОТ ПУТЬ */
+    background-image: url('/img/contacts-city-night.webp');
+}
+.contacts_section::before {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.contacts_grid {
+    display: flex;
+    gap: 50px;
+    flex-wrap: wrap;
+}
+
+.contacts_info, .contacts_form {
+    flex: 1;
+    min-width: 300px;
+}
+
+.contacts_subtitle {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.contact_item {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.contact_item svg {
+    margin-right: 10px;
+    color: var(--primary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.contact_item a {
+    color: var(--dark-color);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.contact_item a:hover {
+    color: var(--primary-color);
+}
+
+.social_links {
+    display: flex;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.social_link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    color: var(--dark-color);
+    transition: var(--transition);
+    font-size: 1.2rem;
+}
+
+.social_link:hover {
+    color: white;
+    transform: translateY(-3px);
+}
+
+.social_links a[aria-label="Telegram"]:hover { background-color: #0088cc; }
+.social_links a[aria-label="Viber"]:hover { background-color: #7360f2; }
+.social_links a[aria-label="WhatsApp"]:hover { background-color: #25D366; }
+.social_links a[aria-label="Instagram"]:hover { background-color: #E1306C; }
+
+.contact_hours h4 {
+    margin-bottom: 10px;
+}
+
+.tours_section {
+  padding: 30px 0;
+}
+
+.light_bg {
+  background-color: #f8f9fa;
+}
+
+.tours_section :global(.swiper) {
+  padding-bottom: 50px !important;
+}
+
+.tours_section :global(.swiper-button-next),
+.tours_section :global(.swiper-button-prev) {
+  color: var(--primary-color) !important;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 44px !important;
+  height: 44px !important;
+  transition: all 0.3s ease;
+}
+
+.tours_section :global(.swiper-button-next:hover),
+.tours_section :global(.swiper-button-prev:hover) {
+    background-color: var(--primary-color);
+    color: var(--white-color) !important;
+}
+
+.tours_section :global(.swiper-button-next::after),
+.tours_section :global(.swiper-button-prev::after) {
+  font-size: 1.2rem !important;
+  font-weight: 700;
+}
+
+.tours_section :global(.swiper-pagination-bullet) {
+  background-color: var(--gray-color) !important;
+  width: 10px !important;
+  height: 10px !important;
+  opacity: 0.5;
+}
+
+.tours_section :global(.swiper-pagination-bullet-active) {
+  background-color: var(--primary-color) !important;
+  opacity: 1;
+}
+
+.reviews_section :global(.swiper) {
+  padding-bottom: 50px;
+}
+
+.reviews_section :global(.swiper-pagination) {
+  bottom: 10px !important;
+}
+
+.add_review_btn_container {
+    margin-top: 40px;
+    text-align: center;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  /* Отключаем "прилипающий" фон, который плохо работает на мобильных */
+  .reviews_section, .faq_section, .contacts_section, .search_tours, .tours_section_wrapper, .tourvisor_section { /* Добавлен .tourvisor_section */
+    background-attachment: scroll;
+  }
+  .contacts_grid {
+      flex-direction: column;
+      gap: 30px;
+  }
+}

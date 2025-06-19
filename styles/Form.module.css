@@ -1,0 +1,97 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    /* Уменьшаем расстояние между элементами */
+    gap: 15px; 
+}
+
+.form_group {
+    position: relative;
+}
+
+.form_group input,
+.form_group textarea {
+    width: 100%;
+    /* Уменьшаем вертикальные отступы, чтобы поля были не такими высокими */
+    padding: 12px 15px; 
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--transition);
+    background-color: var(--light-color);
+}
+
+.form_group textarea {
+    resize: vertical;
+    min-height: 80px; /* Добавим минимальную высоту для текстового поля */
+}
+
+.form_group input:focus,
+.form_group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.form_group label {
+    position: absolute;
+    /* Корректируем позицию метки под новые отступы */
+    top: 12px; 
+    left: 15px;
+    color: var(--gray-color);
+    transition: var(--transition);
+    pointer-events: none;
+    background-color: var(--light-color);
+    padding: 0 5px;
+}
+
+/* Делаем всплывающую метку компактнее */
+.form_group input:focus + label,
+.form_group input:not(:placeholder-shown) + label,
+.form_group textarea:focus + label,
+.form_group textarea:not(:placeholder-shown) + label {
+    top: -9px;
+    left: 10px;
+    font-size: 0.75rem; /* Уменьшаем шрифт метки */
+    color: var(--primary-color);
+    background-color: white;
+}
+
+.form_message {
+    /* Уменьшаем отступ сверху */
+    margin-top: 10px; 
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.error {
+    background-color: #ffcdd2;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.error_message {
+    color: #dc3545; /* Красный цвет ошибки */
+    font-size: 0.875rem;
+    margin-top: 5px;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

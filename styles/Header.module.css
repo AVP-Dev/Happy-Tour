@@ -1,0 +1,196 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: transparent;
+    box-shadow: none;
+    z-index: 1000;
+    transition: background-color 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease;
+}
+
+.scrolled {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('https://images.unsplash.com/photo-1507525428034-b723a996f6ea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+    background-size: cover;
+    background-position: center;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    background-color: transparent;
+    box-shadow: var(--box-shadow);
+}
+
+.header_inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0; /* Уменьшен вертикальный отступ шапки для компактности */
+    transition: var(--transition);
+}
+
+/* Стили для контейнера логотипа и текста */
+.logo_container {
+    display: flex;
+    align-items: center; /* Выравнивание по центру по вертикали */
+    text-decoration: none;
+    color: inherit;
+    gap: 8px; /* Минимальный отступ между логотипом и текстом */
+}
+
+/* Стили для изображения логотипа */
+.logo_image {
+    height: 60px; /* Уменьшена высота логотипа для более компактной шапки */
+    display: block;
+}
+
+/* Стили для текста логотипа */
+.logo_text {
+    font-size: 1.8rem; /* Скорректирован размер текста логотипа */
+    font-weight: 700;
+    color: var(--primary-color);
+    text-shadow: none;
+    transition: color 0.3s ease;
+    line-height: 1;
+}
+
+.scrolled .logo_text {
+    color: var(--primary-color);
+    text-shadow: none;
+}
+
+.nav {
+    display: flex;
+}
+
+.nav_link {
+    margin-left: 30px;
+    text-decoration: none;
+    color: var(--white-color);
+    font-weight: 600;
+    transition: color 0.3s ease;
+    position: relative;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+.scrolled .nav_link {
+    color: var(--dark-color);
+    text-shadow: none;
+}
+
+.nav_link:hover {
+    color: var(--primary-color);
+}
+
+.nav_link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.nav_link:hover::after {
+    width: 100%;
+}
+
+.burger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    color: var(--white-color); /* Изначальный цвет бургера */
+    font-size: 1.5rem;
+    z-index: 1001;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+
+.scrolled .burger {
+    color: var(--dark-color); /* Цвет бургера при прокрутке */
+    text-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .header_inner {
+        padding: 10px 0; /* Сохраняем компактность шапки и на мобильных */
+    }
+
+    .logo_container {
+        gap: 5px; /* Еще меньше отступ на мобильных */
+    }
+
+    .logo_image {
+        height: 45px; /* Скорректирована высота логотипа на мобильных */
+    }
+
+    .logo_text {
+        font-size: 1.6rem; /* Скорректирован размер текста логотипа на мобильных */
+    }
+
+    .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.95);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+
+        flex-direction: column;
+        align-items: center;
+        justify-content: center; /* Центрирование элементов меню по вертикали */
+        padding: 20px 0; /* Скорректирован padding для центрирования */
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .nav.active {
+        transform: translateX(0);
+    }
+
+    /* Стили для логотипа и названия внутри мобильного меню */
+    .nav_mobile_logo_container {
+        display: flex;
+        align-items: center;
+        gap: 8px; /* Отступ между логотипом и текстом в мобильном меню */
+        margin-bottom: 30px; /* Отступ от ссылок меню */
+        text-decoration: none;
+    }
+
+    .nav_mobile_logo_image {
+        height: 55px; /* Увеличен размер логотипа в мобильном меню */
+    }
+
+    .nav_mobile_logo_text {
+        font-size: 2.2rem; /* Увеличен размер текста в мобильном меню */
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .nav_link {
+        margin: 15px 0; /* Отступ между пунктами меню */
+        color: var(--dark-color);
+        font-size: 1.5rem;
+        text-shadow: none;
+    }
+
+    .burger {
+        display: block; /* Показываем кнопку бургер на мобильных */
+    }
+
+    /* Когда меню активно, бургер превращается в крестик и его цвет всегда primary-color */
+    .nav.active + .burger { /* Целевой крестик, когда меню открыто */
+        color: var(--primary-color); /* Цвет сайта */
+        text-shadow: none; /* Убираем тень */
+    }
+
+    /* Отдельный стиль для бургера при прокрутке, чтобы избежать конфликтов, если меню закрыто */
+    .scrolled .burger {
+        color: var(--dark-color);
+        text-shadow: none;
+    }
+}

@@ -13,6 +13,7 @@ out/ # Для экспортированных статических сайто
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
 
 # Лог-файлы пакетных менеджеров
 npm-debug.log*

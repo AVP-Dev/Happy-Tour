@@ -24,12 +24,12 @@
 
 /* Стили для изображения логотипа в футере */
 .footer_logo_image {
-    height: 75px; /* Еще увеличено */
+    height: 40px;
 }
 
 /* Стили для текста логотипа в футере (без подчеркивания) */
 .footer_logo_text {
-    font-size: 3.3rem; /* Еще увеличено */
+    font-size: 1.8rem;
     font-weight: 700;
     color: var(--white-color);
     text-decoration: none;
@@ -100,11 +100,11 @@
     }
 
     .footer_logo_image {
-        height: 55px; /* Еще увеличено для мобильных */
+        height: 30px;
     }
 
     .footer_logo_text {
-        font-size: 2.8rem; /* Еще увеличено для мобильных */
+        font-size: 1.5rem;
     }
 
     .disclaimer_text {

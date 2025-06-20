@@ -5,6 +5,24 @@
       "static/chunks/components_FloatingContact_js.js"
     ]
   },
+  "admin/index.js -> ../../components/admin/NotificationModal": {
+    "id": "admin/index.js -> ../../components/admin/NotificationModal",
+    "files": [
+      "static/chunks/components_admin_NotificationModal_js.js"
+    ]
+  },
+  "admin/index.js -> ../../components/admin/ReviewManager": {
+    "id": "admin/index.js -> ../../components/admin/ReviewManager",
+    "files": [
+      "static/chunks/components_admin_ReviewManager_js.js"
+    ]
+  },
+  "admin/index.js -> ../../components/admin/TourManager": {
+    "id": "admin/index.js -> ../../components/admin/TourManager",
+    "files": [
+      "static/chunks/components_admin_TourManager_js.js"
+    ]
+  },
   "index.js -> ../components/AnimateOnScroll": {
     "id": "index.js -> ../components/AnimateOnScroll",
     "files": [

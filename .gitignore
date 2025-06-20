@@ -3,8 +3,12 @@
 node_modules/
 
 # .env файлы для локальной разработки (они не должны быть в репозитории)
+.env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production
+.env.production.local
 
 # Кэш Next.js
 .next/

@@ -2,7 +2,10 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/api/reviews": "pages/api/reviews.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-  "/": "pages/index.js"
+  "/api/admin/reviews/[id]": "pages/api/admin/reviews/[id].js",
+  "/admin": "pages/admin.js",
+  "/": "pages/index.js",
+  "/api/admin/reviews": "pages/api/admin/reviews.js",
+  "/api/admin/tours": "pages/api/admin/tours.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js"
 }

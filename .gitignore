@@ -1,22 +1,31 @@
-# Gitignore для проектов Next.js
-# /node_modules
+# Зависимости
 node_modules/
+.pnp/
+.pnp.js
 
-# .env файлы для локальной разработки (они не должны быть в репозитории)
+# Сборочные директории Next.js
+.next/
+out/ # Для экспортированных статических сайтов
+
+# Локальные переменные окружения (НЕ должны быть в репозитории!)
 .env
 .env.local
 .env.development.local
 .env.test.local
-.env.production
 .env.production.local
 
-# Кэш Next.js
-.next/
-
-# Логи npm/yarn
+# Лог-файлы пакетных менеджеров
 npm-debug.log*
+yarn-debug.log*
 yarn-error.log
 
-# Другие временные файлы или файлы IDE, если есть
+# Файлы операционных систем и IDE
 .DS_Store # macOS
-.vscode/ # VS Code настройки (по желанию)
+Thumbs.db # Windows
+.vscode/ # Настройки VS Code (опционально, если не хочешь делиться)
+
+# TypeScript кэш (если используешь TypeScript)
+*.tsbuildinfo
+
+# Файлы Vercel CLI (если деплоишь на Vercel)
+.vercel/

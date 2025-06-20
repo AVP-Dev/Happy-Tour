@@ -1,62 +1,66 @@
 {
-  "../components/Layout.js -> ./FloatingContact": {
-    "id": "../components/Layout.js -> ./FloatingContact",
+  "components/Layout.js -> ./FloatingContact": {
+    "id": 6221,
     "files": [
-      "static/chunks/components_FloatingContact_js.js"
+      "static/css/6e8982603af5b19e.css",
+      "static/chunks/221.a1c396293615d533.js"
     ]
   },
-  "admin/index.js -> ../../components/admin/NotificationModal": {
-    "id": "admin/index.js -> ../../components/admin/NotificationModal",
+  "pages/admin/index.js -> ../../components/admin/NotificationModal": {
+    "id": 7927,
     "files": [
-      "static/chunks/components_admin_NotificationModal_js.js"
+      "static/chunks/927.bc74e731b27e91ba.js"
     ]
   },
-  "admin/index.js -> ../../components/admin/ReviewManager": {
-    "id": "admin/index.js -> ../../components/admin/ReviewManager",
+  "pages/admin/index.js -> ../../components/admin/ReviewManager": {
+    "id": 4716,
     "files": [
-      "static/chunks/components_admin_ReviewManager_js.js"
+      "static/chunks/716.bd971a2d3f00793b.js"
     ]
   },
-  "admin/index.js -> ../../components/admin/TourManager": {
-    "id": "admin/index.js -> ../../components/admin/TourManager",
+  "pages/admin/index.js -> ../../components/admin/TourManager": {
+    "id": 8267,
     "files": [
-      "static/chunks/components_admin_TourManager_js.js"
+      "static/chunks/267.69c0323c978c92ef.js"
     ]
   },
-  "index.js -> ../components/AnimateOnScroll": {
-    "id": "index.js -> ../components/AnimateOnScroll",
+  "pages/index.js -> ../components/AnimateOnScroll": {
+    "id": 8632,
     "files": [
-      "static/chunks/components_AnimateOnScroll_js.js"
+      "static/chunks/632.db798219f1878ced.js"
     ]
   },
-  "index.js -> ../components/FAQ": {
-    "id": "index.js -> ../components/FAQ",
+  "pages/index.js -> ../components/FAQ": {
+    "id": 5079,
     "files": [
-      "static/chunks/components_FAQ_js.js"
+      "static/css/cf1a94ed89476549.css",
+      "static/chunks/79.5c26713ca0c55b71.js"
     ]
   },
-  "index.js -> ../components/Modal": {
-    "id": "index.js -> ../components/Modal",
+  "pages/index.js -> ../components/Modal": {
+    "id": 2242,
     "files": [
-      "static/chunks/components_Modal_js.js"
+      "static/css/99c54197fa980ba6.css",
+      "static/chunks/242.25c3ad1e1499db85.js"
     ]
   },
-  "index.js -> ../components/Notification": {
-    "id": "index.js -> ../components/Notification",
+  "pages/index.js -> ../components/Notification": {
+    "id": 2234,
     "files": [
-      "static/chunks/components_Notification_js.js"
+      "static/css/86f2c386ae1bd727.css",
+      "static/chunks/234.b0ba382d5050145e.js"
     ]
   },
-  "index.js -> ../components/ReviewForm": {
-    "id": "index.js -> ../components/ReviewForm",
+  "pages/index.js -> ../components/ReviewForm": {
+    "id": 8639,
     "files": [
-      "static/chunks/components_ReviewForm_js.js"
+      "static/chunks/639.043f2414d88a5748.js"
     ]
   },
-  "index.js -> ../components/TourvisorWidget": {
-    "id": "index.js -> ../components/TourvisorWidget",
+  "pages/index.js -> ../components/TourvisorWidget": {
+    "id": 2686,
     "files": [
-      "static/chunks/components_TourvisorWidget_js.js"
+      "static/chunks/686.ea8a031c6f3618f8.js"
     ]
   }
 }

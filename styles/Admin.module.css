@@ -1,0 +1,330 @@
+/* styles/Admin.module.css */
+
+/*
+  ==============================================
+  Final Polish: Modern Admin UI
+  ==============================================
+  * Fully rounded, cohesive, and "volumetric" style
+  * Consistent design language for all components
+  * Redesigned Login Page & Accordion
+*/
+
+/* 1. CSS Variables & Base Layout
+------------------------------------------------- */
+.adminLayout {
+    --green-light: #ecfdf5;
+    --green: #22c55e;
+    --green-dark: #16a34a;
+    
+    --grey-50: #f8fafc;   /* Main background */
+    --grey-100: #f1f5f9; /* Subtle background, borders */
+    --grey-200: #e2e8f0; /* Borders, dividers */
+    --grey-400: #94a3b8; /* Icons, secondary text */
+    --grey-600: #475569; /* Body text */
+    --grey-800: #1e293b; /* Headings */
+
+    --red-light: #fff1f2;
+    --red: #f43f5e;
+    --red-dark: #e11d48;
+
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 4px 8px -2px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-button: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+    --shadow-button-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+    
+    --radius: 12px;
+    --radius-button: 8px;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--grey-50);
+    color: var(--grey-600);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* 2. Sidebar
+------------------------------------------------- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background-color: var(--white);
+    border-right: 1px solid var(--grey-100);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transform: translateX(0);
+    transition: var(--transition);
+    z-index: 100;
+}
+
+.sidebarHeader {
+    margin-bottom: 2.5rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--green-dark);
+    text-align: center;
+}
+
+.navLink {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.85rem 1rem;
+    margin: 0 -1rem 0.5rem;
+    border-radius: var(--radius-button);
+    font-weight: 500;
+    color: var(--grey-600);
+    transition: var(--transition);
+}
+.navLink:hover {
+    background-color: var(--grey-100);
+    color: var(--grey-800);
+}
+.navLinkActive {
+    background-color: var(--green);
+    color: var(--white);
+    font-weight: 600;
+    box-shadow: var(--shadow-button);
+}
+.navLinkActive:hover {
+    background-color: var(--green);
+    color: var(--white);
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: var(--grey-100);
+    border-radius: var(--radius);
+}
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--green);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.userName {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--grey-800);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* 3. Main Content
+------------------------------------------------- */
+.mainContent {
+    flex-grow: 1;
+    padding: 2.5rem;
+    margin-left: 260px; /* Sidebar width */
+    transition: margin-left var(--transition);
+}
+.contentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+.contentHeader h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--grey-800);
+}
+.mobileMenuButton {
+    display: none;
+}
+
+/* 4. Cards
+------------------------------------------------- */
+.card {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--grey-100);
+    margin-bottom: 1.5rem;
+}
+
+/* 5. Buttons
+------------------------------------------------- */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-button);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-button);
+}
+.button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-button-hover);
+}
+.button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+.primaryButton { background-color: var(--green); color: var(--white); }
+.primaryButton:hover:not(:disabled) { background-color: var(--green-dark); }
+.secondaryButton { background-color: var(--white); color: var(--grey-800); border-color: var(--grey-200); }
+.secondaryButton:hover:not(:disabled) { background-color: var(--white); border-color: var(--grey-400); }
+.dangerButton { background-color: var(--red); color: var(--white); }
+.dangerButton:hover:not(:disabled) { background-color: var(--red-dark); }
+.iconButton { 
+    padding: 0.75rem; 
+    border-radius: 50%;
+    background-color: var(--grey-100);
+    color: var(--grey-600);
+    border: none;
+    box-shadow: none;
+}
+.iconButton:hover:not(:disabled) {
+    background-color: var(--grey-200);
+    color: var(--grey-800);
+    transform: translateY(-1px);
+}
+.iconButton.danger:hover:not(:disabled) {
+    background-color: var(--red-light);
+    color: var(--red-dark);
+}
+
+/* 6. Forms & Modals
+------------------------------------------------- */
+.modalBackdrop {
+    position: fixed; inset: 0; background-color: rgba(30, 41, 59, 0.6);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.formModal {
+    background-color: var(--white); padding: 2.5rem; border-radius: var(--radius);
+    box-shadow: var(--shadow-lg); width: 90%; max-width: 650px;
+    max-height: 90vh; overflow-y: auto;
+}
+.formHeader {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;
+}
+.formHeader h2 { font-size: 1.5rem; font-weight: 600; color: var(--grey-800); }
+.closeButton { 
+    background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--grey-400); 
+    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: var(--transition);
+}
+.closeButton:hover { background-color: var(--grey-100); transform: rotate(90deg); }
+
+.formGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.25rem; }
+.formGroup { display: flex; flex-direction: column; gap: 0.5rem; }
+.formGroup.fullWidth { grid-column: 1 / -1; }
+.formGroup label { font-weight: 500; font-size: 0.875rem; color: var(--grey-600); }
+.formGroup input, .formGroup textarea, .formGroup select {
+    padding: 0.85rem 1rem; border-radius: var(--radius-button); border: 1px solid var(--grey-200);
+    font-size: 0.95rem; transition: var(--transition); background-color: var(--grey-50);
+}
+.formGroup input:focus, .formGroup textarea:focus, .formGroup select:focus {
+    outline: none; box-shadow: 0 0 0 3px var(--green-light); 
+    border-color: var(--green); background-color: var(--white);
+}
+.formActions { 
+    display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2.5rem; 
+    padding-top: 1.5rem; border-top: 1px solid var(--grey-100); 
+}
+
+/* 7. Specific Component Styles
+------------------------------------------------- */
+/* Tour Manager & Accordion */
+.accordionContainer { display: flex; flex-direction: column; gap: 1rem; }
+.accordionItem { background: var(--white); border-radius: var(--radius); border: 1px solid var(--grey-100); box-shadow: var(--shadow-sm); }
+.accordionHeader { 
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    padding: 1.25rem 1.5rem; font-size: 1.1rem; font-weight: 600; color: var(--grey-800);
+    background: none; border: none; cursor: pointer;
+}
+.accordionIcon { transition: var(--transition); }
+.accordionIconOpen { transform: rotate(180deg); }
+.accordionContent { 
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease-out;
+}
+.accordionContent > div { overflow: hidden; }
+.accordionContentOpen { grid-template-rows: 1fr; }
+.tourGrid { padding: 0 1.5rem 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+.tourCardItem { border-radius: var(--radius); border: 1px solid var(--grey-200); overflow: hidden; }
+.tourCardImage { width: 100%; height: 180px; object-fit: cover; }
+.tourCardContent { padding: 1rem; }
+.tourCardTitle { font-size: 1rem; font-weight: 600; color: var(--grey-800); margin-bottom: 0.75rem; }
+.tourCardActions { display: flex; justify-content: space-between; align-items: center; }
+.tourCardPrice { font-weight: 700; font-size: 1rem; color: var(--green-dark); }
+
+/* Review Manager */
+.reviewsContainer { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+.reviewColumn h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--grey-200); }
+.reviewCard { padding: 1.5rem; }
+.reviewCard .cardHeader { border: none; padding: 0; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;}
+.reviewAuthor { font-weight: 600; color: var(--grey-800); }
+.reviewDate { font-size: 0.8rem; color: var(--grey-400); }
+.reviewText { line-height: 1.6; margin: 0.5rem 0 1.5rem; color: var(--grey-800); }
+.reviewActions { display: flex; justify-content: flex-end; gap: 0.75rem; }
+.statusBadge { padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+.statusPending { background-color: var(--grey-100); color: var(--grey-600); }
+.statusPublished { background-color: var(--green-light); color: var(--green-dark); }
+
+/* 8. Login Page
+------------------------------------------------- */
+.loginPage { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-grow: 1; 
+}
+.loginBox {
+    width: 100%; max-width: 420px; padding: 3rem; background: var(--white);
+    border-radius: var(--radius); box-shadow: var(--shadow-lg); text-align: center;
+}
+.loginBox h2 { font-size: 1.75rem; font-weight: 700; color: var(--green-dark); margin-bottom: 1rem; }
+.loginBox p { color: var(--grey-400); margin-bottom: 2.5rem; }
+.loginForm .formGroup { text-align: left; margin-bottom: 1.5rem; }
+.loginForm input { width: 100%; box-sizing: border-box; }
+.loginError { 
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background-color: var(--red-light); color: var(--red-dark);
+    border: 1px solid var(--red-light); border-radius: var(--radius-button); margin-bottom: 1.5rem; 
+    font-size: 0.9rem; text-align: left;
+}
+
+/* 9. Mobile & Responsive Styles
+------------------------------------------------- */
+@media (max-width: 768px) {
+    .sidebar { 
+        transform: translateX(-100%); 
+        box-shadow: var(--shadow-lg); 
+    }
+    .sidebarOpen { 
+        transform: translateX(0); 
+    }
+    .mainContent { margin-left: 0; padding: 1.5rem; }
+    .contentHeader h1 { font-size: 1.5rem; }
+    .mobileMenuButton { 
+        display: block; background: none; border: none; font-size: 1.75rem; 
+        color: var(--grey-600); z-index: 101;
+    }
+    .pageOverlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 99; }
+}
+

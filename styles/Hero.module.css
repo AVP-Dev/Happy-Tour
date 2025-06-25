@@ -1,0 +1,67 @@
+/* styles/Hero.module.css */
+.hero {
+    height: 100vh;
+    min-height: 600px;
+    /* REMOVED: background-image property is now handled by next/image in the component */
+    background-color: #333; /* Fallback color while image loads */
+    background-size: cover;
+    background-position: center;
+    color: white;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden; /* Ensures the Image component doesn't overflow */
+}
+
+.hero_overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1; /* Sits above the image but below the content */
+}
+
+.hero_content {
+    position: relative;
+    z-index: 2; /* Sits on top of the overlay */
+    max-width: 800px;
+    margin: 0 auto;
+    animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero_title {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    line-height: 1.2;
+}
+
+.hero_text {
+    font-size: 1.4rem;
+    margin-bottom: 40px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+    line-height: 1.4;
+}
+
+@media(max-width: 768px) {
+    .hero_title {
+        font-size: 2.5rem;
+    }
+    .hero_text {
+        font-size: 1.2rem;
+    }
+}

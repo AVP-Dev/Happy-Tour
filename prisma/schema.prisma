@@ -1,0 +1,74 @@
+// prisma/schema.prisma
+
+// Генератор клиента Prisma для JavaScript
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Источник данных для подключения к базе данных SQLite
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL") // Получает URL базы данных из переменных окружения
+}
+
+// Модель Tour (туры)
+model Tour {
+  // id тура, генерируется UUID по умолчанию, хранится как TEXT в SQLite
+  // УДАЛЕНО: @db.Text, так как String в Prisma по умолчанию маппируется на TEXT в SQLite
+  id          String    @id @default(uuid()) @map("id") 
+  // Название тура, обязательное поле
+  title       String
+  // Описание тура, может быть пустым
+  // УДАЛЕНО: @db.Text, так как String в Prisma по умолчанию маппируется на TEXT в SQLite
+  description String?   
+  // Цена тура, число с плавающей точкой
+  // УДАЛЕНО: @db.Real, так как Float в Prisma по умолчанию маппируется на REAL в SQLite
+  price       Float     
+  // Валюта, по умолчанию "BYN"
+  currency    String    @default("BYN")
+  // Категория тура, по умолчанию "hot"
+  category    String    @default("hot")
+  // URL изображения, путь к локальному файлу
+  image_url   String
+  // Время создания записи, устанавливается автоматически
+  createdAt   DateTime  @default(now()) @map("created_at")
+  // Время последнего обновления записи, обновляется автоматически
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  // Соответствие имени таблицы в базе данных
+  @@map("tours")
+}
+
+// Модель Review (отзывы)
+model Review {
+  // id отзыва, генерируется UUID по умолчанию, хранится как TEXT в SQLite
+  // УДАЛЕНО: @db.Text, так как String в Prisma по умолчанию маппируется на TEXT в SQLite
+  id          String    @id @default(uuid()) @map("id") 
+  // Автор отзыва
+  author      String
+  // Текст отзыва, обязательное поле
+  text        String
+  // Дата создания отзыва, устанавливается автоматически
+  date        DateTime  @default(now())
+  // Статус отзыва ('pending' - на модерации, 'published' - опубликован), по умолчанию "pending"
+  status      String    @default("pending")
+  // Время последнего обновления записи, обновляется автоматически
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  // Соответствие имени таблицы в базе данных
+  @@map("reviews")
+}
+
+// Примечание: Модель User НЕ НУЖНА для Firebase Auth, так как пользователей нет, а админы аутентифицируются через Firebase.
+// Если вы захотите хранить ДОПОЛНИТЕЛЬНЫЕ данные об администраторах (не логин/пароль),
+// можете добавить модель AdminUserExtra, как обсуждалось ранее.
+// model AdminUserExtra {
+//     id          String    @id @default(uuid()) @map("id") @db.Text // Соответствует UID из Firebase Auth
+//     email       String    @unique
+//     name        String?
+//     // Дополнительные поля
+//     createdAt   DateTime  @default(now()) @map("created_at")
+//     updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+//
+//     @@map("admin_user_extra")
+// }

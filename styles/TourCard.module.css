@@ -1,0 +1,106 @@
+/* Основной контейнер карточки */
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Заставляет карточку занимать всю высоту слайда */
+    background-color: var(--white-color);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease-in-out;
+}
+
+/* Эффект при наведении */
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Контейнер для изображения */
+.image_container {
+    position: relative;
+    width: 100%;
+    /* Создаем пропорции 3:2 для изображения */
+    padding-top: 66.66%; 
+}
+
+/* Стили для самого изображения */
+.image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Изображение будет покрывать контейнер без искажений */
+}
+
+/* Контейнер для текстового контента */
+.content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Позволяет этому блоку занять все оставшееся место */
+    padding: 20px;
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+    min-height: 4.5rem; /* Резервируем место для 3 строк заголовка */
+}
+
+.description {
+    font-size: 0.9rem;
+    color: var(--gray-color);
+    line-height: 1.5;
+    flex-grow: 1; /* Занимает все доступное место, отодвигая футер вниз */
+    margin-bottom: 15px;
+}
+
+/* === ИЗМЕНЕНО: Футер карточки теперь центрирует элементы === */
+.footer {
+    display: flex;
+    flex-direction: column; /* Ставим элементы друг под другом */
+    align-items: center; /* Выравниваем по центру */
+    margin-top: auto; /* Прижимает футер к низу */
+    gap: 12px; /* Расстояние между ценой и кнопкой */
+}
+
+/* Стили для цены */
+.price {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.price span {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--gray-color);
+}
+
+/* Стили для кнопки "Подробнее" */
+.button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    width: 100%; /* Растягиваем кнопку на всю ширину */
+    text-align: center; /* Центрируем текст в кнопке */
+}
+
+.button:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}

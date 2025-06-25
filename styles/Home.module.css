@@ -1,0 +1,174 @@
+/* styles/Home.module.css */
+
+/* --- Sections --- */
+.tourvisor_section,
+.tours_section_wrapper, 
+.reviews_section, 
+.faq_section,
+.contacts_section {
+    padding: 60px 0;
+}
+.tours_section {
+    padding: 30px 0 60px; /* Increased bottom padding for carousel controls */
+}
+.tours_section_wrapper, .faq_section, .contacts_section {
+    background-color: var(--light-color);
+}
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 50px;
+    color: var(--dark-color);
+    font-weight: 700;
+}
+
+/* --- Carousel Styles --- */
+.tours_section :global(.carousel-wrapper),
+.reviews_section :global(.carousel-wrapper) {
+    position: relative;
+    padding: 10px 60px; /* Padding for desktop arrows */
+}
+.reviews_section {
+    padding-bottom: 80px; /* Extra space for review carousel pagination */
+}
+/* Hide default Swiper navigation by anchoring to a local class */
+.tours_section :global(.swiper-button-next),
+.tours_section :global(.swiper-button-prev),
+.reviews_section :global(.swiper-button-next),
+.reviews_section :global(.swiper-button-prev) {
+    display: none !important;
+}
+
+/* Custom navigation buttons */
+.tours_section :global(.swiper-button-next-custom), 
+.tours_section :global(.swiper-button-prev-custom),
+.reviews_section :global(.swiper-button-next-custom),
+.reviews_section :global(.swiper-button-prev-custom) {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px; height: 44px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: var(--box-shadow);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 10;
+}
+
+.tours_section :global(.swiper-button-next-custom)::after, 
+.tours_section :global(.swiper-button-prev-custom)::after,
+.reviews_section :global(.swiper-button-next-custom)::after,
+.reviews_section :global(.swiper-button-prev-custom)::after {
+    font-family: 'swiper-icons'; font-size: 1.2rem; font-weight: 700;
+}
+
+.tours_section :global(.swiper-button-prev-custom),
+.reviews_section :global(.swiper-button-prev-custom) { left: 5px; }
+.tours_section :global(.swiper-button-prev-custom)::after,
+.reviews_section :global(.swiper-button-prev-custom)::after { content: 'prev'; }
+
+.tours_section :global(.swiper-button-next-custom),
+.reviews_section :global(.swiper-button-next-custom) { right: 5px; }
+.tours_section :global(.swiper-button-next-custom)::after,
+.reviews_section :global(.swiper-button-next-custom)::after { content: 'next'; }
+
+.tours_section :global(.swiper-button-next-custom:hover), 
+.tours_section :global(.swiper-button-prev-custom:hover),
+.reviews_section :global(.swiper-button-next-custom:hover),
+.reviews_section :global(.swiper-button-prev-custom:hover) {
+    background-color: var(--primary-color); color: white; transform: translateY(-50%) scale(1.05);
+}
+
+/* Custom pagination */
+.tours_section :global(.swiper-pagination-custom),
+.reviews_section :global(.swiper-pagination-custom) {
+    position: absolute;
+    bottom: -45px; /* Positioned well below the slider */
+    left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px;
+}
+.tours_section :global(.swiper-pagination-custom) .swiper-pagination-bullet,
+.reviews_section :global(.swiper-pagination-custom) .swiper-pagination-bullet {
+    width: 10px; height: 10px;
+    background-color: var(--gray-color);
+    opacity: 0.4; border-radius: 50%;
+    transition: var(--transition); cursor: pointer;
+}
+.tours_section :global(.swiper-pagination-custom) .swiper-pagination-bullet-active,
+.reviews_section :global(.swiper-pagination-custom) .swiper-pagination-bullet-active {
+    background-color: var(--primary-color); opacity: 1;
+    width: 25px; border-radius: 5px;
+}
+
+/* Add Review Button */
+.add_review_btn_container {
+    text-align: center;
+    margin-top: 40px; /* Space above the button */
+}
+
+/* --- Contact Section --- */
+.contacts_grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 50px;
+    align-items: flex-start;
+}
+.contacts_info h3, .contacts_form h3 {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+.contact_item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+.contact_item svg {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+.contact_item a {
+    color: var(--dark-color);
+    text-decoration: none;
+    transition: var(--transition);
+}
+.contact_item a:hover {
+    color: var(--primary-color);
+}
+.contact_hours {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+.contact_hours h4 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+.contact_hours p {
+    margin: 5px 0;
+    color: var(--gray-color);
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 992px) {
+    .contacts_grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 768px) {
+    .tours_section :global(.carousel-wrapper),
+    .reviews_section :global(.carousel-wrapper) {
+        padding: 10px 0; /* Remove side padding */
+    }
+    .tours_section :global(.swiper-button-next-custom), 
+    .tours_section :global(.swiper-button-prev-custom),
+    .reviews_section :global(.swiper-button-next-custom),
+    .reviews_section :global(.swiper-button-prev-custom) {
+        display: none; /* Hide arrows on mobile */
+    }
+}

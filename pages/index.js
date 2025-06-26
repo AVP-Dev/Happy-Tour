@@ -1,10 +1,11 @@
 // pages/index.js
 // Это главный публичный маршрут для домашней страницы.
 
-import React, { useState, useEffect } from 'react'; // ИСПРАВЛЕНО: Добавлен импорт React и хуков
+import React, { useState, useEffect } from 'react'; 
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr'; // Для получения данных для каруселей и FAQ (если используются)
+import styles from '../styles/Home.module.css'; // ИСПРАВЛЕНО: Добавлен импорт стилей для Home.module.css
 
 // Динамические импорты для секций (для оптимизации загрузки)
 const Hero = dynamic(() => import('../components/Hero'));
@@ -81,12 +82,7 @@ export default function Home() {
      */
     const handleReadMoreReview = (review) => {
         setSelectedReview(review);
-        // Открываем модальное окно, но не то, что для оставления отзыва
-        // Используем другое состояние или убедимся, что isReviewModalOpen для формы не активен
-        // Для простоты, здесь мы будем использовать тот же Modal, но с другим selectedReview.
-        // Если вы хотите ДВЕ РАЗНЫЕ модалки, то нужны отдельные состояния isFullReviewModalOpen.
-        // Пока обойдемся одним isReviewModalOpen и SelectedReview
-        setIsReviewModalOpen(true); // Используем то же модальное окно, что и для ReviewForm
+        setIsReviewModalOpen(true); 
     };
 
 
@@ -161,7 +157,7 @@ export default function Home() {
                     {!reviewsData && !reviewsError && <p style={{textAlign: 'center'}}>Загрузка отзывов...</p>}
                     <Carousel reviews={publishedReviews} isReviewCarousel={true} onReadMore={handleReadMoreReview} />
                     
-                    <div className={styles.add_review_btn_container}>
+                    <div className={styles.add_review_btn_container}> {/* ИСПРАВЛЕНО: Теперь styles определен */}
                         <button onClick={() => { setIsReviewModalOpen(true); setSelectedReview(null); }} className="btn btn-primary">
                             Оставить отзыв
                         </button>

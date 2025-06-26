@@ -1,155 +1,226 @@
-import { useState, useEffect } from 'react';
+// components/admin/TourManager.js
+// Компонент для управления турами в административной панели.
+// Обновлен для работы с локальными изображениями.
+
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { FiEdit, FiTrash2, FiPlus, FiChevronDown } from 'react-icons/fi';
+import { FiChevronDown, FiEdit2, FiTrash2, FiPlusCircle } from 'react-icons/fi';
 import styles from '../../styles/Admin.module.css';
 
-// Импорт экземпляров Firebase Auth, Firestore и Storage
-import { auth, db, storage } from '../../lib/firebase'; // Убедитесь, что auth, db, storage импортированы
+// Удален импорт firebase.js, так как TourManager не использует его напрямую.
+// import { auth, db, storage } from '../../lib/firebase'; 
 
-const TourForm = dynamic(() => import('./TourForm'));
+// Динамически импортируем форму TourForm, чтобы она не влияла на начальную загрузку
+const TourForm = dynamic(() => import('../../components/admin/TourForm'));
 
-const TourCard = ({ tour, onEdit, onDelete }) => (
-    <div className={styles.tourCardItem}>
-        <img 
-            src={tour.image} 
-            alt={tour.title} 
-            className={styles.tourCardImage} 
-            onError={(e) => { 
-                e.target.onerror = null; 
-                e.target.src = 'https://placehold.co/400x200/e2e8f0/a0aec0?text=IMG'; // Заглушка изображения при ошибке
-            }}
-        />
-        <div className={styles.tourCardContent}>
-            <h4 className={styles.tourCardTitle}>{tour.title}</h4>
-            <div className={styles.tourCardActions}>
-                <span className={styles.tourCardPrice}>{tour.price} {tour.currency}</span>
-                <div>
-                    <button onClick={() => onEdit(tour)} className={styles.iconButton} title="Редактировать"><FiEdit size={16} /></button>
-                    <button onClick={() => onDelete(tour.id)} className={`${styles.iconButton} ${styles.danger}`} title="Удалить"><FiTrash2 size={16} /></button>
-                </div>
-            </div>
-        </div>
-    </div>
-);
+/**
+ * Компонент TourCategory отображает туры в рамках одной категории в виде аккордеона.
+ * @param {object} props - Свойства компонента.
+ * @param {string} props.categoryName - Название категории.
+ * @param {Array<object>} props.tours - Массив туров в этой категории.
+ * @param {function} props.onEdit - Функция для редактирования тура.
+ * @param {function} props.onDelete - Функция для удаления тура.
+ */
+const TourCategory = ({ categoryName, tours, onEdit, onDelete }) => {
+    const [isOpen, setIsOpen] = useState(true); // Состояние для открытия/закрытия аккордеона
 
-const AccordionCategory = ({ title, tours, isOpen, onToggle, onEdit, onDelete }) => {
     return (
         <div className={styles.accordionItem}>
-            <button className={styles.accordionHeader} onClick={onToggle}>
-                <span>{title} ({tours?.length || 0})</span>
-                <FiChevronDown className={`${styles.accordionIcon} ${isOpen ? styles.accordionIconOpen : ''}`} />
+            <button className={styles.accordionHeader} onClick={() => setIsOpen(!isOpen)}>
+                <span>{categoryName} ({tours?.length || 0})</span>
+                <FiChevronDown className={`${styles.accordionIcon} ${isOpen ? styles.open : ''}`} />
             </button>
-            <div className={`${styles.accordionContent} ${isOpen ? styles.accordionContentOpen : ''}`}>
-                <div className={styles.tourGrid}>
-                    {tours && tours.length > 0 ? (
-                        tours.map(tour => <TourCard key={tour.id} tour={tour} onEdit={onEdit} onDelete={onDelete} />)
+            {isOpen && (
+                <div className={styles.accordionContentWrapper}>
+                    {!tours || tours.length === 0 ? (
+                        <p className={styles.noItems}>В этой категории пока нет туров.</p>
                     ) : (
-                        <p>В этой категории пока нет туров.</p>
+                        <div className={styles.tourGrid}> {/* Добавлен класс для сетки туров */}
+                            {tours.map((tour) => (
+                                <div key={tour.id} className={styles.tourItemAdmin}>
+                                    {/* ИЗМЕНЕНО: src теперь использует tour.image_url */}
+                                    <img 
+                                        src={tour.image_url} 
+                                        alt={tour.title} 
+                                        className={styles.tourImageAdmin} 
+                                        onError={(e) => { 
+                                            e.target.onerror = null; 
+                                            e.target.src = '/placeholder.png'; // Заглушка изображения при ошибке
+                                        }} 
+                                    />
+                                    <div className={styles.tourInfoAdmin}>
+                                        <strong>{tour.title}</strong>
+                                        <p>{tour.description}</p>
+                                        <span className={styles.tourPriceAdmin}>{tour.price} {tour.currency}</span>
+                                    </div>
+                                    <div className={styles.tourActionsAdmin}>
+                                        <button onClick={() => onEdit(tour)} className={styles.editBtn} title="Редактировать"><FiEdit2 /></button>
+                                        <button onClick={() => onDelete(tour.id)} className={styles.deleteBtn} title="Удалить"><FiTrash2 /></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </div>
-            </div>
+            )}
         </div>
     );
 };
 
+/**
+ * Основной компонент TourManager для управления турами в административной панели.
+ * @param {object} props - Свойства компонента.
+ * @param {object} props.tours - Объект с турами, сгруппированными по категориям.
+ * @param {function} props.onDataChange - Функция для обновления данных.
+ * @param {function} props.showNotification - Функция для показа уведомлений.
+ * @param {function} props.showConfirm - Функция для показа окна подтверждения.
+ */
+export default function TourManager({ tours, onDataChange, showNotification, showConfirm }) {
+    const [isModalOpen, setIsModalOpen] = useState(false); // Состояние для открытия/закрытия модального окна формы
+    const [formConfig, setFormConfig] = useState({ mode: 'add', data: null }); // Конфигурация формы (добавление/редактирование, данные)
+    const [openCategory, setOpenCategory] = useState('hot'); // Состояние для открытой категории аккордеона
 
-export default function TourManager({ tours, isLoading, onDataChange, showNotification, showConfirm }) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formConfig, setFormConfig] = useState({ mode: 'add', data: null });
-    const [openCategory, setOpenCategory] = useState('hot');
-
-    // ВРЕМЕННЫЙ КОД ДЛЯ ОТЛАДКИ Firebase Auth:
-    // Этот useEffect будет выполняться на клиенте после монтирования компонента
-    useEffect(() => {
-        if (auth) { // Проверяем, что экземпляр auth доступен
-            if (auth.currentUser) {
-                console.log("Firebase Auth User (from TourManager component):", auth.currentUser.toJSON());
-            } else {
-                console.log("Firebase Auth User (from TourManager component): null. User not logged in according to Firebase Auth SDK.");
-                // Также можно добавить слушатель для отладки изменения состояния аутентификации
-                const unsubscribe = auth.onAuthStateChanged(user => {
-                    if (user) {
-                        console.log("Firebase Auth User state changed to (from TourManager listener):", user.toJSON());
-                    } else {
-                        console.log("Firebase Auth User state changed to (from TourManager listener): null");
-                    }
-                });
-                return () => unsubscribe(); // Очистка слушателя при размонтировании компонента
-            }
-        } else {
-            console.log("Firebase Auth instance is not available in TourManager component.");
-        }
-    }, []); // Запускаем один раз при монтировании компонента
-
+    /**
+     * Обработчик переключения категории аккордеона.
+     * @param {string} categoryKey - Ключ категории.
+     */
     const handleToggleCategory = (categoryKey) => {
         setOpenCategory(prev => (prev === categoryKey ? null : categoryKey));
     };
 
-    const handleAdd = () => {
-        setFormConfig({ mode: 'add', data: null });
+    /**
+     * Обработчик добавления нового тура.
+     * Открывает форму в режиме добавления, с указанной категорией по умолчанию.
+     * @param {string} category - Категория для нового тура.
+     */
+    const handleAdd = (category) => {
+        setFormConfig({ mode: 'add', data: { category } });
         setIsModalOpen(true);
     };
 
+    /**
+     * Обработчик редактирования тура.
+     * Открывает форму в режиме редактирования с данными выбранного тура.
+     * @param {object} tour - Объект тура для редактирования.
+     */
     const handleEdit = (tour) => {
         setFormConfig({ mode: 'edit', data: tour });
         setIsModalOpen(true);
     };
 
+    /**
+     * Обработчик удаления тура.
+     * Показывает окно подтверждения, затем отправляет запрос на удаление.
+     * @param {string} tourId - ID тура для удаления.
+     */
     const handleDelete = (tourId) => {
-        showConfirm('Вы уверены, что хотите удалить этот тур?', async () => {
+        showConfirm('Вы уверены, что хотите удалить этот тур? Это действие необратимо.', async () => {
             try {
                 const res = await fetch('/api/admin/tours', {
-                    method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: tourId }),
                 });
                 const result = await res.json();
                 if (!res.ok) throw new Error(result.message);
-                showNotification({type: 'success', message: 'Тур успешно удален!'});
-                onDataChange(); // Обновление списка туров после удаления
+                showNotification('Тур успешно удален!');
+                onDataChange(); // Обновляем данные после удаления
             } catch (error) {
-                showNotification({type: 'error', message: `Ошибка удаления: ${error.message}`});
+                showNotification(`Ошибка удаления: ${error.message}`);
             }
         });
     };
 
+    // Заголовки для категорий туров
     const categoryTitles = {
         hot: 'Горящие туры',
         popular: 'Популярные направления',
         special: 'Выгодные предложения',
     };
 
-    if (isLoading) return <p>Загрузка туров...</p>;
+    // Если данные загружаются, показываем сообщение о загрузке
+    // ИЗМЕНЕНО: Проверка isLoading теперь зависит от наличия данных tours
+    if (!tours) return <p>Загрузка туров...</p>;
 
     return (
         <div>
             <div className={styles.contentHeader} style={{marginBottom: "2rem"}}>
+                {/* Пустой div для выравнивания, если нет других элементов */}
                 <div/>
-                <button onClick={handleAdd} className={`${styles.button} ${styles.primaryButton}`}>
+                {/* Кнопка добавления нового тура (общая для всех категорий) */}
+                <button onClick={() => handleAdd(openCategory || 'hot')} className={`${styles.button} ${styles.primaryButton}`}>
                     <FiPlus />
                     <span>Добавить тур</span>
                 </button>
             </div>
 
             <div className={styles.accordionContainer}>
-                {Object.entries(categoryTitles).map(([key, title]) => (
+                {/* Рендеринг каждой категории туров в виде аккордеона */}
+                {Object.entries(tours).map(([key, categoryTours]) => (
                     <AccordionCategory
                         key={key}
-                        title={title}
-                        tours={tours?.[key]}
-                        isOpen={openCategory === key}
-                        onToggle={() => handleToggleCategory(key)}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
+                        title={categoryTitles[key] || 'Неизвестная категория'} // Заголовок категории
+                        tours={categoryTours} // Туры в этой категории
+                        isOpen={openCategory === key} // Открыта ли текущая категория
+                        onToggle={() => handleToggleCategory(key)} // Обработчик переключения
+                        onEdit={handleEdit} // Передаем функцию редактирования
+                        onDelete={handleDelete} // Передаем функцию удаления
                     />
                 ))}
             </div>
 
+            {/* Модальное окно формы для добавления/редактирования туров */}
             {isModalOpen && (
                 <TourForm 
-                    isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
-                    config={formConfig} showNotification={showNotification} onDataChange={onDataChange}
+                    isOpen={isModalOpen} 
+                    onClose={() => setIsModalOpen(false)}
+                    config={formConfig} 
+                    showNotification={showNotification} 
+                    onDataChange={onDataChange}
                 />
             )}
         </div>
     );
 }
+
+// Вспомогательный компонент для AccordionCategory, чтобы не дублировать код в TourManager
+const AccordionCategory = ({ title, tours, isOpen, onToggle, onEdit, onDelete }) => (
+    <div className={styles.accordionItem}>
+        <button className={styles.accordionHeader} onClick={onToggle}>
+            <span>{title} ({tours?.length || 0})</span>
+            <FiChevronDown className={`${styles.accordionIcon} ${isOpen ? styles.open : ''}`} />
+        </button>
+        {isOpen && (
+            <div className={styles.accordionContentWrapper}>
+                {!tours || tours.length === 0 ? (
+                    <p className={styles.noItems}>В этой категории пока нет туров.</p>
+                ) : (
+                    <div className={styles.tourGrid}>
+                        {tours.map((tour) => (
+                            <div key={tour.id} className={styles.tourItemAdmin}>
+                                <img 
+                                    src={tour.image_url} // ИЗМЕНЕНО: tour.image -> tour.image_url
+                                    alt={tour.title} 
+                                    className={styles.tourImageAdmin} 
+                                    onError={(e) => { 
+                                        e.target.onerror = null; 
+                                        e.target.src = '/placeholder.png'; // Заглушка
+                                    }} 
+                                />
+                                <div className={styles.tourInfoAdmin}>
+                                    <strong>{tour.title}</strong>
+                                    <p>{tour.description}</p>
+                                    <span className={styles.tourPriceAdmin}>{tour.price} {tour.currency}</span>
+                                </div>
+                                <div className={styles.tourActionsAdmin}>
+                                    <button onClick={() => onEdit(tour)} className={styles.editBtn} title="Редактировать"><FiEdit2 /></button>
+                                    <button onClick={() => onDelete(tour.id)} className={styles.deleteBtn} title="Удалить"><FiTrash2 /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        )}
+    </div>
+);

@@ -11,7 +11,10 @@ import Sidebar from '../../components/admin/Sidebar';
 const TourManager = dynamic(() => import('../../components/admin/TourManager'));
 const ReviewManager = dynamic(() => import('../../components/admin/ReviewManager'));
 const NotificationModal = dynamic(() => import('../../components/admin/NotificationModal'));
-const AdminUsersPage = dynamic(() => import('./users')); // ДОБАВЛЕНО: Динамический импорт страницы управления админами
+const AdminUsersPage = dynamic(() => import('./users')); // Динамический импорт страницы управления админами
+
+// Удален импорт Firebase db, так как он больше не используется.
+// import { db } from '../lib/firebase'; 
 
 const fetcher = async (url) => {
     const res = await fetch(url);
@@ -152,6 +155,7 @@ export default function AdminPage() {
                     <AdminUsersPage 
                         showNotification={showNotification} 
                         showConfirm={showConfirm}
+                        onDataChange={() => handleDataChange('users')} // Добавлено: для обновления списка админов
                         handleUnauthorized={() => signOut({ callbackUrl: '/admin/login' })}
                     />
                 )}

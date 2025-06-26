@@ -1,245 +1,237 @@
 // pages/index.js
-import { useState } from 'react';
+// Это главный публичный маршрут для домашней страницы.
+
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import useSWR from 'swr';
+import useSWR from 'swr'; // Для получения данных для каруселей и FAQ (если используются)
 
-// Импортируем нашу инициализацию Firebase
-import { db } from '../lib/firebase';
-// Добавлены query, where, orderBy для фильтрации и сортировки туров
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+// Удален импорт firebase, так как эта страница не использует его напрямую.
+// import { db } from '../lib/firebase'; 
 
-// Основные компоненты
-// Layout больше не импортируется здесь, так как он применяется в _app.js
-import Hero from '../components/Hero';
-import ContactSection from '../components/ContactSection';
-import styles from '../styles/Home.module.css';
-
-// Динамически импортируемые компоненты для производительности
-const Carousel = dynamic(() => import('../components/Carousel'), { ssr: false });
-const FAQ = dynamic(() => import('../components/FAQ'), { ssr: false });
-const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false });
+// Динамические импорты для секций (для оптимизации загрузки)
+const Hero = dynamic(() => import('../components/Hero'));
+const Carousel = dynamic(() => import('../components/Carousel'));
+const ContactSection = dynamic(() => import('../components/ContactSection'));
+const FAQ = dynamic(() => import('../components/FAQ'));
 const Modal = dynamic(() => import('../components/Modal'));
 const Notification = dynamic(() => import('../components/Notification'));
-const AnimateOnScroll = dynamic(() => import('../components/AnimateOnScroll'), { ssr: false });
-const ReviewForm = dynamic(() => import('../components/ReviewForm'), { ssr: false });
-const ContactForm = dynamic(() => import('../components/ContactForm'));
+const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false }); // Клиентский виджет
 
-
-const fetcher = url => fetch(url).then(res => res.json());
-
-// Расширенные и улучшенные FAQ (без изменений)
-const faqItems = [
-    {
-        q: "Какие документы мне понадобятся для поездки?",
-        a: "Все просто: вам нужен действующий загранпаспорт. Авиабилеты, ваучер на отель и страховку мы оформим и предоставим вам. Если для выбранной страны нужна виза — мы подробно проконсультируем и поможем с ее оформлением. С нами вы не забудете ни одной важной бумаги!"
-    },
-    {
-        q: "Страховка уже включена в стоимость тура?",
-        a: "Безусловно! Базовая медицинская страховка, покрывающая неотложные случаи, уже включена в каждый наш тур. Если вы хотите чувствовать себя еще увереннее — например, планируете активный отдых — мы предложим расширенные варианты страховки от невыезда и других рисков."
-    },
-    {
-        q: "Что такое 'горящий тур' и в чем подвох?",
-        a: "Никакого подвоха! 'Горящий тур' — это прекрасная возможность отдохнуть по очень выгодной цене. Туроператоры снижают стоимость на туры с вылетом в ближайшие дни, чтобы гарантированно заполнить места. Это тот же качественный отдых, но со скидкой за вашу спонтанность."
-    },
-    {
-        q: "Что делать, если мои планы изменятся?",
-        a: "Мы понимаем, что жизнь непредсказуема. Условия отмены или переноса тура зависят от правил авиакомпании и отеля. Мы всегда подбираем максимально гибкие варианты и честно рассказываем обо всех условиях. Для полного спокойствия рекомендуем оформить страховку от невыезда."
-    },
-    {
-        q: "Как не ошибиться с выбором отеля?",
-        a: "Доверьтесь нам! Мы знаем отели не по картинкам, а по реальным отзывам наших туристов. Расскажите, чего вы ждете от отдыха, и мы подберем идеальный вариант: тихий отель для двоих, веселый — для всей семьи или с лучшим пляжем на побережье. Ваш комфорт — наш главный приоритет."
-    },
-    {
-        q: "Почему иногда просят доплатить 'топливный сбор'?",
-        a: "Это редкая, но возможная ситуация. Топливный сбор — это плата авиакомпании за изменение цен на авиатопливо. Мы всегда стараемся включать все сборы в итоговую стоимость, но если авиакомпания вводит его после бронирования, мы честно и прозрачно информируем вас об этом."
+// Вспомогательная функция для получения данных (для SWR)
+const fetcher = async (url) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+        const error = new Error('An error occurred while fetching the data.');
+        error.info = await res.json();
+        error.status = res.status;
+        throw error;
     }
-];
+    return res.json();
+};
 
-export default function Home({ tours }) {
-    // Пока оставляем загрузку отзывов через useSWR.
-    // На следующем шаге мы обновим API-роут /api/reviews, чтобы он брал данные из Firestore.
-    const { data: reviews, mutate: mutateReviews } = useSWR('/api/reviews', fetcher);
+export default function Home() {
+    // Состояния для модальных окон и уведомлений
+    const [isTourModalOpen, setIsTourModalOpen] = useState(false);
+    const [selectedTour, setSelectedTour] = useState(null);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [selectedReview, setSelectedReview] = useState(null);
+    const [notification, setNotification] = useState({ isOpen: false, type: 'info', message: '' });
 
-    const [modalState, setModalState] = useState({ isOpen: false, title: '', component: null });
+    // Получение данных туров
+    // Группируем туры по категориям для каруселей
+    const { data: toursData, error: toursError } = useSWR('/api/admin/tours', fetcher);
+    const hotTours = toursData?.filter(tour => tour.category === 'hot') || [];
+    const popularTours = toursData?.filter(tour => tour.category === 'popular') || [];
+    const specialOffers = toursData?.filter(tour => tour.category === 'special') || [];
 
-    const openModal = (title, component) => setModalState({ isOpen: true, title, component });
-    const closeModal = () => setModalState({ isOpen: false, title: '', component: null });
+    // Получение данных отзывов (только опубликованные)
+    const { data: reviewsData, error: reviewsError } = useSWR('/api/reviews', fetcher);
+    const publishedReviews = reviewsData || [];
 
-    const showNotification = ({ type, message }) => {
-        openModal('', <Notification type={type} message={message} onClose={closeModal} />);
+    // Данные для секции FAQ
+    const faqItems = [
+        { q: 'Как выбрать идеальный тур?', a: 'Наши эксперты помогут вам определиться с направлением, бюджетом и активностями, исходя из ваших предпочтений. Мы подберем лучшие предложения со всего мира.' },
+        { q: 'Что входит в стоимость тура?', a: 'Обычно в стоимость включены перелет, проживание, трансферы и страховка. Дополнительные услуги, такие как экскурсии, оговариваются отдельно.' },
+        { q: 'Можно ли забронировать тур онлайн?', a: 'Да, вы можете оставить заявку на подбор тура прямо на нашем сайте, и мы свяжемся с вами для уточнения деталей и оформления.' },
+        { q: 'Какие документы нужны для путешествия?', a: 'В большинстве случаев необходим действующий загранпаспорт. Для некоторых стран может потребоваться виза. Наши менеджеры проконсультируют вас по всем вопросам.' },
+        { q: 'Какие способы оплаты доступны?', a: 'Мы принимаем оплату наличными, банковскими картами, а также предоставляем возможность рассрочки. Все детали обсуждаются индивидуально.' },
+    ];
+
+    /**
+     * Обработчик клика по кнопке "Подобрать тур" в Hero секции.
+     * Прокручивает страницу до виджета Tourvisor.
+     */
+    const handleSearchClick = () => {
+        document.getElementById('tourvisor').scrollIntoView({ behavior: 'smooth' });
     };
 
+    /**
+     * Обработчик клика "Подробнее" на карточке тура.
+     * Открывает модальное окно с деталями тура.
+     * @param {object} tour - Объект тура.
+     */
     const handleTourInquiry = (tour) => {
-        openModal(
-            `Запрос по туру: ${tour.title}`,
-            <ContactForm
-                onFormSubmit={showNotification}
-                onClose={closeModal}
-                initialMessage={`Здравствуйте! Меня интересует тур "${tour.title}".`}
-            />
-        );
+        setSelectedTour(tour);
+        setIsTourModalOpen(true);
     };
 
-    const handleReviewReadMore = (review) => {
-        openModal(
-            `Отзыв от ${review.author}`,
-            <div style={{ padding: '20px', lineHeight: '1.7', textAlign: 'left' }}>
-                <p>"{review.text}"</p>
-            </div>
-        );
+    /**
+     * Обработчик клика "Читать далее" на карточке отзыва.
+     * Открывает модальное окно с полным текстом отзыва.
+     * @param {object} review - Объект отзыва.
+     */
+    const handleReadMoreReview = (review) => {
+        setSelectedReview(review);
+        setIsReviewModalOpen(true);
     };
 
-    const handleAddReview = () => {
-        openModal(
-            'Оставить отзыв',
-            <ReviewForm
-                onClose={closeModal}
-                onReviewSubmitted={() => {
-                    mutateReviews();
-                    closeModal();
-                }}
-                onFormSubmit={showNotification}
-            />
-        );
+    /**
+     * Показывает уведомление.
+     * @param {string} message - Текст сообщения.
+     * @param {'success' | 'error'} type - Тип уведомления.
+     */
+    const showNotification = (message, type = 'info') => {
+        setNotification({ isOpen: true, message, type });
     };
 
-    const scrollToTourvisor = () => {
-        document.getElementById('tourvisor')?.scrollIntoView({ behavior: 'smooth' });
+    /**
+     * Закрывает уведомление.
+     */
+    const closeNotification = () => {
+        setNotification(prev => ({ ...prev, isOpen: false }));
     };
 
     return (
-        // Используем React.Fragment (<>) как корневой элемент.
-        // Layout теперь оборачивает компонент Home в _app.js.
         <>
             <Head>
-                <title>Happy Tour - Незабываемые путешествия по всему миру</title>
-                <meta name="description" content="Подбор и продажа туров по популярным направлениям. Горящие туры, выгодные предложения и индивидуальный подход от Happy Tour." />
+                <title>Happy Tour - Ваш идеальный отпуск начинается здесь!</title>
+                <meta name="description" content="Подбираем идеальные туры по всему миру. Горящие туры, популярные направления, выгодные предложения. Ваше путешествие мечты ждет!" />
             </Head>
 
-            <Hero onSearchClick={scrollToTourvisor} />
+            {/* Hero Section */}
+            <Hero onSearchClick={handleSearchClick} />
 
-            <main>
-                <AnimateOnScroll>
-                    <section id="tourvisor" className={styles.tourvisor_section}>
-                        <div className="container">
-                            <h2 className="section-title">Подбор тура онлайн</h2>
-                            <TourvisorWidget />
-                        </div>
-                    </section>
-                </AnimateOnScroll>
-
-                <div className={styles.tours_section_wrapper}>
-                    <AnimateOnScroll>
-                        <section id="hot-tours" className={styles.tours_section}>
-                            <div className="container">
-                                <h2 className="section-title">Горящие туры</h2>
-                                <Carousel tours={tours.hot} onTourInquiry={handleTourInquiry} />
-                            </div>
-                        </section>
-                    </AnimateOnScroll>
-
-                    <AnimateOnScroll>
-                        <section className={styles.tours_section}>
-                            <div className="container">
-                                <h2 className="section-title">Популярные направления</h2>
-                                <Carousel tours={tours.popular} onTourInquiry={handleTourInquiry} />
-                            </div>
-                        </section>
-                    </AnimateOnScroll>
-
-                    <AnimateOnScroll>
-                        <section className={styles.tours_section}>
-                            <div className="container">
-                                <h2 className="section-title">Выгодные предложения</h2>
-                                <Carousel tours={tours.special} onTourInquiry={handleTourInquiry} />
-                            </div>
-                        </section>
-                    </AnimateOnScroll>
+            {/* Tourvisor Widget Section */}
+            <section id="tourvisor" className="section-padding light-bg">
+                <div className="container">
+                    <h2 className="section-title">Подбор тура онлайн</h2>
+                    <p style={{textAlign: 'center', marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px'}}>
+                        Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
+                    </p>
+                    <TourvisorWidget />
                 </div>
+            </section>
 
-                <AnimateOnScroll>
-                    <section id="reviews" className={styles.reviews_section}>
-                        <div className="container">
-                            <h2 className="section-title">Отзывы наших туристов</h2>
-                            <Carousel reviews={reviews} isReviewCarousel={true} onReadMore={handleReviewReadMore} />
-                            <div className={styles.add_review_btn_container}>
-                               <button onClick={handleAddReview} className="btn btn-primary">Поделиться впечатлениями</button>
-                            </div>
-                        </div>
-                    </section>
-                </AnimateOnScroll>
+            {/* Hot Tours Section */}
+            <section id="hot-tours" className="section-padding">
+                <div className="container">
+                    <h2 className="section-title">Горящие туры</h2>
+                    {toursError && <p style={{textAlign: 'center', color: 'red'}}>Ошибка загрузки туров: {toursError.message}</p>}
+                    {!toursData && !toursError && <p style={{textAlign: 'center'}}>Загрузка горящих туров...</p>}
+                    <Carousel tours={hotTours} onTourInquiry={handleTourInquiry} />
+                </div>
+            </section>
 
-                <AnimateOnScroll>
-                    <section id="faq" className={styles.faq_section}>
-                        <div className="container">
-                            <h2 className="section-title">Отвечаем на важные вопросы</h2>
-                            <FAQ items={faqItems} />
-                        </div>
-                    </section>
-                </AnimateOnScroll>
-                
-                <ContactSection onFormSubmit={showNotification} />
+            {/* Popular Destinations Section */}
+            <section id="popular-destinations" className="section-padding light-bg">
+                <div className="container">
+                    <h2 className="section-title">Популярные направления</h2>
+                    <Carousel tours={popularTours} onTourInquiry={handleTourInquiry} />
+                </div>
+            </section>
 
-                <Modal isOpen={modalState.isOpen} onClose={closeModal} title={modalState.title}>
-                    {modalState.component}
-                </Modal>
-            </main>
+            {/* Special Offers Section */}
+            <section id="special-offers" className="section-padding">
+                <div className="container">
+                    <h2 className="section-title">Выгодные предложения</h2>
+                    <Carousel tours={specialOffers} onTourInquiry={handleTourInquiry} />
+                </div>
+            </section>
+
+            {/* Reviews Section */}
+            <section id="reviews" className="section-padding light-bg">
+                <div className="container">
+                    <h2 className="section-title">Отзывы наших клиентов</h2>
+                    {reviewsError && <p style={{textAlign: 'center', color: 'red'}}>Ошибка загрузки отзывов: {reviewsError.message}</p>}
+                    {!reviewsData && !reviewsError && <p style={{textAlign: 'center'}}>Загрузка отзывов...</p>}
+                    <Carousel reviews={publishedReviews} isReviewCarousel={true} onReadMore={handleReadMoreReview} />
+                    
+                    <div className={styles.add_review_btn_container}>
+                        <button onClick={() => setIsReviewModalOpen(true)} className="btn btn-primary">
+                            Оставить отзыв
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* FAQ Section */}
+            <section id="faq" className="section-padding">
+                <div className="container">
+                    <h2 className="section-title">Популярные вопросы</h2>
+                    <FAQ items={faqItems} />
+                </div>
+            </section>
+
+            {/* Contact Section */}
+            <ContactSection onFormSubmit={showNotification} />
+
+            {/* Modals */}
+            {/* Модальное окно деталей тура */}
+            <Modal isOpen={isTourModalOpen} onClose={() => setIsTourModalOpen(false)} title={selectedTour?.title}>
+                {selectedTour && (
+                    <div className="tour-details-modal-content">
+                        {selectedTour.image_url && 
+                            <img src={selectedTour.image_url} alt={selectedTour.title} style={{maxWidth: '100%', height: 'auto', borderRadius: '8px', marginBottom: '1rem'}} />
+                        }
+                        <p>{selectedTour.description}</p>
+                        <p><strong>Цена:</strong> от {selectedTour.price} {selectedTour.currency}</p>
+                        <p><strong>Категория:</strong> {selectedTour.category}</p>
+                        <button 
+                            onClick={() => {
+                                setIsTourModalOpen(false);
+                                handleSearchClick(); // Прокрутка к виджету Tourvisor
+                                showNotification('Ваша заявка на тур отправлена! Скоро свяжемся с вами.', 'success');
+                            }} 
+                            className="btn btn-primary"
+                            style={{marginTop: '1rem'}}
+                        >
+                            Оставить заявку на этот тур
+                        </button>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Модальное окно отзыва */}
+            <Modal isOpen={isReviewModalOpen} onClose={() => setIsReviewModalOpen(false)} title="Оставить отзыв">
+                <ReviewForm 
+                    onClose={() => setIsReviewModalOpen(false)} 
+                    onReviewSubmitted={() => showNotification('Ваш отзыв успешно отправлен и будет опубликован после модерации.', 'success')} 
+                    onFormSubmit={showNotification} // Для отображения уведомлений об ошибках/успехе
+                    initialMessage={selectedReview?.text ? `Отзыв на тур: ${selectedTour.title}` : ''}
+                />
+            </Modal>
+
+            {/* Модальное окно полного отзыва (для "Читать далее") */}
+            <Modal isOpen={selectedReview !== null && isReviewModalOpen === false} onClose={() => setSelectedReview(null)} title={selectedReview?.author}>
+                {selectedReview && (
+                    <div className="review-full-text-modal">
+                        <p style={{fontStyle: 'italic', marginBottom: '1rem'}}>"{selectedReview.text}"</p>
+                        <p style={{fontWeight: 'bold', textAlign: 'right'}}>- {selectedReview.author}</p>
+                        <p style={{fontSize: '0.8rem', textAlign: 'right', color: 'var(--gray-color)'}}>
+                            {new Date(selectedReview.date).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
+                )}
+            </Modal>
+
+
+            {/* Уведомление (всплывающее, не модальное) */}
+            <Notification
+                isOpen={notification.isOpen}
+                message={notification.message}
+                type={notification.type}
+                onClose={closeNotification}
+            />
         </>
     );
-}
-
-// ЭТО ГЛАВНОЕ ИЗМЕНЕНИЕ: Получение данных туров из Firestore и их сериализация
-export async function getStaticProps() {
-    try {
-        const toursCollectionRef = collection(db, "tours");
-        
-        // Запросы для получения туров по категориям, отсортированные по дате
-        const hotToursQuery = query(toursCollectionRef, where("category", "==", "hot"), orderBy("date", "desc"));
-        const popularToursQuery = query(toursCollectionRef, where("category", "==", "popular"), orderBy("date", "desc"));
-        const specialToursQuery = query(toursCollectionRef, where("category", "==", "special"), orderBy("date", "desc"));
-
-        // Выполняем все запросы параллельно
-        const [hotSnapshot, popularSnapshot, specialSnapshot] = await Promise.all([
-            getDocs(hotToursQuery),
-            getDocs(popularToursQuery),
-            getDocs(specialToursQuery),
-        ]);
-
-        // Вспомогательная функция для преобразования Firestore Timestamp в JSON-сериализуемые строки
-        const serializeTours = (snapshot) => {
-            return snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    // Преобразуем объекты Timestamp в строки ISO
-                    // Убедитесь, что 'createdAt' (или любое другое поле с датой) существует
-                    createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null,
-                    date: data.date ? data.date.toDate().toISOString() : null, // Пример для поля 'date'
-                };
-            });
-        };
-
-        // Сериализуем и фильтруем туры по категориям
-        const tours = {
-            hot: serializeTours(hotSnapshot),
-            popular: serializeTours(popularSnapshot),
-            special: serializeTours(specialSnapshot),
-        };
-        
-        return {
-            props: { tours: tours },
-            revalidate: 60, // Включаем регенерацию страницы каждые 60 секунд для обновления данных
-        };
-
-    } catch (error) {
-        // Обработка ошибок, если не удалось подключиться к базе или получить данные
-        console.error("Firebase fetch error in getStaticProps for tours:", error);
-        return {
-            props: { 
-                tours: { hot: [], popular: [], special: [] } // Возвращаем пустые массивы в случае ошибки
-            },
-        };
-    }
 }

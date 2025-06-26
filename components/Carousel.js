@@ -1,5 +1,6 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper';
+// ИСПРАВЛЕНО: Импорт модулей Swiper теперь из 'swiper/modules'
+import { Navigation, Pagination, Autoplay } from 'swiper/modules'; 
 import TourCard from './TourCard';
 import ReviewCard from './ReviewCard'; 
 
@@ -17,6 +18,7 @@ const Carousel = ({ tours, reviews, isReviewCarousel = false, onTourInquiry, onR
     }
 
     const swiperParams = {
+        // ИСПРАВЛЕНО: Модули теперь передаются корректно
         modules: [Navigation, Pagination, Autoplay],
         spaceBetween: 30,
         loop: items.length > 3, // Цикл включается, если элементов больше, чем может поместиться на экране
@@ -49,7 +51,7 @@ const Carousel = ({ tours, reviews, isReviewCarousel = false, onTourInquiry, onR
                     <SwiperSlide key={item.id || `slide-${index}`} style={{ height: 'auto' }}>
                         {isReviewCarousel 
                             ? <ReviewCard review={item} onReadMore={onReadMore} /> 
-                            : <TourCard tour={item} onDetailsClick={onTourInquiry} />
+                            : <TourCard tour={item} onTourInquiry={onTourInquiry} />
                         }
                     </SwiperSlide>
                 ))}

@@ -1,12 +1,10 @@
 // pages/index.js
 // Это главный публичный маршрут для домашней страницы.
 
+import React, { useState, useEffect } from 'react'; // ИСПРАВЛЕНО: Добавлен импорт React и хуков
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr'; // Для получения данных для каруселей и FAQ (если используются)
-
-// Удален импорт firebase, так как эта страница не использует его напрямую.
-// import { db } from '../lib/firebase'; 
 
 // Динамические импорты для секций (для оптимизации загрузки)
 const Hero = dynamic(() => import('../components/Hero'));
@@ -15,6 +13,7 @@ const ContactSection = dynamic(() => import('../components/ContactSection'));
 const FAQ = dynamic(() => import('../components/FAQ'));
 const Modal = dynamic(() => import('../components/Modal'));
 const Notification = dynamic(() => import('../components/Notification'));
+const ReviewForm = dynamic(() => import('../components/ReviewForm')); // Добавлен импорт ReviewForm
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false }); // Клиентский виджет
 
 // Вспомогательная функция для получения данных (для SWR)
@@ -34,7 +33,7 @@ export default function Home() {
     const [isTourModalOpen, setIsTourModalOpen] = useState(false);
     const [selectedTour, setSelectedTour] = useState(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-    const [selectedReview, setSelectedReview] = useState(null);
+    const [selectedReview, setSelectedReview] = useState(null); // Для полного текста отзыва
     const [notification, setNotification] = useState({ isOpen: false, type: 'info', message: '' });
 
     // Получение данных туров
@@ -82,8 +81,14 @@ export default function Home() {
      */
     const handleReadMoreReview = (review) => {
         setSelectedReview(review);
-        setIsReviewModalOpen(true);
+        // Открываем модальное окно, но не то, что для оставления отзыва
+        // Используем другое состояние или убедимся, что isReviewModalOpen для формы не активен
+        // Для простоты, здесь мы будем использовать тот же Modal, но с другим selectedReview.
+        // Если вы хотите ДВЕ РАЗНЫЕ модалки, то нужны отдельные состояния isFullReviewModalOpen.
+        // Пока обойдемся одним isReviewModalOpen и SelectedReview
+        setIsReviewModalOpen(true); // Используем то же модальное окно, что и для ReviewForm
     };
+
 
     /**
      * Показывает уведомление.
@@ -157,7 +162,7 @@ export default function Home() {
                     <Carousel reviews={publishedReviews} isReviewCarousel={true} onReadMore={handleReadMoreReview} />
                     
                     <div className={styles.add_review_btn_container}>
-                        <button onClick={() => setIsReviewModalOpen(true)} className="btn btn-primary">
+                        <button onClick={() => { setIsReviewModalOpen(true); setSelectedReview(null); }} className="btn btn-primary">
                             Оставить отзыв
                         </button>
                     </div>
@@ -201,19 +206,10 @@ export default function Home() {
                 )}
             </Modal>
 
-            {/* Модальное окно отзыва */}
-            <Modal isOpen={isReviewModalOpen} onClose={() => setIsReviewModalOpen(false)} title="Оставить отзыв">
-                <ReviewForm 
-                    onClose={() => setIsReviewModalOpen(false)} 
-                    onReviewSubmitted={() => showNotification('Ваш отзыв успешно отправлен и будет опубликован после модерации.', 'success')} 
-                    onFormSubmit={showNotification} // Для отображения уведомлений об ошибках/успехе
-                    initialMessage={selectedReview?.text ? `Отзыв на тур: ${selectedTour.title}` : ''}
-                />
-            </Modal>
-
-            {/* Модальное окно полного отзыва (для "Читать далее") */}
-            <Modal isOpen={selectedReview !== null && isReviewModalOpen === false} onClose={() => setSelectedReview(null)} title={selectedReview?.author}>
-                {selectedReview && (
+            {/* Модальное окно отзыва: используется и для оставления, и для полного текста отзыва */}
+            <Modal isOpen={isReviewModalOpen || selectedReview !== null} onClose={() => { setIsReviewModalOpen(false); setSelectedReview(null); }} 
+                title={selectedReview ? selectedReview.author : "Оставить отзыв"}>
+                {selectedReview ? ( // Если выбран отзыв для чтения, показываем полный текст
                     <div className="review-full-text-modal">
                         <p style={{fontStyle: 'italic', marginBottom: '1rem'}}>"{selectedReview.text}"</p>
                         <p style={{fontWeight: 'bold', textAlign: 'right'}}>- {selectedReview.author}</p>
@@ -221,6 +217,13 @@ export default function Home() {
                             {new Date(selectedReview.date).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                     </div>
+                ) : ( // Иначе показываем форму для оставления отзыва
+                    <ReviewForm 
+                        onClose={() => setIsReviewModalOpen(false)} 
+                        onReviewSubmitted={() => showNotification('Ваш отзыв успешно отправлен и будет опубликован после модерации.', 'success')} 
+                        onFormSubmit={showNotification} // Для отображения уведомлений об ошибках/успехе
+                        initialMessage={selectedTour?.title ? `Отзыв на тур: ${selectedTour.title}` : ''} // Предзаполнение, если тур выбран
+                    />
                 )}
             </Modal>
 

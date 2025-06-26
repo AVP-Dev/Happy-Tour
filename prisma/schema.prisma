@@ -14,15 +14,12 @@ datasource db {
 // Модель Tour (туры)
 model Tour {
   // id тура, генерируется UUID по умолчанию, хранится как TEXT в SQLite
-  // УДАЛЕНО: @db.Text, так как String в Prisma по умолчанию маппируется на TEXT в SQLite
   id          String    @id @default(uuid()) @map("id") 
   // Название тура, обязательное поле
   title       String
   // Описание тура, может быть пустым
-  // УДАЛЕНО: @db.Text, так как String в Prisma по умолчанию маппируется на TEXT в SQLite
   description String?   
   // Цена тура, число с плавающей точкой
-  // УДАЛЕНО: @db.Real, так как Float в Prisma по умолчанию маппируется на REAL в SQLite
   price       Float     
   // Валюта, по умолчанию "BYN"
   currency    String    @default("BYN")
@@ -42,7 +39,6 @@ model Tour {
 // Модель Review (отзывы)
 model Review {
   // id отзыва, генерируется UUID по умолчанию, хранится как TEXT в SQLite
-  // УДАЛЕНО: @db.Text, так как String в Prisma по умолчанию маппируется на TEXT в SQLite
   id          String    @id @default(uuid()) @map("id") 
   // Автор отзыва
   author      String
@@ -53,22 +49,27 @@ model Review {
   // Статус отзыва ('pending' - на модерации, 'published' - опубликован), по умолчанию "pending"
   status      String    @default("pending")
   // Время последнего обновления записи, обновляется автоматически
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_ad")
 
   // Соответствие имени таблицы в базе данных
   @@map("reviews")
 }
 
-// Примечание: Модель User НЕ НУЖНА для Firebase Auth, так как пользователей нет, а админы аутентифицируются через Firebase.
-// Если вы захотите хранить ДОПОЛНИТЕЛЬНЫЕ данные об администраторах (не логин/пароль),
-// можете добавить модель AdminUserExtra, как обсуждалось ранее.
-// model AdminUserExtra {
-//     id          String    @id @default(uuid()) @map("id") @db.Text // Соответствует UID из Firebase Auth
-//     email       String    @unique
-//     name        String?
-//     // Дополнительные поля
-//     createdAt   DateTime  @default(now()) @map("created_at")
-//     updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
-//
-//     @@map("admin_user_extra")
-// }
+// НОВАЯ МОДЕЛЬ: AdminUser (для управления администраторами)
+model AdminUser {
+  // id пользователя, генерируется UUID по умолчанию, хранится как TEXT в SQLite
+  id            String    @id @default(uuid()) @map("id")
+  // Email пользователя, должен быть уникальным
+  email         String    @unique @map("email")
+  // Хеш пароля пользователя (обязательно хешированный)
+  passwordHash  String    @map("password_hash")
+  // Роль пользователя ('admin' или 'super_admin'), по умолчанию 'admin'
+  role          String    @default("admin") @map("role")
+  // Время создания записи
+  createdAt     DateTime  @default(now()) @map("created_at")
+  // Время последнего обновления записи
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  // Соответствие имени таблицы в базе данных
+  @@map("admin_users")
+}

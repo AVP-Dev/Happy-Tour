@@ -1,6 +1,7 @@
 import React from 'react';
-import { FiGrid, FiMessageSquare, FiLogOut } from 'react-icons/fi';
+import { FiGrid, FiMessageSquare, FiLogOut, FiUsers } from 'react-icons/fi'; // ДОБАВЛЕНО: FiUsers
 import styles from '../../styles/Admin.module.css';
+import { useSession } from 'next-auth/react'; // ДОБАВЛЕНО: Для проверки роли
 
 const NavLink = ({ icon, label, isActive, onClick }) => (
     <a
@@ -19,6 +20,7 @@ const NavLink = ({ icon, label, isActive, onClick }) => (
 // Принимаем className как пропс
 export default function Sidebar({ className, activeTab, setActiveTab, user, onLogout }) {
     const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'A';
+    const { data: session } = useSession(); // Получаем сессию для проверки роли
 
     return (
         // Применяем полученный className к корневому элементу
@@ -40,6 +42,15 @@ export default function Sidebar({ className, activeTab, setActiveTab, user, onLo
                         isActive={activeTab === 'reviews'}
                         onClick={() => setActiveTab('reviews')}
                     />
+                    {/* НОВАЯ ССЫЛКА: Управление администраторами */}
+                    {session?.user?.role === 'super_admin' && ( // Показываем только для супер-админов
+                        <NavLink
+                            icon={<FiUsers size={20} />}
+                            label="Управление администраторами"
+                            isActive={activeTab === 'users'}
+                            onClick={() => setActiveTab('users')}
+                        />
+                    )}
                 </nav>
             </div>
 

@@ -1,228 +1,120 @@
-// pages/admin/users.js
-// Страница для управления учетными записями администраторов.
-// Доступна только для супер-администраторов.
+// pages/api/admin/users.js
+// API-маршрут для управления учетными записями администраторов (CRUD).
+// Доступно только для авторизованных пользователей с ролью 'super_admin'.
+// НЕ ИМПОРТИРУЕТ КЛИЕНТСКИЕ КОМПОНЕНТЫ ИЛИ CSS.
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react'; // Для проверки сессии NextAuth
-import { FiPlus, FiTrash2, FiUser, FiAlertCircle } from 'react-icons/fi'; // Иконки
-import useSWR from 'swr'; // Для получения данных
-import styles from '../../styles/Admin.module.css'; // Стили
-import NotificationModal from '../../components/admin/NotificationModal'; // Модальное окно уведомлений
+import { getToken } from 'next-auth/jwt'; // Для получения токена сессии
+import prisma from '../../../lib/prisma'; // Prisma Client
+import bcrypt from 'bcryptjs'; // Для хеширования паролей
 
-// Вспомогательная функция для получения данных
-const fetcher = async (url) => {
-    const res = await fetch(url);
-    if (!res.ok) {
-        const error = new Error('An error occurred while fetching the data.');
-        error.info = await res.json();
-        error.status = res.status;
-        throw error;
-    }
-    return res.json();
-};
+export default async function handler(req, res) {
+  // 1. Проверка аутентификации и авторизации (только для супер-админа)
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-export default function AdminUsersPage() {
-    const { data: session, status } = useSession({ required: true }); // Получаем сессию NextAuth
-    const [email, setEmail] = useState(''); // Состояние для email нового админа
-    const [password, setPassword] = useState(''); // Состояние для пароля нового админа
-    const [role, setRole] = useState('admin'); // Состояние для роли нового админа
-    const [isSubmitting, setIsSubmitting] = useState(false); // Состояние отправки формы
-    const [notification, setNotification] = useState({ isOpen: false, type: 'info', message: '', isConfirm: false, onConfirm: () => {} });
+  if (!token) {
+    return res.status(401).json({ message: 'Не авторизован.' });
+  }
 
-    // Получаем список администраторов с помощью SWR
-    const { data: adminUsers, error, isLoading, mutate } = useSWR(
-        status === 'authenticated' && session?.user?.role === 'super_admin' ? '/api/admin/users' : null,
-        fetcher
-    );
+  // Проверяем роль: только супер-админ может управлять другими админами
+  if (token.role !== 'super_admin') {
+    return res.status(403).json({ message: 'Недостаточно прав. Только супер-администраторы могут управлять учетными записями.' });
+  }
 
-    // Функция для показа уведомлений
-    const showNotification = (message, type = 'info', isConfirm = false, onConfirm = () => {}) => {
-        setNotification({ isOpen: true, message, type, isConfirm, onConfirm });
-    };
-
-    // Функция для закрытия уведомлений
-    const closeNotification = () => {
-        setNotification(prev => ({ ...prev, isOpen: false }));
-    };
-
-    /**
-     * Обработчик добавления нового администратора.
-     * @param {Event} e - Событие формы.
-     */
-    const handleAddAdmin = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        if (!email || !password) {
-            showNotification('Email и пароль обязательны.', 'error');
-            setIsSubmitting(false);
-            return;
+  try {
+    if (req.method === 'GET') {
+      // Получение списка всех администраторов (без хешей паролей)
+      const adminUsers = await prisma.adminUser.findMany({
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          createdAt: true,
+        },
+        orderBy: {
+            createdAt: 'asc', // Сортировка по дате создания
         }
+      });
+      return res.status(200).json(adminUsers);
+    } 
+    
+    else if (req.method === 'POST') {
+      // Добавление нового администратора
+      const { email, password, role } = req.body;
 
-        try {
-            const res = await fetch('/api/admin/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, role }),
-            });
+      if (!email || !password || !role) {
+        return res.status(400).json({ message: 'Email, пароль и роль обязательны.' });
+      }
 
-            const result = await res.json();
-            if (!res.ok) throw new Error(result.message);
+      // Проверяем, существует ли пользователь с таким email
+      const existingUser = await prisma.adminUser.findUnique({ where: { email } });
+      if (existingUser) {
+        return res.status(409).json({ message: 'Пользователь с таким email уже существует.' });
+      }
 
-            showNotification('Администратор успешно добавлен!', 'success');
-            setEmail('');
-            setPassword('');
-            setRole('admin');
-            mutate(); // Обновляем список администраторов
-        } catch (err) {
-            console.error('Ошибка добавления администратора:', err);
-            showNotification(`Ошибка добавления: ${err.message}`, 'error');
-        } finally {
-            setIsSubmitting(false);
+      // Хешируем пароль
+      const salt = bcrypt.genSaltSync(10);
+      const passwordHash = bcrypt.hashSync(password, salt);
+
+      const newAdmin = await prisma.adminUser.create({
+        data: {
+          email,
+          passwordHash,
+          role: ['admin', 'super_admin'].includes(role) ? role : 'admin', // Защита от некорректной роли
+        },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          createdAt: true,
         }
-    };
+      });
+      return res.status(201).json({ message: 'Администратор успешно добавлен.', admin: newAdmin });
+    } 
+    
+    else if (req.method === 'DELETE') {
+      // Удаление администратора
+      const { id } = req.body;
 
-    /**
-     * Обработчик удаления администратора.
-     * @param {string} adminId - ID администратора для удаления.
-     */
-    const handleDeleteAdmin = (adminId) => {
-        showNotification(
-            'Вы уверены, что хотите удалить этого администратора?',
-            'info', // тип может быть 'info' для запроса
-            true, // isConfirm: true для показа кнопок подтверждения
-            async () => {
-                closeNotification(); // Закрываем модальное окно перед выполнением
-                try {
-                    const res = await fetch('/api/admin/users', {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: adminId }),
-                    });
+      if (!id) {
+        return res.status(400).json({ message: 'ID администратора обязателен.' });
+      }
 
-                    const result = await res.json();
-                    if (!res.ok) throw new Error(result.message);
+      // Не позволяем супер-админу удалить самого себя через этот API (если он единственный)
+      if (token.id === id) {
+          const adminCount = await prisma.adminUser.count();
+          if (adminCount <= 1) {
+              return res.status(400).json({ message: 'Нельзя удалить последнего администратора.' }); // Изменено на "последнего администратора"
+          }
+          // Если есть другие админы, супер-админ может удалить себя.
+          // Но лучше требовать, чтобы был минимум один super_admin.
+          if (token.role === 'super_admin') {
+              const superAdminCount = await prisma.adminUser.count({ where: { role: 'super_admin' } });
+              if (superAdminCount <= 1 && userToDelete.role === 'super_admin') { // Проверяем, что удаляемый тоже супер-админ
+                  return res.status(400).json({ message: 'Нельзя удалить единственного супер-администратора.' });
+              }
+          }
+      }
 
-                    showNotification('Администратор успешно удален!', 'success');
-                    mutate(); // Обновляем список администраторов
-                } catch (err) {
-                    console.error('Ошибка удаления администратора:', err);
-                    showNotification(`Ошибка удаления: ${err.message}`, 'error');
-                }
-            }
-        );
-    };
+      // Не позволяем обычному админу удалить кого-либо, включая себя.
+      // Эта проверка уже есть в начале (token.role !== 'super_admin'), но для DELETE она особенно важна.
+      // Дополнительная проверка, чтобы обычный админ не мог удалить супер-админа
+      const userToDelete = await prisma.adminUser.findUnique({ where: { id } });
+      if (userToDelete && userToDelete.role === 'super_admin' && token.role !== 'super_admin') {
+          return res.status(403).json({ message: 'Недостаточно прав для удаления супер-администратора.' });
+      }
 
-    // Если сессия загружается или пользователь не супер-админ, показываем заглушку
-    if (status === 'loading') {
-        return <p>Загрузка...</p>;
+      await prisma.adminUser.delete({ where: { id } });
+      return res.status(200).json({ message: 'Администратор успешно удален.' });
+    } 
+    
+    else {
+      // Неподдерживаемый метод HTTP
+      res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    if (status === 'unauthenticated' || session?.user?.role !== 'super_admin') {
-        return (
-            <div className={styles.adminContainer}>
-                <h2 className="section-title" style={{textAlign: 'left'}}>Управление администраторами</h2>
-                <div className={`${styles.card} ${styles.errorCard}`}>
-                    <FiAlertCircle size={24} />
-                    <p>У вас недостаточно прав для доступа к этой странице.</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (isLoading) return <p>Загрузка списка администраторов...</p>;
-    if (error) return <p>Ошибка загрузки администраторов: {error.message}</p>;
-
-    return (
-        <div className={styles.adminContainer}>
-            <h2 className="section-title" style={{textAlign: 'left'}}>Управление администраторами</h2>
-
-            {/* Форма добавления нового администратора */}
-            <div className={styles.card}>
-                <h3>Добавить нового администратора</h3>
-                <form onSubmit={handleAddAdmin} className={styles.formGrid} style={{marginTop: '1.5rem'}}>
-                    <div className={styles.formGroup}>
-                        <label htmlFor="email">Email</label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="admin@example.com"
-                            required
-                        />
-                    </div>
-                    <div className={styles.formGroup}>
-                        <label htmlFor="password">Пароль</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            required
-                        />
-                    </div>
-                    <div className={styles.formGroup}>
-                        <label htmlFor="role">Роль</label>
-                        <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
-                            <option value="admin">Администратор</option>
-                            <option value="super_admin">Супер-администратор</option>
-                        </select>
-                    </div>
-                    <div className={styles.formGroup} style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem'}}>
-                        <button type="submit" className={`${styles.button} ${styles.primaryButton}`} disabled={isSubmitting}>
-                            <FiPlus size={16} />
-                            {isSubmitting ? 'Добавление...' : 'Добавить администратора'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            {/* Список существующих администраторов */}
-            <div className={`${styles.card} ${styles.usersListCard}`}>
-                <h3>Существующие администраторы</h3>
-                {!adminUsers || adminUsers.length === 0 ? (
-                    <p className={styles.noItems}>Администраторы пока не добавлены.</p>
-                ) : (
-                    <div className={styles.adminUserGrid}>
-                        {adminUsers.map((user) => (
-                            <div key={user.id} className={styles.adminUserItem}>
-                                <div className={styles.adminUserInfo}>
-                                    <FiUser size={20} className={styles.adminUserIcon} />
-                                    <div>
-                                        <strong>{user.email}</strong>
-                                        <span className={styles.adminUserRole}>{user.role === 'super_admin' ? 'Супер-администратор' : 'Администратор'}</span>
-                                        <span className={styles.adminUserDate}>Создан: {new Date(user.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                </div>
-                                <div className={styles.adminUserActions}>
-                                    {/* Не позволяем удалять себя, если есть такая логика, и не единственного супер-админа */}
-                                    {session?.user?.id !== user.id && ( // Не позволяем удалить текущего залогиненного пользователя
-                                        <button 
-                                            onClick={() => handleDeleteAdmin(user.id)} 
-                                            className={`${styles.button} ${styles.iconButton} ${styles.danger}`} 
-                                            title="Удалить администратора"
-                                        >
-                                            <FiTrash2 size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Модальное окно уведомлений */}
-            <NotificationModal 
-                isOpen={notification.isOpen}
-                message={notification.message}
-                type={notification.type}
-                isConfirm={notification.isConfirm}
-                onConfirm={notification.onConfirm}
-                onCancel={closeNotification}
-            />
-        </div>
-    );
+  } catch (error) {
+    console.error('Ошибка в API управления администраторами:', error);
+    return res.status(500).json({ message: 'Внутренняя ошибка сервера.' });
+  }
 }

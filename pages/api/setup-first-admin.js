@@ -21,6 +21,7 @@ export default async function handler(req, res) {
     // Проверяем, есть ли уже какие-либо администраторы в базе данных
     const existingAdmins = await prisma.adminUser.count();
     if (existingAdmins > 0) {
+      console.warn('Попытка зарегистрировать администратора, когда он уже существует.');
       return res.status(403).json({ message: 'Администратор уже существует. Этот маршрут только для первой регистрации.' });
     }
 
@@ -37,10 +38,16 @@ export default async function handler(req, res) {
       },
     });
 
+    console.log(`Успешно зарегистрирован первый супер-администратор: ${newAdmin.email}`);
     return res.status(201).json({ message: 'Первый супер-администратор успешно зарегистрирован!', email: newAdmin.email });
 
   } catch (error) {
-    console.error('Ошибка при регистрации первого администратора:', error);
+    // УЛУЧШЕННОЕ ЛОГИРОВАНИЕ
+    console.error('Ошибка при регистрации первого администратора:', error.message);
+    if (error.code) { // Prisma Client errors have a 'code' property
+      console.error('Prisma Error Code:', error.code);
+      console.error('Prisma Error Meta:', error.meta);
+    }
     return res.status(500).json({ message: 'Ошибка сервера при регистрации администратора.' });
   }
 }

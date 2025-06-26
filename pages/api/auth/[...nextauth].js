@@ -26,7 +26,9 @@ export const authOptions = {
       },
       // Функция авторизации: здесь происходит проверка учетных данных
       async authorize(credentials, req) {
+        console.log("NextAuth: Попытка авторизации для email:", credentials?.email);
         if (!credentials.email || !credentials.password) {
+            console.warn("NextAuth: Email или пароль не предоставлены.");
             return null; // Если email или пароль отсутствуют, авторизация невозможна
         }
 
@@ -37,15 +39,20 @@ export const authOptions = {
           });
 
           // Если администратор не найден, или пароль не совпадает
-          if (!adminUser || !bcrypt.compareSync(credentials.password, adminUser.passwordHash)) {
-            console.log("Неверный Email или пароль для:", credentials.email);
-            return null; // Возвращаем null, если аутентификация не удалась
+          if (!adminUser) {
+            console.warn("NextAuth: Пользователь не найден для email:", credentials.email);
+            return null; // Возвращаем null, если пользователь не найден
+          }
+
+          // Сравнение паролей
+          const isPasswordValid = bcrypt.compareSync(credentials.password, adminUser.passwordHash);
+          if (!isPasswordValid) {
+            console.warn("NextAuth: Неверный пароль для email:", credentials.email);
+            return null; // Возвращаем null, если пароль не совпадает
           }
 
           // 2. Если аутентификация успешна, возвращаем объект пользователя.
-          // Только 'id', 'email' и 'role' необходимы для сессии NextAuth.
-          // Не возвращайте 'passwordHash' или другие чувствительные данные.
-          console.log("Авторизация успешна для:", adminUser.email);
+          console.log("NextAuth: Авторизация успешна для email:", adminUser.email);
           return {
             id: adminUser.id,
             email: adminUser.email,
@@ -53,7 +60,12 @@ export const authOptions = {
           };
 
         } catch (error) {
-          console.error("Ошибка авторизации:", error.message);
+          console.error("NextAuth: Ошибка в функции авторизации:", error.message);
+          // Дополнительное логирование для отладки Prisma ошибок
+          if (error.code) {
+              console.error("Prisma Error Code:", error.code);
+              console.error("Prisma Error Meta:", error.meta);
+          }
           return null; // В случае ошибки возвращаем null
         }
       }

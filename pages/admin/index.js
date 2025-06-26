@@ -4,7 +4,7 @@ import useSWR, { mutate } from 'swr';
 import { useSession, signOut, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { FiMenu, FiX } from 'react-icons/fi';
-import styles from '../../styles/Admin.module.css';
+import styles from '../../styles/Admin.module.css'; // ИСПРАВЛЕНО: Добавлен импорт стилей для admin
 
 import Sidebar from '../../components/admin/Sidebar';
 
@@ -14,7 +14,6 @@ const NotificationModal = dynamic(() => import('../../components/admin/Notificat
 // ИСПРАВЛЕННЫЙ ПУТЬ: Убедитесь, что './users' находится в той же директории, что и index.js
 const AdminUsersPage = dynamic(() => import('./users')); 
 
-// fetcher остается без изменений
 const fetcher = async (url) => {
     const res = await fetch(url);
     if (!res.ok) {

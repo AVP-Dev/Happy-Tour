@@ -81,16 +81,15 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'ID администратора обязателен.' });
       }
 
-      // 1. Не позволяем супер-админу удалить себя, если он единственный супер-админ.
+      // 1. Не позволяем супер-админу удалить самого себя, если он единственный супер-админ.
       if (token.id === id && token.role === 'super_admin') {
           const superAdminCount = await prisma.adminUser.count({ where: { role: 'super_admin' } });
           if (superAdminCount <= 1) {
-              return res.status(400).json({ message: 'Нельзя удалить единственного супер-администратора.' });
+              return res.status(400).json({ message: 'Нельзя удалить единственного супер-администратора.' }); 
           }
       }
 
       // 2. Не позволяем обычному админу удалить кого-либо, или супер-админа.
-      // Эта проверка уже есть в начале (token.role !== 'super_admin'), но для DELETE она особенно важна.
       const userToDelete = await prisma.adminUser.findUnique({ where: { id } });
       if (userToDelete && userToDelete.role === 'super_admin' && token.role !== 'super_admin') {
           return res.status(403).json({ message: 'Недостаточно прав для удаления супер-администратора.' });

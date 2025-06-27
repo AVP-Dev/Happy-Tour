@@ -154,7 +154,7 @@ export default function AdminPage() {
                     <AdminUsersPage 
                         showNotification={showNotification} 
                         showConfirm={showConfirm}
-                        onDataChange={() => handleDataChange('users')}\
+                        onDataChange={() => handleDataChange('users')}
                         handleUnauthorized={handleUnauthorized}
                     />
                 )}

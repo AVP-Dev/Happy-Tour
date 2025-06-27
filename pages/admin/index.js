@@ -3,15 +3,15 @@ import dynamic from 'next/dynamic';
 import useSWR, { mutate } from 'swr';
 import { useSession, signOut, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { FiMenu, FiX } from 'react-icons/fi';
-import styles from '../../styles/Admin.module.css'; // ИСПРАВЛЕНО: Добавлен импорт стилей для admin
+// ИСПРАВЛЕНИЕ: Добавлен импорт всех необходимых иконок
+import { FiMenu, FiX, FiPlus, FiAlertCircle, FiCheck, FiTrash2, FiEdit, FiSlash } from 'react-icons/fi'; 
+import styles from '../../styles/Admin.module.css'; 
 
 import Sidebar from '../../components/admin/Sidebar';
 
 const TourManager = dynamic(() => import('../../components/admin/TourManager'));
 const ReviewManager = dynamic(() => import('../../components/admin/ReviewManager'));
 const NotificationModal = dynamic(() => import('../../components/admin/NotificationModal'));
-// ИСПРАВЛЕННЫЙ ПУТЬ: Убедитесь, что './users' находится в той же директории, что и index.js
 const AdminUsersPage = dynamic(() => import('./users')); 
 
 const fetcher = async (url) => {
@@ -32,51 +32,56 @@ export default function AdminPage() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [notification, setNotification] = useState({ isOpen: false, type: 'info', message: '', isConfirm: false, onConfirm: () => {} });
 
-    const { data: toursData, error: toursError } = useSWR('/api/admin/tours', fetcher);
-    const { data: reviewsData, error: reviewsError } = useSWR('/api/admin/reviews', fetcher);
-    
-    const groupedTours = toursData?.reduce((acc, tour) => {
-        acc[tour.category] = acc[tour.category] || [];
-        acc[tour.category].push(tour);
-        return acc;
-    }, {});
+    // SWR для данных туров
+    const { data: toursData, error: toursError, isLoading: toursLoading } = useSWR('/api/admin/tours', fetcher);
+    // SWR для данных отзывов
+    const { data: reviewsData, error: reviewsError, isLoading: reviewsLoading } = useSWR('/api/admin/reviews', fetcher);
+    // SWR для данных пользователей (админов) - будет загружаться только для super_admin
+    const { data: adminUsersData, error: adminUsersError, isLoading: adminUsersLoading } = useSWR(
+        activeTab === 'users' && session?.user?.role === 'super_admin' ? '/api/admin/users' : null, 
+        fetcher
+    );
 
-    useEffect(() => {
-        if (isSidebarOpen) {
-            document.body.classList.add('no-scroll');
-        } else {
-            document.body.classList.remove('no-scroll');
-        }
-        return () => document.body.classList.remove('no-scroll');
-    }, [isSidebarOpen]);
-
+    // Функция для показа уведомлений
     const showNotification = (message, type = 'info', isConfirm = false, onConfirm = () => {}) => {
         setNotification({ isOpen: true, message, type, isConfirm, onConfirm });
     };
 
-    const showConfirm = (message, onConfirm) => {
-        showNotification(message, 'info', true, onConfirm);
+    // Функция для показа подтверждения (использует showNotification с isConfirm)
+    const showConfirm = (message, onConfirmCallback) => {
+        showNotification(message, 'info', true, onConfirmCallback);
     };
 
+    // Функция для закрытия уведомлений
     const closeNotification = () => {
         setNotification(prev => ({ ...prev, isOpen: false }));
     };
 
-    const handleDataChange = (tab) => {
-        if (tab === 'tours') mutate('/api/admin/tours');
-        if (tab === 'reviews') mutate('/api/admin/reviews');
-        if (tab === 'users') mutate('/api/admin/users');
+    // Функция для обновления данных после изменений
+    const handleDataChange = (dataType) => {
+        if (dataType === 'tours') {
+            mutate('/api/admin/tours');
+        } else if (dataType === 'reviews') {
+            mutate('/api/admin/reviews');
+        } else if (dataType === 'users') {
+            mutate('/api/admin/users');
+        }
     };
 
-    const handleLogout = async () => {
-        await signOut({ callbackUrl: '/admin/login' });
+    // Обработчик для Unauthorized ошибок
+    const handleUnauthorized = () => {
+        showNotification('Сессия истекла или у вас нет прав доступа. Пожалуйста, войдите снова.', 'error', false, () => {
+            signOut({ callbackUrl: '/admin/login' });
+        });
     };
 
+    // Проверка статуса сессии
     if (status === 'loading') {
         return (
             <div className={styles.adminLayout}>
                 <div className={styles.loadingPage}>
-                    <p>Загрузка админ-панели...</p>
+                    <FiAlertCircle size={50} className={styles.loadingIcon} />
+                    <p>Загрузка сессии...</p>
                 </div>
             </div>
         );
@@ -87,38 +92,61 @@ export default function AdminPage() {
         return null;
     }
 
+    // Удаление файла setup-first-admin.js (после того как админ создан и вход работает)
+    useEffect(() => {
+        // Этот код не будет выполняться на клиенте, но служит напоминанием
+        // IF (process.env.NODE_ENV === 'production') {
+        //     // Запустите команду удаления файла на вашем сервере
+        //     // Например, через SSH: `rm /path/to/your/project/pages/api/setup-first-admin.js`
+        // }
+    }, []);
+
     return (
         <div className={styles.adminLayout}>
             <Sidebar 
                 className={isSidebarOpen ? styles.sidebarOpen : ''}
-                activeTab={activeTab}
+                activeTab={activeTab} 
                 setActiveTab={setActiveTab}
                 user={session?.user}
-                onLogout={handleLogout}
+                onLogout={() => signOut({ callbackUrl: '/admin/login' })}
             />
-
-            {isSidebarOpen && <div className={styles.pageOverlay} onClick={() => setSidebarOpen(false)} />}
+            {isSidebarOpen && <div className={styles.pageOverlay} onClick={() => setSidebarOpen(false)}></div>}
 
             <div className={styles.mainContent}>
-                <button onClick={() => setSidebarOpen(!isSidebarOpen)} className={styles.mobileMenuButton}>
-                    {isSidebarOpen ? <FiX /> : <FiMenu />}
-                </button>
-
+                <div className={styles.contentHeader}>
+                    {/* Кнопка для открытия/закрытия сайдбара на мобильных */}
+                    <button 
+                        className={styles.mobileMenuButton} 
+                        onClick={() => setSidebarOpen(!isSidebarOpen)}
+                        aria-label={isSidebarOpen ? "Закрыть меню" : "Открыть меню"}
+                    >
+                        {isSidebarOpen ? <FiX /> : <FiMenu />}
+                    </button>
+                    <h1>{
+                        activeTab === 'tours' ? 'Управление турами' :
+                        activeTab === 'reviews' ? 'Управление отзывами' :
+                        activeTab === 'users' ? 'Управление администраторами' : ''
+                    }</h1>
+                </div>
+                
                 {activeTab === 'tours' && (
                     <TourManager 
-                        tours={groupedTours}
+                        tours={toursData}
+                        isLoading={toursLoading} 
                         onDataChange={() => handleDataChange('tours')} 
-                        showNotification={showNotification} 
+                        showNotification={showNotification}
                         showConfirm={showConfirm}
+                        handleUnauthorized={handleUnauthorized}
                     />
                 )}
                 {activeTab === 'reviews' && (
                    <ReviewManager 
                         reviews={reviewsData}
+                        isLoading={reviewsLoading}
                         onDataChange={() => handleDataChange('reviews')} 
                         showNotification={showNotification}
                         showConfirm={showConfirm}
-                        handleUnauthorized={() => signOut({ callbackUrl: '/admin/login' })}
+                        handleUnauthorized={handleUnauthorized}
                     />
                 )}
                 {activeTab === 'users' && session?.user?.role === 'super_admin' && (
@@ -126,7 +154,7 @@ export default function AdminPage() {
                         showNotification={showNotification} 
                         showConfirm={showConfirm}
                         onDataChange={() => handleDataChange('users')}
-                        handleUnauthorized={() => signOut({ callbackUrl: '/admin/login' })}
+                        handleUnauthorized={handleUnauthorized}
                     />
                 )}
             </div>

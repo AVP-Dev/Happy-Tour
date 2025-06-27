@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+// УДАЛЕНО: import dynamic from 'next/dynamic'; // Больше не нужен для прямых импортов
 import useSWR, { mutate } from 'swr';
 import { useSession, signOut, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -9,10 +9,11 @@ import styles from '../../styles/Admin.module.css';
 
 import Sidebar from '../../components/admin/Sidebar';
 
-const TourManager = dynamic(() => import('../../components/admin/TourManager'));
-const ReviewManager = dynamic(() => import('../../components/admin/ReviewManager'));
-const NotificationModal = dynamic(() => import('../../components/admin/NotificationModal'));
-const AdminUsersPage = dynamic(() => import('./users')); 
+// ИЗМЕНЕНИЕ ЗДЕСЬ: Прямой импорт компонентов вместо dynamic
+import TourManager from '../../components/admin/TourManager';
+import ReviewManager from '../../components/admin/ReviewManager';
+import NotificationModal from '../../components/admin/NotificationModal';
+import AdminUsersPage from './users'; 
 
 const fetcher = async (url) => {
     const res = await fetch(url);
@@ -153,7 +154,7 @@ export default function AdminPage() {
                     <AdminUsersPage 
                         showNotification={showNotification} 
                         showConfirm={showConfirm}
-                        onDataChange={() => handleDataChange('users')}
+                        onDataChange={() => handleDataChange('users')}\
                         handleUnauthorized={handleUnauthorized}
                     />
                 )}

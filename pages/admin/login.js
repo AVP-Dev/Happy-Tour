@@ -16,13 +16,14 @@ const LoginPage = () => {
         setLoading(true);
         const res = await signIn('credentials', {
             redirect: false,
-            username: email,
+            email, 
             password,
         });
         
         if (res.ok) {
             router.push('/admin');
         } else {
+            // Улучшаем обработку ошибок для более информативного сообщения
             router.push('/admin/login?error=CredentialsSignin', undefined, { shallow: true });
             setLoading(false);
         }

@@ -1,8 +1,8 @@
-// components/admin/TourManager.js
+// pages/admin/TourManager.js
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { FiChevronDown, FiEdit2, FiTrash2, FiPlusCircle } from 'react-icons/fi';
+import { FiChevronDown, FiEdit2, FiTrash2, FiPlusCircle } from 'react-icons/fi'; // FiPlusCircle уже импортирован
 import styles from '../../styles/Admin.module.css';
 
 // Динамически импортируем форму, чтобы она не влияла на начальную загрузку
@@ -25,7 +25,16 @@ const TourCategory = ({ categoryName, tours, onEdit, onDelete }) => {
                     ) : (
                         tours.map((tour) => (
                             <div key={tour.id} className={styles.tourItemAdmin}>
-                                <img src={tour.image} alt={tour.title} className={styles.tourImageAdmin} onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder.png'; }} />
+                                {/* ИСПРАВЛЕНО: используем tour.image_url вместо tour.image */}
+                                <img
+                                    src={tour.image_url} //
+                                    alt={tour.title}
+                                    className={styles.tourImageAdmin}
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/placeholder.png'; // Заглушка изображения при ошибке
+                                    }}
+                                />
                                 <div className={styles.tourInfoAdmin}>
                                     <strong>{tour.title}</strong>
                                     <p>{tour.description}</p>
@@ -110,7 +119,7 @@ export default function TourManager({ tours, onDataChange, showNotification, sho
             </div>
 
             {isModalOpen && (
-                <TourForm 
+                <TourForm
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     config={formConfig}

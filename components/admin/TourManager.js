@@ -4,14 +4,15 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { FiChevronDown, FiEdit2, FiTrash2, FiPlusCircle } from 'react-icons/fi';
+// ИСПРАВЛЕНО: Добавлен FiPlus в импорт для кнопки "Добавить тур"
+import { FiChevronDown, FiEdit2, FiTrash2, FiPlus, FiPlusCircle } from 'react-icons/fi';
 import styles from '../../styles/Admin.module.css';
 
 // Удален импорт firebase.js, так как TourManager не использует его напрямую.
 // import { auth, db, storage } from '../../lib/firebase'; 
 
 // Динамически импортируем форму TourForm, чтобы она не влияла на начальную загрузку
-const TourForm = dynamic(() => import('../../components/admin/TourForm'));
+const TourForm = dynamic(() => import('./TourForm')); // ИЗМЕНЕНО: Исправлен относительный путь к TourForm
 
 /**
  * Компонент TourCategory отображает туры в рамках одной категории в виде аккордеона.
@@ -38,7 +39,7 @@ const TourCategory = ({ categoryName, tours, onEdit, onDelete }) => {
                         <div className={styles.tourGrid}> {/* Добавлен класс для сетки туров */}
                             {tours.map((tour) => (
                                 <div key={tour.id} className={styles.tourItemAdmin}>
-                                    {/* ИЗМЕНЕНО: src теперь использует tour.image_url */}
+                                    {/* ИСПРАВЛЕНО: src теперь использует tour.image_url вместо tour.image */}
                                     <img 
                                         src={tour.image_url} 
                                         alt={tour.title} 
@@ -149,7 +150,7 @@ export default function TourManager({ tours, onDataChange, showNotification, sho
                 <div/>
                 {/* Кнопка добавления нового тура (общая для всех категорий) */}
                 <button onClick={() => handleAdd(openCategory || 'hot')} className={`${styles.button} ${styles.primaryButton}`}>
-                    <FiPlus />
+                    <FiPlus /> {/* ИСПРАВЛЕНО: Теперь использует FiPlus */}
                     <span>Добавить тур</span>
                 </button>
             </div>
@@ -199,7 +200,7 @@ const AccordionCategory = ({ title, tours, isOpen, onToggle, onEdit, onDelete })
                         {tours.map((tour) => (
                             <div key={tour.id} className={styles.tourItemAdmin}>
                                 <img 
-                                    src={tour.image_url} // ИЗМЕНЕНО: tour.image -> tour.image_url
+                                    src={tour.image_url} // ИСПРАВЛЕНО: tour.image -> tour.image_url
                                     alt={tour.title} 
                                     className={styles.tourImageAdmin} 
                                     onError={(e) => { 

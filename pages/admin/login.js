@@ -4,28 +4,38 @@ import { useRouter } from 'next/router';
 import { FiAlertTriangle, FiLogIn } from 'react-icons/fi';
 import styles from '../../styles/Admin.module.css';
 
+/**
+ * Страница входа в панель администратора.
+ */
 const LoginPage = () => {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { error } = router.query;
+    const { error } = router.query; // Получаем параметр ошибки из URL
 
+    /**
+     * Обработчик отправки формы входа.
+     * @param {Event} e - Событие отправки формы.
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        setLoading(true); // Включаем состояние загрузки
+
+        // Выполняем попытку входа с учетными данными
         const res = await signIn('credentials', {
-            redirect: false,
+            redirect: false, // Отключаем автоматическое перенаправление
             email, 
             password,
         });
         
         if (res.ok) {
-            router.push('/admin');
+            router.push('/admin'); // В случае успеха перенаправляем на главную страницу админки
         } else {
-            // Улучшаем обработку ошибок для более информативного сообщения
+            // В случае ошибки перенаправляем на страницу входа с параметром ошибки
+            // Это позволит отобразить сообщение об ошибке пользователю
             router.push('/admin/login?error=CredentialsSignin', undefined, { shallow: true });
-            setLoading(false);
+            setLoading(false); // Выключаем состояние загрузки
         }
     };
 
@@ -47,7 +57,7 @@ const LoginPage = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="admin@example.com"
                                 required
-                                disabled={loading}
+                                disabled={loading} /* Деактивируем поле во время загрузки */
                             />
                         </div>
                         <div className={styles.formGroup}>
@@ -60,10 +70,11 @@ const LoginPage = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 required
-                                disabled={loading}
+                                disabled={loading} /* Деактивируем поле во время загрузки */
                             />
                         </div>
 
+                        {/* Отображаем сообщение об ошибке, если есть */}
                         {error && (
                             <div className={styles.loginError}>
                                 <FiAlertTriangle />
@@ -82,6 +93,12 @@ const LoginPage = () => {
     );
 };
 
+/**
+ * Функция getServerSideProps для проверки сессии на стороне сервера.
+ * Если пользователь уже аутентифицирован, перенаправляет его на страницу админки.
+ * @param {object} context - Контекст запроса Next.js.
+ * @returns {object} - Объект с редиректом или пропсами.
+ */
 export async function getServerSideProps(context) {
     const session = await getSession(context);
     if (session) {

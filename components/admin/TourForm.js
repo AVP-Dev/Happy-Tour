@@ -1,13 +1,8 @@
 // components/admin/TourForm.js
 // Форма для добавления и редактирования туров.
-// Теперь загружает изображения локально на сервер через API и работает с SQLite.
 
 import React, { useState, useEffect } from 'react';
 import styles from '../../styles/Admin.module.css';
-// Удалены импорты из Firebase Storage, так как изображения теперь локальные
-// import { storage } from '../../lib/firebase'; 
-// import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
-// import { v4 as uuidv4 } from 'uuid'; // uuid теперь используется на сервере в API
 
 export default function TourForm({ isOpen, onClose, config, showNotification, onDataChange }) {
     const [formData, setFormData] = useState({});
@@ -117,12 +112,12 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
                 throw new Error(result.message || 'Произошла ошибка при сохранении.');
             }
             
-            showNotification(result.message); // Показываем уведомление об успехе
+            showNotification({type: 'success', message: result.message || 'Тур успешно сохранен!'}); // Показываем уведомление об успехе
             onDataChange(); // Уведомляем родительский компонент об изменении данных
             onClose(); // Закрываем модальное окно формы
         } catch (error) {
             console.error('Ошибка сохранения тура:', error);
-            showNotification(`Ошибка сохранения: ${error.message}`); // Показываем уведомление об ошибке
+            showNotification({type: 'error', message: `Ошибка сохранения: ${error.message}`}); // Показываем уведомление об ошибке
         } finally {
             setIsSubmitting(false); // Снимаем состояние отправки
         }
@@ -136,25 +131,25 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
                 <form onSubmit={handleSubmit} className={styles.tourForm}>
                     <div className={styles.formHeader}>
                         <h2>{config.mode === 'add' ? 'Добавить новый тур' : 'Редактировать тур'}</h2>
-                        <button type="button" onClick={onClose} className={styles.closeButton}>&times;</button>
+                        <button type="button" onClick={onClose} className={styles.closeButton} title="Закрыть">&times;</button>
                     </div>
                     <div className={styles.formContent}>
                         <div className={styles.formGrid}>
                             <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                                <label>Название тура *</label>
-                                <input type="text" name="title" value={formData.title || ''} onChange={handleChange} required />
+                                <label htmlFor="title">Название тура *</label>
+                                <input id="title" type="text" name="title" value={formData.title || ''} onChange={handleChange} required />
                             </div>
                             <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                                <label>Описание</label>
-                                <textarea name="description" value={formData.description || ''} onChange={handleChange} rows="3"></textarea>
+                                <label htmlFor="description">Описание</label>
+                                <textarea id="description" name="description" value={formData.description || ''} onChange={handleChange} rows="3"></textarea>
                             </div>
                             <div className={styles.formGroup}>
-                                <label>Цена *</label>
-                                <input type="number" name="price" value={formData.price || ''} onChange={handleChange} required />
+                                <label htmlFor="price">Цена *</label>
+                                <input id="price" type="number" name="price" value={formData.price || ''} onChange={handleChange} required />
                             </div>
                             <div className={styles.formGroup}>
-                                <label>Валюта</label>
-                                <select name="currency" value={formData.currency || 'BYN'} onChange={handleChange}>
+                                <label htmlFor="currency">Валюта</label>
+                                <select id="currency" name="currency" value={formData.currency || 'BYN'} onChange={handleChange}>
                                     <option value="BYN">BYN</option>
                                     <option value="USD">USD</option>
                                     <option value="RUB">RUB</option>
@@ -162,22 +157,22 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
                                 </select>
                             </div>
                             <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                                <label>Категория *</label>
-                                <select name="category" value={formData.category || 'hot'} onChange={handleChange} required>
+                                <label htmlFor="category">Категория *</label>
+                                <select id="category" name="category" value={formData.category || 'hot'} onChange={handleChange} required>
                                     <option value="hot">Горящие туры</option>
                                     <option value="popular">Популярные направления</option>
                                     <option value="special">Выгодные предложения</option>
                                 </select>
                             </div>
                             <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                                <label>Изображение *</label>
-                                <input type="file" accept="image/*" onChange={handleImageChange} />
+                                <label htmlFor="image">Изображение *</label>
+                                <input id="image" type="file" accept="image/*" onChange={handleImageChange} />
                                 {imagePreview && 
                                     <div style={{ marginTop: '1rem' }}>
                                         <img 
                                             src={imagePreview} 
                                             alt="Предпросмотр" 
-                                            style={{ width: '150px', height: 'auto', borderRadius: '8px' }}
+                                            style={{ width: '150px', height: 'auto', borderRadius: '8px', objectFit: 'cover' }}
                                         />
                                     </div>
                                 }

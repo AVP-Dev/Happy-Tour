@@ -2,18 +2,18 @@
 // Страница для управления учетными записями администраторов.
 // Доступна только для супер-администраторов.
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react'; // Для проверки сессии NextAuth
+import { useState } from 'react';
+import { useSession, signOut } from 'next-auth/react'; // Для проверки сессии NextAuth
 import { FiPlus, FiTrash2, FiUser, FiAlertCircle } from 'react-icons/fi'; // Иконки
 import useSWR from 'swr'; // Для получения данных
 import styles from '../../styles/Admin.module.css'; // Стили
 import NotificationModal from '../../components/admin/NotificationModal'; // Модальное окно уведомлений
 
-// Вспомогательная функция для получения данных
+// Вспомогательная функция для получения данных с сервера
 const fetcher = async (url) => {
     const res = await fetch(url);
     if (!res.ok) {
-        const error = new Error('An error occurred while fetching the data.');
+        const error = new Error('Произошла ошибка при загрузке данных.');
         error.info = await res.json();
         error.status = res.status;
         throw error;
@@ -21,29 +21,27 @@ const fetcher = async (url) => {
     return res.json();
 };
 
-export default function AdminUsersPage() {
+/**
+ * Компонент AdminUsersPage для управления администраторами.
+ * @param {object} props - Свойства компонента.
+ * @param {function} props.showNotification - Функция для показа уведомлений.
+ * @param {function} props.showConfirm - Функция для показа окна подтверждения.
+ * @param {function} props.onDataChange - Функция для обновления данных.
+ * @param {function} props.handleUnauthorized - Функция для обработки ошибок авторизации.
+ */
+export default function AdminUsersPage({ showNotification, showConfirm, onDataChange, handleUnauthorized }) {
     const { data: session, status } = useSession({ required: true }); // Получаем сессию NextAuth
     const [email, setEmail] = useState(''); // Состояние для email нового админа
     const [password, setPassword] = useState(''); // Состояние для пароля нового админа
     const [role, setRole] = useState('admin'); // Состояние для роли нового админа
     const [isSubmitting, setIsSubmitting] = useState(false); // Состояние отправки формы
-    const [notification, setNotification] = useState({ isOpen: false, type: 'info', message: '', isConfirm: false, onConfirm: () => {} });
-
-    // Получаем список администраторов с помощью SWR
+    
+    // Получаем список администраторов с помощью SWR.
+    // Запрос выполняется только если пользователь аутентифицирован и является super_admin.
     const { data: adminUsers, error, isLoading, mutate } = useSWR(
         status === 'authenticated' && session?.user?.role === 'super_admin' ? '/api/admin/users' : null,
         fetcher
     );
-
-    // Функция для показа уведомлений
-    const showNotification = (message, type = 'info', isConfirm = false, onConfirm = () => {}) => {
-        setNotification({ isOpen: true, message, type, isConfirm, onConfirm });
-    };
-
-    // Функция для закрытия уведомлений
-    const closeNotification = () => {
-        setNotification(prev => ({ ...prev, isOpen: false }));
-    };
 
     /**
      * Обработчик добавления нового администратора.
@@ -54,7 +52,7 @@ export default function AdminUsersPage() {
         setIsSubmitting(true);
 
         if (!email || !password) {
-            showNotification('Email и пароль обязательны.', 'error');
+            showNotification({ type: 'error', message: 'Email и пароль обязательны.' });
             setIsSubmitting(false);
             return;
         }
@@ -67,16 +65,23 @@ export default function AdminUsersPage() {
             });
 
             const result = await res.json();
-            if (!res.ok) throw new Error(result.message);
+            if (!res.ok) {
+                // Если ошибка связана с уже существующим email, выдаем конкретное сообщение
+                if (res.status === 409) { // Пример статуса конфликта
+                    throw new Error('Пользователь с таким email уже существует.');
+                }
+                throw new Error(result.message || 'Произошла ошибка при добавлении администратора.');
+            }
 
-            showNotification('Администратор успешно добавлен!', 'success');
-            setEmail('');
+            showNotification({ type: 'success', message: 'Администратор успешно добавлен!' });
+            setEmail(''); // Очищаем поля формы
             setPassword('');
             setRole('admin');
-            mutate(); // Обновляем список администраторов
+            mutate(); // Обновляем список администраторов через SWR
+            onDataChange(); // Уведомляем родителя об изменении данных (для общей панели)
         } catch (err) {
             console.error('Ошибка добавления администратора:', err);
-            showNotification(`Ошибка добавления: ${err.message}`, 'error');
+            showNotification({ type: 'error', message: `Ошибка добавления: ${err.message}` });
         } finally {
             setIsSubmitting(false);
         }
@@ -87,12 +92,9 @@ export default function AdminUsersPage() {
      * @param {string} adminId - ID администратора для удаления.
      */
     const handleDeleteAdmin = (adminId) => {
-        showNotification(
-            'Вы уверены, что хотите удалить этого администратора?',
-            'info', // тип может быть 'info' для запроса
-            true, // isConfirm: true для показа кнопок подтверждения
+        showConfirm(
+            'Вы уверены, что хотите удалить этого администратора? Это действие необратимо.',
             async () => {
-                closeNotification(); // Закрываем модальное окно перед выполнением
                 try {
                     const res = await fetch('/api/admin/users', {
                         method: 'DELETE',
@@ -101,23 +103,26 @@ export default function AdminUsersPage() {
                     });
 
                     const result = await res.json();
-                    if (!res.ok) throw new Error(result.message);
+                    if (!res.ok) {
+                        throw new Error(result.message || 'Произошла ошибка при удалении администратора.');
+                    }
 
-                    showNotification('Администратор успешно удален!', 'success');
+                    showNotification({ type: 'success', message: 'Администратор успешно удален!' });
                     mutate(); // Обновляем список администраторов
+                    onDataChange(); // Уведомляем родителя
                 } catch (err) {
                     console.error('Ошибка удаления администратора:', err);
-                    showNotification(`Ошибка удаления: ${err.message}`, 'error');
+                    showNotification({ type: 'error', message: `Ошибка удаления: ${err.message}` });
                 }
             }
         );
     };
 
-    // Если сессия загружается или пользователь не супер-админ, показываем заглушку
+    // Отображение состояния загрузки или недостаточных прав
     if (status === 'loading') {
         return (
             <div className={styles.adminContainer}>
-                <h2 className="section-title" style={{textAlign: 'left'}}>Управление администраторами</h2>
+                <h2 className={styles.sectionTitle} style={{textAlign: 'left'}}>Управление администраторами</h2>
                 <div className={`${styles.card} ${styles.errorCard}`}>
                     <FiAlertCircle size={24} />
                     <p>Загрузка прав пользователя...</p>
@@ -127,27 +132,29 @@ export default function AdminUsersPage() {
     }
 
     if (status === 'unauthenticated' || session?.user?.role !== 'super_admin') {
+        // Перенаправление на страницу входа происходит в _app.js или index.js (главной админки)
+        // Здесь просто показываем сообщение, если компонент каким-то образом отрисовался
         return (
-            <div className={styles.adminLayout}> {/* Используем adminLayout для правильного центрирования на странице логина */}
-                <div className={`${styles.loginPage} ${styles.adminContainer}`}> {/* И loginPage для центрирования контента */}
-                    <div className={`${styles.card} ${styles.errorCard}`}>
-                        <FiAlertCircle size={24} />
-                        <p>У вас недостаточно прав для доступа к этой странице.</p>
-                        <button onClick={() => signOut({ callbackUrl: '/admin/login' })} className={`${styles.button} ${styles.primaryButton}`} style={{marginTop: '1rem'}}>
-                            Вернуться на страницу входа
-                        </button>
-                    </div>
+            <div className={styles.adminContainer}>
+                <div className={`${styles.card} ${styles.errorCard}`}>
+                    <FiAlertCircle size={24} />
+                    <p>У вас недостаточно прав для доступа к этой странице.</p>
+                    <button onClick={() => signOut({ callbackUrl: '/admin/login' })} className={`${styles.button} ${styles.primaryButton}`} style={{marginTop: '1rem'}}>
+                        Вернуться на страницу входа
+                    </button>
                 </div>
             </div>
         );
     }
 
+    // Если данные загружаются (SWR)
     if (isLoading) return <p>Загрузка списка администраторов...</p>;
+    // Если произошла ошибка при загрузке данных
     if (error) return <p>Ошибка загрузки администраторов: {error.message}</p>;
 
     return (
         <div className={styles.adminContainer}>
-            <h2 className="section-title" style={{textAlign: 'left'}}>Управление администраторами</h2>
+            <h2 className={styles.sectionTitle} style={{textAlign: 'left'}}>Управление администраторами</h2>
 
             {/* Форма добавления нового администратора */}
             <div className={styles.card}>
@@ -182,6 +189,7 @@ export default function AdminUsersPage() {
                             <option value="super_admin">Супер-администратор</option>
                         </select>
                     </div>
+                    {/* Кнопка отправки формы */}
                     <div className={styles.formGroup} style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem'}}>
                         <button type="submit" className={`${styles.button} ${styles.primaryButton}`} disabled={isSubmitting}>
                             <FiPlus size={16} />
@@ -209,8 +217,8 @@ export default function AdminUsersPage() {
                                     </div>
                                 </div>
                                 <div className={styles.adminUserActions}>
-                                    {/* Не позволяем удалять себя, если есть такая логика, и не единственного супер-админа */}
-                                    {session?.user?.id !== user.id && ( // Не позволяем удалить текущего залогиненного пользователя
+                                    {/* Не позволяем удалять себя (текущего залогиненного пользователя) */}
+                                    {session?.user?.id !== user.id && ( 
                                         <button 
                                             onClick={() => handleDeleteAdmin(user.id)} 
                                             className={`${styles.button} ${styles.iconButton} ${styles.danger}`} 
@@ -225,16 +233,7 @@ export default function AdminUsersPage() {
                     </div>
                 )}
             </div>
-
-            {/* Модальное окно уведомлений */}
-            <NotificationModal 
-                isOpen={notification.isOpen}
-                message={notification.message}
-                type={notification.type}
-                isConfirm={notification.isConfirm}
-                onConfirm={notification.onConfirm}
-                onCancel={closeNotification}
-            />
+            {/* NotificationModal управляется родительским компонентом (AdminPage) */}
         </div>
     );
 }

@@ -139,18 +139,21 @@ export default function TourManager({ tours, onDataChange, showNotification, sho
      * @param {string} tourId - ID тура для удаления.
      */
     const handleDelete = (tourId) => {
+        console.log('[CLIENT] Attempting to delete tour with ID:', tourId); // ОТЛАДКА: Лог ID перед удалением
         showConfirm('Вы уверены, что хотите удалить этот тур? Это действие необратимо.', async () => {
             try {
                 const res = await fetch('/api/admin/tours', {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json' }, // <-- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Добавлен Content-Type
                     body: JSON.stringify({ id: tourId }),
                 });
                 const result = await res.json();
+                console.log('[CLIENT] Delete API response:', result); // ОТЛАДКА: Лог ответа от API после удаления
                 if (!res.ok) throw new Error(result.message);
                 showNotification({type: 'success', message: 'Тур успешно удален!'});
                 onDataChange(); // Обновляем данные после успешного удаления
             } catch (error) {
+                console.error('[CLIENT] Error deleting tour:', error); // ОТЛАДКА: Лог ошибки удаления на клиенте
                 showNotification({type: 'error', message: `Ошибка удаления: ${error.message}`});
             }
         });

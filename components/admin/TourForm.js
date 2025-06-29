@@ -47,11 +47,11 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
             }
             setImageFile(file); // Сохраняем файл для отправки
             setImagePreview(URL.createObjectURL(file)); // Создаем URL для предпросмотра
-            console.log('Image file selected:', file.name, file.size); // ОТЛАДКА: Лог выбранного файла
+            console.log('[CLIENT] Image file selected:', file.name, file.size); // ОТЛАДКА: Лог выбранного файла
         } else {
             setImageFile(null);
             setImagePreview(null);
-            console.log('Image file deselected.'); // ОТЛАДКА: Лог отмены выбора
+            console.log('[CLIENT] Image file deselected.'); // ОТЛАДКА: Лог отмены выбора
         }
     };
 
@@ -98,12 +98,12 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
             }
 
             // ОТЛАДКА: Логируем данные, которые будут отправлены
-            console.log('--- Sending FormData to API ---');
+            console.log('[CLIENT] --- Sending FormData to API ---');
             for (let pair of dataToSend.entries()) {
                 console.log(pair[0]+ ': ' + pair[1]); 
             }
-            console.log('Image file present in FormData (expected):', dataToSend.has('image'));
-            console.log('--- End FormData Log ---');
+            console.log('[CLIENT] Image file present in FormData (expected):', dataToSend.has('image'));
+            console.log('[CLIENT] --- End FormData Log ---');
 
 
             // Отправляем запрос на API-маршрут
@@ -118,8 +118,8 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
             const result = await res.json(); // Парсим ответ от сервера
 
             // ОТЛАДКА: Логируем ответ от API
-            console.log('API response after saving tour:', result);
-            console.log('API response status:', res.status);
+            console.log('[CLIENT] API response after saving tour:', result);
+            console.log('[CLIENT] API response status:', res.status);
 
             // Проверяем, был ли запрос успешным
             if (!res.ok) {
@@ -130,7 +130,7 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
             onDataChange(); // Уведомляем родительский компонент об изменении данных
             onClose(); // Закрываем модальное окно формы
         } catch (error) {
-            console.error('Ошибка сохранения тура (client-side):', error);
+            console.error('[CLIENT] Error saving tour (client-side):', error);
             showNotification({type: 'error', message: `Ошибка сохранения: ${error.message}`}); // Показываем уведомление об ошибке
         } finally {
             setIsSubmitting(false); // Снимаем состояние отправки

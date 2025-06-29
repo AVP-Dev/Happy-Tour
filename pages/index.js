@@ -41,19 +41,19 @@ export default function Home() {
     // Группируем туры по категориям для каруселей
     const { data: toursData, error: toursError } = useSWR('/api/admin/tours', fetcher);
 
-    // ИСПРАВЛЕНО: Добавлены console.log для отладки
+    // ОТЛАДКА: Логируем данные туров на главной странице
     useEffect(() => {
         if (toursData) {
-            console.log('Tours data received on home page:', toursData);
+            console.log('[CLIENT - Home Page] Tours data received:', toursData);
             const hot = toursData.filter(tour => tour.category === 'hot');
             const popular = toursData.filter(tour => tour.category === 'popular');
             const special = toursData.filter(tour => tour.category === 'special');
-            console.log('Filtered Hot Tours:', hot);
-            console.log('Filtered Popular Tours:', popular);
-            console.log('Filtered Special Offers:', special);
+            console.log('[CLIENT - Home Page] Filtered Hot Tours:', hot);
+            console.log('[CLIENT - Home Page] Filtered Popular Tours:', popular);
+            console.log('[CLIENT - Home Page] Filtered Special Offers:', special);
         }
         if (toursError) {
-            console.error('Error fetching tours on home page:', toursError);
+            console.error('[CLIENT - Home Page] Error fetching tours:', toursError);
         }
     }, [toursData, toursError]);
 
@@ -179,7 +179,7 @@ export default function Home() {
                     {!reviewsData && !reviewsError && <p style={{textAlign: 'center'}}>Загрузка отзывов...</p>}
                     <Carousel reviews={publishedReviews} isReviewCarousel={true} onReadMore={handleReadMoreReview} />
                     
-                    <div className={styles.add_review_btn_container}> {/* ИСПРАВЛЕНО: Теперь styles определен */}
+                    <div className={styles.add_review_btn_container}>
                         <button onClick={() => { setIsReviewModalOpen(true); setSelectedReview(null); }} className="btn btn-primary">
                             Оставить отзыв
                         </button>

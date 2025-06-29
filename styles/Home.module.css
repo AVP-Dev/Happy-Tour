@@ -29,7 +29,7 @@
     overflow: hidden; /* Ensures content/overlay stay within bounds */
 }
 
-/* Overlay for readability on sections with background images */
+/* Overlay for readability */
 .section_overlay {
     position: absolute;
     top: 0;
@@ -105,18 +105,38 @@
     padding-bottom: 1rem; /* Для видимости полосы прокрутки */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch; /* Для более плавной прокрутки на iOS */
+    scrollbar-color: var(--primary-color) var(--light-color); /* thumb track */
+    scrollbar-width: thin; /* auto | thin | none */
+}
+
+/* Стили для скроллбара Webkit (Chrome, Safari) */
+.carouselContainer::-webkit-scrollbar {
+    height: 8px; /* Толщина скроллбара */
+}
+
+.carouselContainer::-webkit-scrollbar-track {
+    background: var(--light-color); /* Цвет трека скроллбара */
+    border-radius: 10px;
+}
+
+.carouselContainer::-webkit-scrollbar-thumb {
+    background: var(--primary-color); /* Цвет ползунка скроллбара */
+    border-radius: 10px;
+}
+
+.carouselContainer::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color-dark); /* Цвет ползунка при наведении */
 }
 
 .carouselContent {
     display: flex;
     gap: 1.5rem; /* Пространство между карточками */
-    padding: 0.5rem; /* Отступы вокруг контента, если нужны */
-    justify-content: flex-start; /* По умолчанию: элементы начинаются слева */
-}
-
-/* Стиль для центрирования при небольшомом количестве элементов */
-.centeredContent {
-    justify-content: center;
+    padding: 0.5rem; /* Отступы вокруг контента */
+    justify-content: center; /* Центрируем, если элементов мало */
+    flex-wrap: nowrap; /* Важно: предотвращает перенос на новую строку */
+    margin: 0 auto; /* Центрирует контейнер, если содержимое не заполняет всю ширину */
+    width: fit-content; /* Позволяет flex-контейнеру сжиматься до содержимого */
+    min-width: 100%; /* Убедимся, что он всегда занимает хотя бы 100% ширины родителя */
 }
 
 .noItemsMessage {
@@ -174,11 +194,39 @@
 }
 
 /* General text colors (can be moved to Globals.css if used widely) */
-:root {
+/* ИСПРАВЛЕНО: Этот блок перемещен в Globals.css */
+/* :root {
     --primary-color: #007bff;
     --primary-color-dark: #0056b3;
-    --light-color: #f8f9fa; /* Very light grey */
+    --light-color: #f8f9fa; 
     --text-color: #333;
     --white: #ffffff;
     --grey-400: #94a3b8;
+} */
+
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 992px) {
+    .contacts_grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 768px) {
+    .carouselWrapper {
+        padding: 10px 0; /* Remove side padding */
+    }
+    .carouselWrapper :global(.swiper-button-next-custom), 
+    .carouselWrapper :global(.swiper-button-prev-custom) {
+        display: none; /* Hide arrows on mobile */
+    }
+}
+
+/* Redefine section-title within Home.module.css for sections with background images */
+/* This will override the global section-title for sections that use section-with-bg */
+.section-with-bg :global(.section-title) {
+    color: var(--white); /* Ensure title is white on dark backgrounds */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Add text shadow for better readability */
+}
+.section-with-bg :global(.section-title)::after {
+    background-color: var(--secondary-color); /* Change underline color for dark backgrounds */
 }

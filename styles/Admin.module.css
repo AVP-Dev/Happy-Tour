@@ -1,823 +1,653 @@
 /* styles/Admin.module.css */
+/* Общие стили для административной панели */
 
-/*
-  ==============================================
-  Final Polish: Modern Admin UI
-  ==============================================
-  * Fully rounded, cohesive, and "volumetric" style
-  * Consistent design language for all components
-  * Redesigned Login Page & Accordion
-*/
-
-/* 1. CSS Variables & Base Layout
-------------------------------------------------- */
 .adminLayout {
-    /* Цветовая палитра */
-    --green-light: #ecfdf5;   /* Светло-зеленый (для фона) */
-    --green: #22c55e;         /* Основной зеленый (для кнопок) */
-    --green-dark: #16a34a;    /* Темно-зеленый (для текста, ховера) */
-    
-    --grey-50: #f8fafc;   /* Основной фон страницы */
-    --grey-100: #f1f5f9; /* Мягкий фон, границы */
-    --grey-200: #e2e8f0; /* Границы, разделители */
-    --grey-400: #94a3b8; /* Иконки, второстепенный текст */
-    --grey-600: #475569; /* Текст */
-    --grey-800: #1e293b; /* Заголовки */
-
-    --red-light: #fff1f2; /* Светло-красный */
-    --red: #f43f5e;       /* Основной красный */
-    --red-dark: #e11d48;  /* Темно-красный */
-
-    --white: #ffffff;     /* Белый */
-
-    /* Тени */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow: 0 4px 8px -2px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.06);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-button: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
-    --shadow-button-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
-    
-    /* Скругления углов */
-    --radius: 12px;
-    --radius-button: 8px;
-
-    /* Переходы для плавных анимаций */
-    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-    /* Базовый макет */
     display: flex;
     min-height: 100vh;
-    background-color: var(--grey-50);
-    color: var(--grey-600);
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.5; /* Улучшение читаемости текста */
+    background-color: var(--background-light);
+    color: var(--text-color);
 }
 
-/* 2. Sidebar (Боковая панель навигации)
-------------------------------------------------- */
+/* Sidebar */
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 260px; /* Фиксированная ширина */
-    background-color: var(--white);
-    border-right: 1px solid var(--grey-100);
-    padding: 1.5rem;
+    width: 250px;
+    background-color: var(--primary-dark);
+    color: #fff;
+    padding: 2rem 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transform: translateX(0); /* По умолчанию видима */
-    transition: var(--transition); /* Плавный переход при открытии/закрытии */
-    z-index: 100;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
 }
 
 .sidebarHeader {
-    margin-bottom: 2.5rem;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--green-dark);
     text-align: center;
+    margin-bottom: 2.5rem;
 }
 
-.navLink {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0.85rem 1rem;
-    margin: 0 -1rem 0.5rem; /* Отрицательный маржин для полного заполнения ширины */
-    border-radius: var(--radius-button);
-    font-weight: 500;
-    color: var(--grey-600);
-    transition: var(--transition);
-    text-decoration: none; /* Убираем подчеркивание */
-}
-.navLink:hover {
-    background-color: var(--grey-100);
-    color: var(--grey-800);
-}
-.navLinkActive {
-    background-color: var(--green);
-    color: var(--white);
-    font-weight: 600;
-    box-shadow: var(--shadow-button);
-}
-.navLinkActive:hover {
-    background-color: var(--green); /* Сохраняем цвет при ховере для активной ссылки */
-    color: var(--white);
+.sidebarHeader h2 {
+    font-size: 1.8rem;
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
 }
 
-.userInfo {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    background-color: var(--grey-100);
-    border-radius: var(--radius);
-}
-.avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: var(--green);
-    color: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-.userName {
-    font-weight: 500;
+.sidebarHeader p {
     font-size: 0.9rem;
-    color: var(--grey-800);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--grey-200);
+}
+
+.sidebarNav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebarNav li {
+    margin-bottom: 1rem;
+}
+
+.sidebarNav a, .sidebarNav button {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: 1rem;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.sidebarNav a:hover, .sidebarNav button:hover {
+    background-color: var(--primary-light);
+    color: var(--accent-color);
+}
+
+.sidebarNav .active {
+    background-color: var(--accent-color);
+    color: var(--primary-dark);
+    font-weight: bold;
+}
+
+.sidebarNav .active svg {
+    color: var(--primary-dark);
+}
+
+.sidebarNav svg {
+    margin-right: 10px;
+    font-size: 1.2rem;
+    color: var(--grey-300);
+}
+
+.sidebarFooter {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--grey-700);
+}
+
+.sidebarFooter p {
+    font-size: 0.9rem;
+    color: var(--grey-300);
+    margin-bottom: 1rem;
+}
+
+.logoutButton {
+    background-color: var(--accent-error);
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.logoutButton:hover {
+    background-color: #cc0000;
 }
 
 
-/* 3. Main Content (Основное содержимое страницы)
-------------------------------------------------- */
+/* Main Content */
 .mainContent {
     flex-grow: 1;
-    padding: 2.5rem;
-    margin-left: 260px; /* Отступ слева для сайдбара */
-    transition: margin-left var(--transition); /* Плавный переход при открытии/закрытии сайдбара */
+    padding: 2rem 2.5rem;
+    background-color: var(--background-light);
 }
+
 .contentHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    background-color: #fff;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
 }
+
 .contentHeader h1 {
     font-size: 2rem;
-    font-weight: 700;
-    color: var(--grey-800);
+    color: var(--primary-dark);
+    margin: 0;
 }
+
 .mobileMenuButton {
-    display: none; /* Скрыто на десктопе */
-}
-
-/* Общий стиль для заголовков секций */
-.section-title {
-    font-size: 1.75rem; /* Чуть меньше основного заголовка страницы */
-    font-weight: 700;
-    color: var(--grey-800);
-    margin-bottom: 1.5rem; /* Отступ после заголовка */
-}
-
-/* 4. Cards (Карточки)
-------------------------------------------------- */
-.card {
-    background-color: var(--white);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--grey-100);
-    margin-bottom: 1.5rem;
-}
-
-/* 5. Buttons (Кнопки)
-------------------------------------------------- */
-.button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-button);
-    font-weight: 600;
-    font-size: 0.9rem;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: var(--shadow-button);
-    text-decoration: none; /* Убираем подчеркивание для кнопок-ссылок */
-}
-.button:hover:not(:disabled) {
-    transform: translateY(-2px); /* Эффект "подъема" */
-    box-shadow: var(--shadow-button-hover);
-}
-.button:disabled { 
-    opacity: 0.6; 
-    cursor: not-allowed; 
-    box-shadow: none; 
-}
-.primaryButton { 
-    background-color: var(--green); 
-    color: var(--white); 
-}
-.primaryButton:hover:not(:disabled) { 
-    background-color: var(--green-dark); 
-}
-.secondaryButton { 
-    background-color: var(--white); 
-    color: var(--grey-800); 
-    border-color: var(--grey-200); 
-}
-.secondaryButton:hover:not(:disabled) { 
-    background-color: var(--grey-100); /* Светло-серый фон при ховере */
-    border-color: var(--grey-400); 
-}
-.dangerButton { 
-    background-color: var(--red); 
-    color: var(--white); 
-}
-.dangerButton:hover:not(:disabled) { 
-    background-color: var(--red-dark); 
-}
-.iconButton { 
-    padding: 0.75rem; 
-    border-radius: 50%; /* Круглая кнопка */
-    background-color: var(--grey-100);
-    color: var(--grey-600);
+    display: none; /* Скрыть по умолчанию на десктопах */
+    background: none;
     border: none;
-    box-shadow: none;
-    display: inline-flex; /* Для центрирования иконок */
+    font-size: 1.8rem;
+    color: var(--primary-dark);
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+
+/* General Forms & Buttons */
+.formGroup {
+    margin-bottom: 1.2rem;
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--text-color-dark);
+    font-size: 0.95rem;
+}
+
+.formGroup input[type="text"],
+.formGroup input[type="number"],
+.formGroup input[type="email"],
+.formGroup input[type="password"],
+.formGroup textarea,
+.formGroup select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.formGroup input[type="file"] {
+    padding: 0.5rem 0;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2);
+    outline: none;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.button {
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
     align-items: center;
+    gap: 0.5rem;
     justify-content: center;
 }
-.iconButton:hover:not(:disabled) {
-    background-color: var(--grey-200);
-    color: var(--grey-800);
+
+.primaryButton {
+    background-color: var(--primary-button-bg);
+    color: var(--primary-button-text);
+}
+
+.primaryButton:hover {
+    background-color: var(--primary-button-hover-bg);
     transform: translateY(-1px);
 }
-.iconButton.danger:hover:not(:disabled) {
-    background-color: var(--red-light);
-    color: var(--red-dark);
+
+.secondaryButton {
+    background-color: var(--secondary-button-bg);
+    color: var(--secondary-button-text);
+    border: 1px solid var(--border-color);
 }
 
-/* 6. Forms & Modals (Формы и модальные окна)
-------------------------------------------------- */
+.secondaryButton:hover {
+    background-color: var(--secondary-button-hover-bg);
+    transform: translateY(-1px);
+}
+
+.button:disabled {
+    background-color: var(--grey-300);
+    color: var(--grey-500);
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+/* Modal Styles (for TourForm and NotificationModal) */
 .modalBackdrop {
-    position: fixed; 
-    inset: 0; 
-    background-color: rgba(30, 41, 59, 0.6); /* Полупрозрачный темный фон */
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
-    z-index: 1000; 
-    backdrop-filter: blur(4px); /* Эффект размытия фона */
-}
-.formModal {
-    background-color: var(--white); 
-    padding: 2.5rem; 
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg); 
-    width: 90%; 
-    max-width: 650px; /* Ограничиваем ширину для больших экранов */
-    max-height: 90vh; /* Ограничиваем высоту */
-    overflow-y: auto; /* Прокрутка, если контента много */
-    position: relative; /* Для позиционирования крестика закрытия */
-}
-.formHeader {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: 2rem;
-    padding-bottom: 1rem; /* Отступ снизу заголовка формы */
-    border-bottom: 1px solid var(--grey-100); /* Линия-разделитель */
-}
-.formHeader h2 { 
-    font-size: 1.5rem; 
-    font-weight: 600; 
-    color: var(--grey-800); 
-}
-.closeButton { 
-    background: none; 
-    border: none; 
-    font-size: 1.5rem; 
-    cursor: pointer; 
-    color: var(--grey-400); 
-    width: 40px; 
-    height: 40px; 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
     justify-content: center;
-    transition: var(--transition);
-    position: absolute; /* Позиционируем абсолютно */
-    top: 1rem; /* Отступ от верха */
-    right: 1rem; /* Отступ от правого края */
-    z-index: 10; /* Поверх остального контента заголовка */
-}
-.closeButton:hover { 
-    background-color: var(--grey-100); 
-    transform: rotate(90deg); /* Эффект вращения при ховере */
+    align-items: center;
+    z-index: 1000;
 }
 
-.formGrid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Адаптивная сетка */
-    gap: 1.25rem; /* Отступ между элементами сетки */
-}
-.formGroup { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 0.5rem; 
-}
-.formGroup.fullWidth { 
-    grid-column: 1 / -1; /* Элемент занимает всю ширину сетки */
-}
-.formGroup label { 
-    font-weight: 500; 
-    font-size: 0.875rem; 
-    color: var(--grey-600); 
-}
-.formGroup input, 
-.formGroup textarea, 
-.formGroup select {
-    padding: 0.85rem 1rem; 
-    border-radius: var(--radius-button); 
-    border: 1px solid var(--grey-200);
-    font-size: 0.95rem; 
-    transition: var(--transition); 
-    background-color: var(--grey-50);
-    width: 100%; /* Убедитесь, что занимает всю доступную ширину */
-    box-sizing: border-box; /* Учитываем padding и border в ширине */
-}
-.formGroup input:focus, 
-.formGroup textarea:focus, 
-.formGroup select:focus {
-    outline: none; 
-    box-shadow: 0 0 0 3px var(--green-light); /* Эффект фокуса */
-    border-color: var(--green); 
-    background-color: var(--white);
-}
-
-/* Добавляем стили для input type="file" */
-.formGroup input[type="file"] {
-    padding: 0.75rem 1rem; /* Чуть меньше паддинг для файлов */
-    background-color: var(--grey-100);
-    cursor: pointer;
-}
-.formGroup input[type="file"]:focus {
-    box-shadow: 0 0 0 3px var(--green-light);
-    border-color: var(--green);
-}
-
-.formActions { 
-    display: flex; 
-    justify-content: flex-end; 
-    gap: 1rem; 
-    margin-top: 2.5rem; 
-    padding-top: 1.5rem; 
-    border-top: 1px solid var(--grey-100); 
-}
-
-/* Стили для NotificationModal */
-.notificationModalBackdrop {
-    z-index: 1001; /* Поверх других модальных окон */
-}
-.notificationModal {
-    background-color: var(--white);
+.formModal, .notificationModal {
+    background-color: #fff;
     padding: 2rem;
-    border-radius: var(--radius);
+    border-radius: 12px;
     box-shadow: var(--shadow-lg);
-    max-width: 400px;
+    max-width: 600px;
     width: 90%;
-    text-align: center;
+    position: relative;
+    animation: fadeIn 0.3s ease-out;
 }
-.notificationIconWrapper {
+
+.formHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.formHeader h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--primary-dark);
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--grey-500);
+    transition: color 0.2s ease;
+}
+
+.closeButton:hover {
+    color: var(--accent-error);
+}
+
+/* Animation for modals */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Notification Modal Specifics */
+.notificationModal {
+    max-width: 400px;
+    text-align: center;
+    padding: 2.5rem;
+    animation: scaleIn 0.3s ease-out;
+}
+
+.notificationIcon {
+    font-size: 3rem;
     margin-bottom: 1rem;
 }
-.notificationIconSuccess { color: var(--green); font-size: 3rem; }
-.notificationIconError { color: var(--red); font-size: 3rem; }
-.notificationIconInfo { color: var(--grey-400); font-size: 3rem; } /* Общий цвет для info */
-.notificationModal p {
+
+.notificationModal.success .notificationIcon { color: var(--accent-success); }
+.notificationModal.error .notificationIcon { color: var(--accent-error); }
+.notificationModal.info .notificationIcon { color: var(--accent-info); }
+
+.notificationMessage {
     font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--grey-800);
     margin-bottom: 1.5rem;
-}
-.notificationActions {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 0; /* Убираем верхний маржин, так как он уже есть у p */
-    border-top: none; /* Убираем границу */
-    padding-top: 0; /* Убираем паддинг */
+    color: var(--text-color);
 }
 
-/* 7. Specific Component Styles (Стили для конкретных компонентов)
-------------------------------------------------- */
-/* Tour Manager & Accordion */
-.accordionContainer { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 1rem; 
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
-.accordionItem { 
-    background: var(--white); 
-    border-radius: var(--radius); 
-    border: 1px solid var(--grey-100); 
-    box-shadow: var(--shadow-sm); 
-    overflow: hidden; /* Важно для скруглений */
+
+
+/* Tour Form Specific Grid */
+.tourForm .formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
 }
-.accordionHeader { 
-    width: 100%; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    padding: 1.25rem 1.5rem; 
-    font-size: 1.1rem; 
-    font-weight: 600; 
-    color: var(--grey-800);
-    background: none; 
-    border: none; 
+
+.tourForm .formGrid .formGroup:nth-child(1),
+.tourForm .formGrid .formGroup:nth-child(2),
+.tourForm .formGrid .formGroup:nth-child(5), /* Категория */
+.tourForm .formGrid .formGroup:nth-child(6) { /* Изображение */
+    grid-column: span 2;
+}
+
+/* Admin Tour Display (TourCategory component) */
+.accordionContainer {
+    margin-top: 2rem;
+}
+
+.accordionItem {
+    background-color: #fff;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden; /* Важно для скрытия содержимого при закрытии */
+}
+
+.accordionHeader {
+    width: 100%;
+    padding: 1.2rem 2rem;
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    text-align: left;
     cursor: pointer;
-    user-select: none; /* Предотвращаем выделение текста при клике */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s ease;
 }
-.accordionIcon { 
-    transition: var(--transition); 
+
+.accordionHeader:hover {
+    background-color: #e0e7ff;
 }
-.accordionIcon.open { /* ИСПРАВЛЕНО: .accordionIconOpen -> .accordionIcon.open */
-    transform: rotate(180deg); 
+
+.accordionIcon {
+    transition: transform 0.3s ease;
 }
-/* Используем contentWrapper для плавного открытия/закрытия аккордеона */
-.accordionContentWrapper { 
+
+.accordionIcon.open {
+    transform: rotate(180deg);
+}
+
+.accordionContentWrapper {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease-out; /* Плавное открытие/закрытие */
+    transition: max-height 0.4s ease-in-out;
+    padding: 0 2rem; /* Убираем padding-top/bottom когда закрыто */
 }
+
 .accordionContentWrapper.open {
-    max-height: 1000px; /* Достаточно большое значение для открытия, должно быть больше, чем макс. высота контента */
+    max-height: 1000px; /* Достаточно большое значение для плавного открытия */
+    padding: 1.5rem 2rem; /* Добавляем padding при открытии */
 }
-.tourGrid { 
-    padding: 0 1.5rem 1.5rem; 
-    display: grid; 
-    /* ИСПРАВЛЕНО: Уточняем minmax для более компактного отображения */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
-    gap: 1.5rem; 
-    align-items: stretch; /* Выравнивание элементов по высоте */
+
+.noItems {
+    text-align: center;
+    color: var(--grey-500);
+    padding: 1.5rem 0;
 }
-.tourItemAdmin { /* Было tourCardItem, теперь уточняем для админки */
-    border-radius: var(--radius); 
-    border: 1px solid var(--grey-200); 
-    overflow: hidden; 
-    display: flex; /* Используем flexbox для внутреннего содержимого */
-    flex-direction: column;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+.tourGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Увеличил minmax для лучшего вида */
+    gap: 1.5rem;
+    padding-top: 1rem;
 }
-.tourItemAdmin:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow);
-}
-.tourImageAdmin { 
-    width: 100%; 
-    height: 180px; /* Фиксированная высота для изображений */
-    object-fit: cover; 
-    border-bottom: 1px solid var(--grey-100); /* Разделитель */
-}
-.tourInfoAdmin { 
-    padding: 1rem; 
-    flex-grow: 1; /* Описание может занимать всю доступную высоту */
+
+.tourItemAdmin {
+    background-color: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: var(--shadow-xs);
+    transition: transform 0.2s ease;
 }
+
+.tourItemAdmin:hover {
+    transform: translateY(-3px);
+}
+
+/* ИСПРАВЛЕНО: Контейнер для изображений в админке */
+.tourImageContainerAdmin {
+    width: 100%;
+    height: 180px; /* Фиксированная высота для всех изображений */
+    overflow: hidden; /* Скрываем излишки */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--grey-100); /* Цвет фона, если изображение не полностью покрывает */
+}
+
+.tourImageAdmin { 
+    width: 100%; /* Занимает всю ширину контейнера */
+    height: 100%; /* Занимает всю высоту контейнера */
+    object-fit: cover; /* Изображение будет покрывать контейнер, обрезая лишнее, но сохраняя пропорции */
+    display: block; /* Убираем лишние отступы */
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tourInfoAdmin {
+    padding: 1rem;
+    flex-grow: 1; /* Чтобы информация занимала доступное пространство */
+}
+
 .tourInfoAdmin strong {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--grey-800);
+    display: block;
+    font-size: 1.1rem;
+    color: var(--primary-dark);
     margin-bottom: 0.5rem;
+    white-space: nowrap; /* Предотвращает перенос текста */
+    overflow: hidden; /* Скрывает текст, который не помещается */
+    text-overflow: ellipsis; /* Добавляет многоточие */
 }
+
 .tourInfoAdmin p {
     font-size: 0.9rem;
     color: var(--grey-600);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.8rem;
     line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Ограничиваем описание 3 строками */
+    -webkit-line-clamp: 2; /* Ограничиваем описание 2 строками */
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.tourPriceAdmin { 
-    font-weight: 700; 
-    font-size: 1rem; 
-    color: var(--green-dark); 
-    margin-top: auto; /* Прижимаем цену к низу */
+
+.tourPriceAdmin {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--accent-color);
 }
-.tourActionsAdmin { 
-    display: flex; 
-    justify-content: flex-end; 
-    gap: 0.75rem; 
-    padding: 1rem;
-    border-top: 1px solid var(--grey-100);
-    background-color: var(--grey-50);
+
+.tourActionsAdmin {
+    display: flex;
+    justify-content: space-around;
+    padding: 0.8rem 1rem;
+    border-top: 1px solid var(--border-color);
 }
-.editBtn, .deleteBtn { /* Уточняем стили для кнопок редактирования/удаления в турах */
+
+.editBtn, .deleteBtn {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--grey-400);
-    transition: var(--transition);
+    font-size: 1.2rem;
     padding: 0.5rem;
-    border-radius: var(--radius-button);
-}
-.editBtn:hover { color: var(--green-dark); background-color: var(--green-light); }
-.deleteBtn:hover { color: var(--red-dark); background-color: var(--red-light); }
-
-.categoryHeader {
+    border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0 1.5rem 0.5rem; /* Уменьшаем верхний паддинг, чтобы кнопка "Добавить" была ближе к заголовку */
-    border-bottom: 1px solid var(--grey-100);
-    margin-top: 1.5rem; /* Отступ сверху для каждой категории */
-    margin-bottom: 1rem; /* Отступ снизу перед аккордеоном */
-}
-.categoryHeader h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--grey-800);
-}
-.addButtonMini { /* Маленькая кнопка добавления в категории */
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-    font-weight: 500;
-    background-color: var(--green);
-    color: var(--white);
-    border-radius: var(--radius-button);
-    border: none;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    box-shadow: var(--shadow-sm);
-}
-.addButtonMini:hover {
-    background-color: var(--green-dark);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-button-hover);
-}
-.noItems {
-    padding: 1.5rem;
-    text-align: center;
-    color: var(--grey-400);
-    font-style: italic;
+    justify-content: center;
 }
 
+.editBtn {
+    color: var(--accent-info);
+}
 
-/* Review Manager */
-.reviewsContainer { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Адаптивная сетка для колонок отзывов */
-    gap: 2rem; 
+.editBtn:hover {
+    background-color: rgba(var(--accent-info-rgb), 0.1);
 }
-.reviewColumn h2 { 
-    font-size: 1.25rem; 
-    font-weight: 600; 
-    margin-bottom: 1rem; 
-    padding-bottom: 0.75rem; 
-    border-bottom: 1px solid var(--grey-200); 
-    color: var(--grey-800);
+
+.deleteBtn {
+    color: var(--accent-error);
 }
-.reviewCard { 
-    padding: 1.5rem; 
-    margin-bottom: 1rem; /* Отступ между карточками */
-}
-.reviewCard .cardHeader { 
-    border: none; 
-    padding: 0; 
-    margin-bottom: 0.75rem; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-}
-.reviewAuthor { 
-    font-weight: 600; 
-    color: var(--grey-800); 
-}
-.reviewDate { 
-    font-size: 0.8rem; 
-    color: var(--grey-400); 
-}
-.reviewText { 
-    line-height: 1.6; 
-    margin: 0.5rem 0 1.5rem; 
-    color: var(--grey-800); 
-    font-style: italic; /* Отзыв курсивом */
-    background-color: var(--grey-50); /* Немного темнее фон для текста отзыва */
-    padding: 1rem;
-    border-radius: var(--radius-button);
-    border: 1px solid var(--grey-100);
-}
-.reviewActions { 
-    display: flex; 
-    justify-content: flex-end; 
-    gap: 0.75rem; 
-}
-.statusBadge { 
-    padding: 0.25rem 0.75rem; 
-    border-radius: 99px; 
-    font-size: 0.75rem; 
-    font-weight: 600; 
-    display: inline-block; /* Чтобы корректно работал padding/margin */
-}
-.statusPending { 
-    background-color: var(--grey-100); 
-    color: var(--grey-600); 
-}
-.statusPublished { 
-    background-color: var(--green-light); 
-    color: var(--green-dark); 
+
+.deleteBtn:hover {
+    background-color: rgba(var(--accent-error-rgb), 0.1);
 }
 
 /* Admin Users Page */
-.adminUserGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+.usersTableContainer {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto; /* Для адаптивности таблицы */
 }
 
-.adminUserItem {
-    background-color: var(--white);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--grey-100);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: var(--transition);
+.usersTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
 }
-.adminUserItem:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+
+.usersTable th, .usersTable td {
+    text-align: left;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border-color);
 }
-.adminUserInfo {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-.adminUserIcon {
-    color: var(--grey-400);
-    font-size: 2rem;
-    flex-shrink: 0;
-}
-.adminUserRole {
+
+.usersTable th {
+    background-color: var(--grey-100);
+    color: var(--primary-dark);
+    font-weight: bold;
+    text-transform: uppercase;
     font-size: 0.85rem;
-    color: var(--grey-400);
-    margin-top: 0.25rem;
-    display: block; /* Чтобы был на новой строке */
 }
-.adminUserDate {
-    font-size: 0.75rem;
-    color: var(--grey-400);
-    display: block;
+
+.usersTable tr:last-child td {
+    border-bottom: none;
 }
-.adminUserActions {
-    display: flex;
-    gap: 0.5rem;
+
+.usersTable tbody tr:hover {
+    background-color: var(--background-light);
 }
-.adminContainer { /* Для центрирования контента на странице пользователей */
-    padding: 2.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
+
+.userRole {
+    font-weight: bold;
 }
-.errorCard {
+
+.userRole.admin { color: var(--accent-info); }
+.userRole.super_admin { color: var(--accent-success); }
+
+.userActions button {
+    margin-right: 0.5rem;
+}
+
+/* Loading and Error States */
+.loadingPage, .errorPage {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    text-align: center;
-    padding: 2rem;
-    background-color: var(--red-light);
-    color: var(--red-dark);
-    border: 1px solid var(--red);
-    box-shadow: var(--shadow);
+    height: 100vh;
+    width: 100%;
+    font-size: 1.2rem;
+    color: var(--grey-600);
 }
-.errorCard svg {
+
+.loadingIcon {
+    animation: spin 2s linear infinite;
     margin-bottom: 1rem;
-}
-.errorCard p {
-    font-size: 1rem;
-    font-weight: 500;
+    color: var(--accent-color);
 }
 
-/* 8. Login Page (Страница входа)
-------------------------------------------------- */
-.loginPage { 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    flex-grow: 1; 
-}
-.loginBox {
-    width: 100%; 
-    max-width: 420px; 
-    padding: 3rem; 
-    background: var(--white);
-    border-radius: var(--radius); 
-    box-shadow: var(--shadow-lg); 
-    text-align: center;
-    border: 1px solid var(--grey-100); /* Граница для login box */
-}
-.loginBox h2 { 
-    font-size: 1.75rem; 
-    font-weight: 700; 
-    color: var(--green-dark); 
-    margin-bottom: 1rem; 
-}
-.loginBox p { 
-    color: var(--grey-400); 
-    margin-bottom: 2.5rem; 
-}
-.loginForm .formGroup { 
-    text-align: left; 
-    margin-bottom: 1.5rem; 
-}
-.loginForm input { 
-    width: 100%; 
-    box-sizing: border-box; 
-}
-.loginError { 
-    display: flex; 
-    align-items: center; 
-    gap: 0.5rem; 
-    padding: 0.75rem 1rem; 
-    background-color: var(--red-light); 
-    color: var(--red-dark);
-    border: 1px solid var(--red-light); 
-    border-radius: var(--radius-button); 
-    margin-bottom: 1.5rem; 
-    font-size: 0.9rem; 
-    text-align: left;
-}
-.loginError svg {
-    flex-shrink: 0; /* Не сжимать иконку */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 
-/* 9. Mobile & Responsive Styles (Адаптивные стили для мобильных устройств)
-------------------------------------------------- */
+/* Responsive Design */
+@media (max-width: 992px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        transform: translateX(-100%);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+    }
+
+    .sidebar.sidebarOpen {
+        transform: translateX(0);
+    }
+
+    .mobileMenuButton {
+        display: block;
+    }
+
+    .mainContent {
+        padding: 1.5rem;
+    }
+
+    .contentHeader {
+        padding: 1rem 1.5rem;
+    }
+
+    .formModal, .notificationModal {
+        padding: 1.5rem;
+    }
+
+    .tourGrid {
+        grid-template-columns: 1fr; /* Одна колонка на маленьких экранах */
+    }
+}
+
 @media (max-width: 768px) {
-    .sidebar { 
-        transform: translateX(-100%); /* Скрываем сайдбар по умолчанию на мобильных */
-        box-shadow: var(--shadow-lg); 
+    .mainContent {
+        padding: 1rem;
     }
-    .sidebarOpen { 
-        transform: translateX(0); /* Показываем сайдбар при открытии */
-    }
-    .mainContent { 
-        margin-left: 0; 
-        padding: 1.5rem; 
-    }
-    .contentHeader h1 { 
-        font-size: 1.5rem; 
-    }
-    .mobileMenuButton { 
-        display: block; /* Показываем кнопку меню на мобильных */
-        background: none; 
-        border: none; 
-        font-size: 1.75rem; 
-        color: var(--grey-600); 
-        z-index: 101;
-        cursor: pointer;
-        padding: 0.5rem; /* Увеличиваем область нажатия */
-    }
-    .pageOverlay { 
-        position: fixed; 
-        inset: 0; 
-        background-color: rgba(0,0,0,0.5); 
-        z-index: 99; /* Перекрытие для закрытия сайдбара */
+
+    .contentHeader h1 {
+        font-size: 1.6rem;
     }
 
     .formModal {
-        padding: 1.5rem; /* Уменьшаем паддинг модальных окон на мобильных */
-    }
-    .formHeader {
-        margin-bottom: 1.5rem;
-    }
-    .formActions {
-        flex-direction: column; /* Кнопки в столбец на мобильных */
-        gap: 0.75rem;
-    }
-    .button {
-        width: 100%; /* Кнопки на всю ширину */
-    }
-    .closeButton {
-        top: 0.5rem;
-        right: 0.5rem;
+        max-width: 95%;
     }
 
-    .reviewsContainer {
-        grid-template-columns: 1fr; /* Одна колонка для отзывов */
-    }
-    .adminUserGrid {
-        grid-template-columns: 1fr; /* Одна колонка для пользователей */
+    .tourForm .formGrid {
+        grid-template-columns: 1fr; /* Всегда одна колонка на очень маленьких экранах */
     }
 }
 
-@media (max-width: 480px) {
-    .loginBox {
-        padding: 2rem; /* Уменьшаем паддинг формы входа */
-    }
-    .sidebar {
-        width: 100%; /* Сайдбар на всю ширину на очень маленьких экранах */
-    }
+.pageOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    /* transition: opacity 0.3s ease-in-out; */
 }

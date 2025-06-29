@@ -155,9 +155,9 @@ export default async function handler(req, res) {
                     }
                 }
             } catch (unlinkError) {
-                console.error(`[SERVER] Ошибка при удалении файла изображения ${imagePath}:`, unlinkError); 
-                // !!! ИСПРАВЛЕНО: Перебрасываем ошибку, чтобы внешний catch обработал её как JSON !!!
-                throw new Error(`Failed to delete image file: ${unlinkError.message}`); //
+                console.error(`[SERVER] Ошибка при удалении файла изображения ${data.image_url}:`, unlinkError); 
+                // ИСПРАВЛЕНО: Перебрасываем ошибку, чтобы внешний catch обработал её как JSON
+                throw new Error(`Не удалось удалить файл изображения: ${unlinkError.message}`); 
             }
         }
 
@@ -231,8 +231,8 @@ export default async function handler(req, res) {
                     }
                 } catch (fileError) {
                     console.error(`[SERVER] Ошибка при удалении файла изображения ${imagePath}:`, fileError); 
-                    // !!! ИСПРАВЛЕНО: Перебрасываем ошибку, чтобы внешний catch обработал её как JSON !!!
-                    throw new Error(`Failed to delete image file: ${fileError.message}`); //
+                    // ИСПРАВЛЕНО: Перебрасываем ошибку, чтобы внешний catch обработал её как JSON
+                    throw new Error(`Не удалось удалить файл изображения: ${fileError.message}`); 
                 }
             }
 

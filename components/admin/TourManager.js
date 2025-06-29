@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 // Импорт необходимых иконок из react-icons
-import { FiChevronDown, FiEdit2, FiTrash2, FiPlus, FiPlusCircle } from 'react-icons/fi';
+import { FiChevronDown, FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi'; // Убрал FiPlusCircle, т.к. не используется
 import styles from '../../styles/Admin.module.css';
 
 // Динамически импортируем форму TourForm, чтобы она не влияла на начальную загрузку
@@ -22,9 +22,6 @@ const TourForm = dynamic(() => import('./TourForm'));
  * @param {function} props.onToggle - Функция для переключения состояния аккордеона.
  */
 const TourCategory = ({ categoryName, tours, onEdit, onDelete, isOpen, onToggle }) => {
-    // УДАЛЕНО: useState для isOpen, теперь состояние контролируется извне
-    // const [isOpen, setIsOpen] = useState(true); 
-
     return (
         <div className={styles.accordionItem}>
             {/* Кнопка заголовка аккордеона. Использует onToggle из пропсов. */}
@@ -44,18 +41,20 @@ const TourCategory = ({ categoryName, tours, onEdit, onDelete, isOpen, onToggle 
                         {tours.map((tour) => (
                             <div key={tour.id} className={styles.tourItemAdmin}>
                                 {/* Изображение тура с заглушкой на случай ошибки */}
-                                <img 
-                                    src={tour.image_url} 
-                                    alt={tour.title} 
-                                    className={styles.tourImageAdmin} 
-                                    onError={(e) => { 
-                                        e.target.onerror = null; 
-                                        e.target.src = '/placeholder.png'; // Заглушка изображения при ошибке
-                                    }} 
-                                />
+                                <div className={styles.tourImageContainerAdmin}> {/* Добавлен контейнер для изображений */}
+                                    <img 
+                                        src={tour.image_url} 
+                                        alt={tour.title} 
+                                        className={styles.tourImageAdmin} 
+                                        onError={(e) => { 
+                                            e.target.onerror = null; 
+                                            e.target.src = 'https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Image'; // Заглушка изображения при ошибке
+                                        }} 
+                                    />
+                                </div>
                                 <div className={styles.tourInfoAdmin}>
                                     <strong>{tour.title}</strong>
-                                    <p>{tour.description}</p>
+                                    {/* Убран tour.description для краткости, чтобы не загромождать карточку в админке */}
                                     <span className={styles.tourPriceAdmin}>{tour.price} {tour.currency}</span>
                                 </div>
                                 <div className={styles.tourActionsAdmin}>
@@ -144,14 +143,14 @@ export default function TourManager({ tours, onDataChange, showNotification, sho
             try {
                 const res = await fetch('/api/admin/tours', {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }, // <-- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Добавлен Content-Type
+                    headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ id: tourId }),
                 });
                 const result = await res.json();
                 console.log('[CLIENT] Delete API response:', result); // ОТЛАДКА: Лог ответа от API после удаления
                 if (!res.ok) throw new Error(result.message);
                 showNotification({type: 'success', message: 'Тур успешно удален!'});
-                onDataChange(); // Обновляем данные после успешного удаления
+                onDataChange('tours'); // Обновляем данные после успешного удаления
             } catch (error) {
                 console.error('[CLIENT] Error deleting tour:', error); // ОТЛАДКА: Лог ошибки удаления на клиенте
                 showNotification({type: 'error', message: `Ошибка удаления: ${error.message}`});
@@ -166,8 +165,7 @@ export default function TourManager({ tours, onDataChange, showNotification, sho
         <div>
             {/* Заголовок раздела и кнопка добавления тура */}
             <div className={styles.contentHeader} style={{marginBottom: "2rem"}}>
-                {/* Пустой div для выравнивания, если нет других элементов в заголовке */}
-                <div/>
+                <div/> {/* Пустой div для выравнивания */}
                 {/* Кнопка добавления нового тура (общая для всех категорий) */}
                 <button onClick={() => handleAdd(openCategory || 'hot')} className={`${styles.button} ${styles.primaryButton}`}>
                     <FiPlus />
@@ -199,7 +197,7 @@ export default function TourManager({ tours, onDataChange, showNotification, sho
                     onClose={() => setIsModalOpen(false)}
                     config={formConfig} 
                     showNotification={showNotification} 
-                    onDataChange={onDataChange}
+                    onDataChange={() => onDataChange('tours')} // Передаем 'tours' для обновления SWR
                 />
             )}
         </div>

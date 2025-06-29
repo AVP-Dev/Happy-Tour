@@ -40,6 +40,24 @@ export default function Home() {
     // Получение данных туров
     // Группируем туры по категориям для каруселей
     const { data: toursData, error: toursError } = useSWR('/api/admin/tours', fetcher);
+
+    // ИСПРАВЛЕНО: Добавлены console.log для отладки
+    useEffect(() => {
+        if (toursData) {
+            console.log('Tours data received on home page:', toursData);
+            const hot = toursData.filter(tour => tour.category === 'hot');
+            const popular = toursData.filter(tour => tour.category === 'popular');
+            const special = toursData.filter(tour => tour.category === 'special');
+            console.log('Filtered Hot Tours:', hot);
+            console.log('Filtered Popular Tours:', popular);
+            console.log('Filtered Special Offers:', special);
+        }
+        if (toursError) {
+            console.error('Error fetching tours on home page:', toursError);
+        }
+    }, [toursData, toursError]);
+
+
     const hotTours = toursData?.filter(tour => tour.category === 'hot') || [];
     const popularTours = toursData?.filter(tour => tour.category === 'popular') || [];
     const specialOffers = toursData?.filter(tour => tour.category === 'special') || [];
@@ -88,11 +106,15 @@ export default function Home() {
 
     /**
      * Показывает уведомление.
-     * @param {string} message - Текст сообщения.
-     * @param {'success' | 'error'} type - Тип уведомления.
+     * @param {string | object} options - Текст сообщения (string) или объект с { message, type }.
+     * @param {'success' | 'error' | 'info'} [type='info'] - Тип уведомления.
      */
-    const showNotification = (message, type = 'info') => {
-        setNotification({ isOpen: true, message, type });
+    const showNotification = (options, type = 'info') => {
+        if (typeof options === 'string') {
+            setNotification({ isOpen: true, message: options, type });
+        } else {
+            setNotification({ isOpen: true, ...options });
+        }
     };
 
     /**
@@ -191,7 +213,7 @@ export default function Home() {
                             onClick={() => {
                                 setIsTourModalOpen(false);
                                 handleSearchClick(); // Прокрутка к виджету Tourvisor
-                                showNotification('Ваша заявка на тур отправлена! Скоро свяжемся с вами.', 'success');
+                                showNotification({type: 'success', message: 'Ваша заявка на тур отправлена! Скоро свяжемся с вами.'});
                             }} 
                             className="btn btn-primary"
                             style={{marginTop: '1rem'}}
@@ -216,7 +238,7 @@ export default function Home() {
                 ) : ( // Иначе показываем форму для оставления отзыва
                     <ReviewForm 
                         onClose={() => setIsReviewModalOpen(false)} 
-                        onReviewSubmitted={() => showNotification('Ваш отзыв успешно отправлен и будет опубликован после модерации.', 'success')} 
+                        onReviewSubmitted={() => showNotification({type: 'success', message: 'Ваш отзыв успешно отправлен и будет опубликован после модерации.'})} 
                         onFormSubmit={showNotification} // Для отображения уведомлений об ошибках/успехе
                         initialMessage={selectedTour?.title ? `Отзыв на тур: ${selectedTour.title}` : ''} // Предзаполнение, если тур выбран
                     />
@@ -234,3 +256,4 @@ export default function Home() {
         </>
     );
 }
+

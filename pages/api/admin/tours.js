@@ -172,7 +172,19 @@ export default async function handler(req, res) {
     } else if (req.method === 'DELETE') {
         // Удаление тура
         const { id } = req.body; // Получаем ID тура из тела запроса
+
+        // ИСПРАВЛЕНО: Добавлена валидация UUID для ID
+        // Простая регулярка для проверки формата UUIDv4
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+        if (!isUuid) {
+            console.error('Попытка удаления с невалидным ID (не UUID):', id);
+            return res.status(400).json({ message: 'Неверный формат ID тура. Ожидается UUID.' });
+        }
+
         try {
+            // Добавлено логирование для отладки
+            console.log('Attempting to delete tour with ID:', id);
+
             const tourToDelete = await prisma.tour.findUnique({ where: { id: id } });
             if (!tourToDelete) {
                 return res.status(404).json({ message: 'Тур не найден.' });
@@ -186,7 +198,7 @@ export default async function handler(req, res) {
                     console.log(`Файл изображения удален: ${imagePath}`);
                 } catch (fileError) {
                     if (fileError.code === 'ENOENT') {
-                        console.warn(`Файл изображения не найден при удалении: ${imagePath}`);
+                        console.warn(`Файл изображения не найден при удалении: ${imagePath}. Возможно, он уже был удален или путь неверен.`);
                     } else {
                         console.error(`Ошибка при удалении файла изображения ${imagePath}:`, fileError);
                     }
@@ -198,6 +210,10 @@ export default async function handler(req, res) {
             return res.status(200).json({ message: 'Тур и связанные файлы успешно удалены!' });
         } catch (error) {
             console.error('Ошибка удаления тура:', error);
+            // Если ошибка связана с Prisma (например, запись не найдена), можно дать более конкретное сообщение
+            if (error.code === 'P2025') { // Код ошибки Prisma для "запись не найдена"
+                return res.status(404).json({ message: 'Тур не найден для удаления.' });
+            }
             return res.status(500).json({ message: `Ошибка удаления тура: ${error.message}` });
         }
     } else {

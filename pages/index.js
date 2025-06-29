@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr'; // Для получения данных для каруселей и FAQ (если используются)
-import styles from '../styles/Home.module.css'; // ИСПРАВЛЕНО: Добавлен импорт стилей для Home.module.css
+import styles from '../styles/Home.module.css'; 
 
 // Динамические импорты для секций (для оптимизации загрузки)
 const Hero = dynamic(() => import('../components/Hero'));
@@ -13,7 +13,6 @@ const Carousel = dynamic(() => import('../components/Carousel'));
 const ContactSection = dynamic(() => import('../components/ContactSection'));
 const FAQ = dynamic(() => import('../components/FAQ'));
 const Modal = dynamic(() => import('../components/Modal'));
-// ИСПРАВЛЕНО: Notification теперь импортируется напрямую, т.к. будет внутри Modal
 const Notification = dynamic(() => import('../components/Notification')); 
 const ReviewForm = dynamic(() => import('../components/ReviewForm')); // Добавлен импорт ReviewForm
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false }); // Клиентский виджет
@@ -136,8 +135,10 @@ export default function Home() {
             <Hero onSearchClick={handleSearchClick} />
 
             {/* Tourvisor Widget Section */}
-            <section id="tourvisor" className="section-padding light-bg">
-                <div className="container">
+            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
+            <section id="tourvisor" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
+                <div className={styles.section_overlay}></div>
+                <div className={`container ${styles.section_content_wrapper}`}>
                     <h2 className="section-title">Подбор тура онлайн</h2>
                     <p style={{textAlign: 'center', marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px'}}>
                         Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
@@ -146,7 +147,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Hot Tours Section */}
+            {/* Hot Tours Section (без фонового изображения по умолчанию) */}
             <section id="hot-tours" className="section-padding">
                 <div className="container">
                     <h2 className="section-title">Горящие туры</h2>
@@ -157,14 +158,16 @@ export default function Home() {
             </section>
 
             {/* Popular Destinations Section */}
-            <section id="popular-destinations" className="section-padding light-bg">
-                <div className="container">
+            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
+            <section id="popular-destinations" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
+                <div className={styles.section_overlay}></div>
+                <div className={`container ${styles.section_content_wrapper}`}>
                     <h2 className="section-title">Популярные направления</h2>
                     <Carousel tours={popularTours} onTourInquiry={handleTourInquiry} />
                 </div>
             </section>
 
-            {/* Special Offers Section */}
+            {/* Special Offers Section (без фонового изображения по умолчанию) */}
             <section id="special-offers" className="section-padding">
                 <div className="container">
                     <h2 className="section-title">Выгодные предложения</h2>
@@ -173,8 +176,10 @@ export default function Home() {
             </section>
 
             {/* Reviews Section */}
-            <section id="reviews" className="section-padding light-bg">
-                <div className="container">
+            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
+            <section id="reviews" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
+                <div className={styles.section_overlay}></div>
+                <div className={`container ${styles.section_content_wrapper}`}>
                     <h2 className="section-title">Отзывы наших клиентов</h2>
                     {reviewsError && <p style={{textAlign: 'center', color: 'red'}}>Ошибка загрузки отзывов: {reviewsError.message}</p>}
                     {!reviewsData && !reviewsError && <p style={{textAlign: 'center'}}>Загрузка отзывов...</p>}
@@ -189,15 +194,24 @@ export default function Home() {
             </section>
 
             {/* FAQ Section */}
-            <section id="faq" className="section-padding">
-                <div className="container">
+            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
+            <section id="faq" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
+                <div className={styles.section_overlay}></div>
+                <div className={`container ${styles.section_content_wrapper}`}>
                     <h2 className="section-title">Популярные вопросы</h2>
                     <FAQ items={faqItems} />
                 </div>
             </section>
 
             {/* Contact Section */}
-            <ContactSection onFormSubmit={showNotification} />
+            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
+            <section id="page_contacts" className={`${styles.contacts_section} ${styles['section-padding']} ${styles['section-with-bg']}`}>
+                <div className={styles.section_overlay}></div>
+                <div className={`container ${styles.section_content_wrapper}`}>
+                    <ContactSection onFormSubmit={showNotification} />
+                </div>
+            </section>
+
 
             {/* Modals */}
             {/* Модальное окно деталей тура */}
@@ -247,7 +261,7 @@ export default function Home() {
             </Modal>
 
 
-            {/* ИСПРАВЛЕНО: Notification теперь рендерится внутри Modal */}
+            {/* Уведомления теперь рендерятся внутри Modal */}
             <Modal isOpen={notification.isOpen} onClose={closeNotification} title={notification.type === 'success' ? 'Успешно!' : 'Ошибка!'}>
                 <Notification
                     message={notification.message}

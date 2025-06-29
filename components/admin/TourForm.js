@@ -47,9 +47,11 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
             }
             setImageFile(file); // Сохраняем файл для отправки
             setImagePreview(URL.createObjectURL(file)); // Создаем URL для предпросмотра
+            console.log('Image file selected:', file.name, file.size); // ОТЛАДКА: Лог выбранного файла
         } else {
             setImageFile(null);
             setImagePreview(null);
+            console.log('Image file deselected.'); // ОТЛАДКА: Лог отмены выбора
         }
     };
 
@@ -95,6 +97,14 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
                 dataToSend.append('image_url', formData.image_url);
             }
 
+            // ОТЛАДКА: Логируем данные, которые будут отправлены
+            console.log('--- Sending FormData to API ---');
+            for (let pair of dataToSend.entries()) {
+                console.log(pair[0]+ ': ' + pair[1]); 
+            }
+            console.log('Image file present in FormData (expected):', dataToSend.has('image'));
+            console.log('--- End FormData Log ---');
+
 
             // Отправляем запрос на API-маршрут
             const res = await fetch('/api/admin/tours', {
@@ -107,6 +117,10 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
 
             const result = await res.json(); // Парсим ответ от сервера
 
+            // ОТЛАДКА: Логируем ответ от API
+            console.log('API response after saving tour:', result);
+            console.log('API response status:', res.status);
+
             // Проверяем, был ли запрос успешным
             if (!res.ok) {
                 throw new Error(result.message || 'Произошла ошибка при сохранении.');
@@ -116,7 +130,7 @@ export default function TourForm({ isOpen, onClose, config, showNotification, on
             onDataChange(); // Уведомляем родительский компонент об изменении данных
             onClose(); // Закрываем модальное окно формы
         } catch (error) {
-            console.error('Ошибка сохранения тура:', error);
+            console.error('Ошибка сохранения тура (client-side):', error);
             showNotification({type: 'error', message: `Ошибка сохранения: ${error.message}`}); // Показываем уведомление об ошибке
         } finally {
             setIsSubmitting(false); // Снимаем состояние отправки

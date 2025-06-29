@@ -38,7 +38,7 @@ async function ensureDirExists(dirPath) {
   } catch (e) {
     if (e.code === 'ENOENT') { // Если директория не существует
       await fs.mkdir(dirPath, { recursive: true }); // Создаем ее рекурсивно
-      console.log(`Директория для загрузок создана: ${dirPath}`);
+      console.log(`[SERVER] Директория для загрузок создана: ${dirPath}`); // ОТЛАДКА: Лог создания директории
     } else {
       // Перебрасываем другие ошибки доступа
       throw e;
@@ -47,9 +47,12 @@ async function ensureDirExists(dirPath) {
 }
 
 export default async function handler(req, res) {
+    console.log(`[SERVER] Received ${req.method} request to /api/admin/tours`); // ОТЛАДКА: Лог входящего запроса
+
     // Проверяем аутентификацию администратора
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
+        console.warn('[SERVER] Неавторизованный доступ к /api/admin/tours'); // ОТЛАДКА: Лог неавторизованного доступа
         return res.status(401).json({ message: 'Не авторизован' });
     }
 
@@ -57,7 +60,7 @@ export default async function handler(req, res) {
     try {
         await ensureDirExists(UPLOADS_DIR);
     } catch (dirError) {
-        console.error('Ошибка создания директории для загрузок:', dirError);
+        console.error('[SERVER] Ошибка создания директории для загрузок:', dirError); // ОТЛАДКА: Лог ошибки создания директории
         return res.status(500).json({ message: 'Ошибка сервера: не удалось подготовить директорию для загрузок.' });
     }
 
@@ -69,9 +72,10 @@ export default async function handler(req, res) {
                     createdAt: 'desc', // Сортируем по дате создания
                 },
             });
+            console.log(`[SERVER] Отправка ${tours.length} туров.`); // ОТЛАДКА: Лог количества отправляемых туров
             return res.status(200).json(tours);
         } catch (error) {
-            console.error('Ошибка получения туров:', error);
+            console.error('[SERVER] Ошибка получения туров:', error); // ОТЛАДКА: Лог ошибки получения туров
             return res.status(500).json({ message: 'Ошибка получения туров' });
         }
     } else if (req.method === 'POST' || req.method === 'PUT') {
@@ -84,7 +88,9 @@ export default async function handler(req, res) {
             minFileSize: 0,
             filename: (name, ext, part) => {
                 // Генерируем уникальное имя файла для предотвращения конфликтов
-                return `${uuidv4()}-${part.originalFilename}`;
+                const uniqueFilename = `${uuidv4()}-${part.originalFilename}`;
+                console.log(`[SERVER] Generated unique filename for upload: ${uniqueFilename}`); // ОТЛАДКА: Лог сгенерированного имени файла
+                return uniqueFilename;
             },
         });
 
@@ -92,9 +98,10 @@ export default async function handler(req, res) {
         try {
             // Парсим входящий запрос для получения полей формы и файлов
             [fields, files] = await form.parse(req);
+            console.log('[SERVER] API received fields:', fields); // ОТЛАДКА: Лог полученных полей
+            console.log('[SERVER] API received files:', files); // ОТЛАДКА: Лог полученных файлов
         } catch (err) {
-            console.error('Ошибка парсинга формы:', err);
-            // Обрабатываем ошибку, если файл слишком большой
+            console.error('[SERVER] Ошибка парсинга формы formidable:', err); // ОТЛАДКА: Лог ошибки парсинга
             if (err.code === formidable.errors.biggerThanMaxFileSize) {
                 return res.status(400).json({ message: 'Файл слишком большой (макс. 5 МБ).' });
             }
@@ -102,10 +109,10 @@ export default async function handler(req, res) {
         }
 
         // Преобразуем поля формы в простой объект
-        // formidable возвращает поля как массивы, берем первый элемент
         const data = Object.fromEntries(
             Object.entries(fields).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
         );
+        console.log('[SERVER] Parsed form data:', data); // ОТЛАДКА: Лог распарсенных данных формы
 
         let imageUrl = data.image_url; // Существующий URL изображения из формы (при редактировании)
 
@@ -114,28 +121,29 @@ export default async function handler(req, res) {
             const uploadedFile = files.image[0];
             // image_url будет относительным путем от public директории
             imageUrl = `/uploads/tours/${path.basename(uploadedFile.filepath)}`;
+            console.log(`[SERVER] New image uploaded. Path: ${uploadedFile.filepath}, URL: ${imageUrl}`); // ОТЛАДКА: Лог пути и URL нового изображения
         } else if (req.method === 'POST' && !imageUrl) {
             // При добавлении нового тура изображение обязательно
+            console.error('[SERVER] Изображение отсутствует для нового тура (POST).'); // ОТЛАДКА: Лог отсутствия изображения
             return res.status(400).json({ message: 'Изображение обязательно для нового тура.' });
         }
+        console.log('[SERVER] Final image URL for DB:', imageUrl); // ОТЛАДКА: Конечный URL изображения перед записью в DB
 
         // Логика удаления старого файла при замене изображения (только при PUT)
         if (req.method === 'PUT' && data.id && files.image && files.image.length > 0) {
             try {
                 const existingTour = await prisma.tour.findUnique({ where: { id: data.id } });
                 if (existingTour && existingTour.image_url) {
-                    // Определяем полный путь к старому изображению на диске
                     const oldImagePath = path.join(process.cwd(), 'public', existingTour.image_url);
-                    // Проверяем, существует ли файл и что новый URL отличается от старого,
-                    // чтобы не удалить только что загруженный файл, если formidable его переместил.
                     if (await fs.stat(oldImagePath).then(() => true).catch(() => false) && existingTour.image_url !== imageUrl) {
                         await fs.unlink(oldImagePath);
-                        console.log(`Удален старый файл изображения: ${oldImagePath}`);
+                        console.log(`[SERVER] Удален старый файл изображения: ${oldImagePath}`); // ОТЛАДКА: Лог удаления старого файла
+                    } else {
+                         console.log(`[SERVER] Старый файл изображения не удален (путь совпадает или файл не найден): ${oldImagePath}`); // ОТЛАДКА: Лог, если старый файл не удален
                     }
                 }
             } catch (unlinkError) {
-                console.warn(`Не удалось удалить старый файл изображения ${data.image_url}:`, unlinkError);
-                // Это предупреждение, не ошибка, так как тур все равно будет обновлен
+                console.warn(`[SERVER] Не удалось удалить старый файл изображения ${data.image_url}:`, unlinkError); // ОТЛАДКА: Лог ошибки удаления старого файла
             }
         }
 
@@ -149,6 +157,7 @@ export default async function handler(req, res) {
                 category: data.category,
                 image_url: imageUrl, // Сохраняем относительный путь
             };
+            console.log('[SERVER] Data to be saved to DB:', tourData); // ОТЛАДКА: Лог данных перед сохранением
 
             if (req.method === 'PUT') {
                 // Обновляем существующий тур по ID
@@ -156,16 +165,18 @@ export default async function handler(req, res) {
                     where: { id: data.id },
                     data: tourData,
                 });
+                console.log('[SERVER] Tour successfully updated in DB:', tour.id); // ОТЛАДКА: Лог успешного обновления
                 return res.status(200).json({ message: 'Тур успешно обновлен!', id: tour.id });
             } else { // POST
                 // Создаем новый тур
                 tour = await prisma.tour.create({
                     data: tourData,
                 });
+                console.log('[SERVER] New tour successfully created in DB:', tour.id); // ОТЛАДКА: Лог успешного создания
                 return res.status(201).json({ message: 'Тур успешно добавлен!', id: tour.id });
             }
         } catch (error) {
-            console.error(`Ошибка сохранения тура (${req.method}):`, error);
+            console.error(`[SERVER] Ошибка сохранения тура (${req.method}):`, error); // ОТЛАДКА: Лог ошибки сохранения
             return res.status(500).json({ message: `Ошибка сохранения тура: ${error.message}` });
         }
 
@@ -174,19 +185,18 @@ export default async function handler(req, res) {
         const { id } = req.body; // Получаем ID тура из тела запроса
 
         // ИСПРАВЛЕНО: Добавлена валидация UUID для ID
-        // Простая регулярка для проверки формата UUIDv4
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
         if (!isUuid) {
-            console.error('Попытка удаления с невалидным ID (не UUID):', id);
+            console.error('[SERVER] Попытка удаления с невалидным ID (не UUID):', id); // ОТЛАДКА: Лог невалидного ID
             return res.status(400).json({ message: 'Неверный формат ID тура. Ожидается UUID.' });
         }
 
         try {
-            // Добавлено логирование для отладки
-            console.log('Attempting to delete tour with ID:', id);
+            console.log('[SERVER] Attempting to delete tour with ID:', id); // ОТЛАДКА: Лог попытки удаления
 
             const tourToDelete = await prisma.tour.findUnique({ where: { id: id } });
             if (!tourToDelete) {
+                console.warn(`[SERVER] Тур с ID ${id} не найден для удаления.`); // ОТЛАДКА: Лог тур не найден
                 return res.status(404).json({ message: 'Тур не найден.' });
             }
 
@@ -195,23 +205,23 @@ export default async function handler(req, res) {
                 const imagePath = path.join(process.cwd(), 'public', tourToDelete.image_url);
                 try {
                     await fs.unlink(imagePath); // Удаляем файл
-                    console.log(`Файл изображения удален: ${imagePath}`);
+                    console.log(`[SERVER] Файл изображения удален: ${imagePath}`); // ОТЛАДКА: Лог успешного удаления файла
                 } catch (fileError) {
                     if (fileError.code === 'ENOENT') {
-                        console.warn(`Файл изображения не найден при удалении: ${imagePath}. Возможно, он уже был удален или путь неверен.`);
+                        console.warn(`[SERVER] Файл изображения не найден при удалении: ${imagePath}. Возможно, он уже был удален или путь неверен.`); // ОТЛАДКА: Файл не найден
                     } else {
-                        console.error(`Ошибка при удалении файла изображения ${imagePath}:`, fileError);
+                        console.error(`[SERVER] Ошибка при удалении файла изображения ${imagePath}:`, fileError); // ОТЛАДКА: Ошибка удаления файла
                     }
                 }
             }
 
             // Удаляем запись о туре из базы данных
             await prisma.tour.delete({ where: { id: id } });
+            console.log(`[SERVER] Тур с ID ${id} успешно удален из БД.`); // ОТЛАДКА: Лог успешного удаления из БД
             return res.status(200).json({ message: 'Тур и связанные файлы успешно удалены!' });
         } catch (error) {
-            console.error('Ошибка удаления тура:', error);
-            // Если ошибка связана с Prisma (например, запись не найдена), можно дать более конкретное сообщение
-            if (error.code === 'P2025') { // Код ошибки Prisma для "запись не найдена"
+            console.error('[SERVER] Ошибка удаления тура:', error); // ОТЛАДКА: Лог ошибки удаления
+            if (error.code === 'P2025') { 
                 return res.status(404).json({ message: 'Тур не найден для удаления.' });
             }
             return res.status(500).json({ message: `Ошибка удаления тура: ${error.message}` });
@@ -219,6 +229,7 @@ export default async function handler(req, res) {
     } else {
         // Если метод запроса не разрешен
         res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+        console.warn(`[SERVER] Метод ${req.method} не разрешен для /api/admin/tours`); // ОТЛАДКА: Лог неразрешенного метода
         res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 }

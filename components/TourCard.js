@@ -6,8 +6,7 @@ import styles from '../styles/TourCard.module.css';
 const BLUR_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkqAcAAIUAgUW0RjgAAAAASUVORK5CYII=';
 
 const TourCard = ({ tour, onDetailsClick }) => {
-    // ИСПРАВЛЕНО: Теперь используем tour.image_url для проверки и отображения
-    if (!tour || !tour.image_url || !tour.title) return null;
+    if (!tour || !tour.image || !tour.title) return null;
     
     const handleDetailsClick = () => {
         if (onDetailsClick) {
@@ -19,7 +18,7 @@ const TourCard = ({ tour, onDetailsClick }) => {
         <div className={styles.card}>
             <div className={styles.image_container}>
                <Image 
-                    src={tour.image_url} // ИСПРАВЛЕНО: tour.image -> tour.image_url
+                    src={tour.image} 
                     alt={tour.title} 
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

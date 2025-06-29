@@ -1,150 +1,106 @@
-/* styles/TourCard.module.css */
+/* Основной контейнер карточки */
 .card {
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Заставляет карточку занимать всю высоту слайда */
+    background-color: var(--white-color);
+    border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    /* ИСПРАВЛЕНО: Устанавливаем базовый размер карточки и предотвращаем сжатие/растяжение */
-    min-width: 280px; /* Минимальная ширина, чтобы карточки не были слишком маленькими */
-    max-width: 300px; /* Максимальная ширина для контроля размера */
-    flex-basis: calc(25% - 1.5rem); /* Для 4-х карточек в ряд с учетом gap 1.5rem, adjusted for typical widths */
-    flex-shrink: 0; /* Не сжимать карточки меньше min-width */
-    flex-grow: 0; /* Не растягивать карточки больше max-width */
+    transition: all 0.3s ease-in-out;
 }
 
+/* Эффект при наведении */
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
 }
 
+/* Контейнер для изображения */
 .image_container {
-    width: 100%;
-    padding-bottom: 60%; /* 5:3 aspect ratio (e.g., 300x180) */
     position: relative;
-    overflow: hidden;
+    width: 100%;
+    /* Создаем пропорции 3:2 для изображения */
+    padding-top: 66.66%; 
 }
 
+/* Стили для самого изображения */
 .image {
-    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Изображение будет покрывать контейнер без искажений */
 }
 
+/* Контейнер для текстового контента */
 .content {
-    padding: 1rem;
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Allow content to grow and push footer down */
+    flex-grow: 1; /* Позволяет этому блоку занять все оставшееся место */
+    padding: 20px;
 }
 
 .title {
     font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: #333;
-    line-height: 1.3;
-    /* Ensure title doesn't overflow much */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+    min-height: 4.5rem; /* Резервируем место для 3 строк заголовка */
 }
 
 .description {
-    font-size: 0.95rem;
-    color: #666;
-    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--gray-color);
     line-height: 1.5;
-    flex-grow: 1; /* Allow description to take available space */
-    /* Clamp description to a few lines */
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex-grow: 1; /* Занимает все доступное место, отодвигая футер вниз */
+    margin-bottom: 15px;
 }
 
+/* === ИЗМЕНЕНО: Футер карточки теперь центрирует элементы === */
 .footer {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto; /* Push footer to the bottom */
-    padding-top: 1rem; /* Add some space above footer */
-    border-top: 1px solid #eee;
+    flex-direction: column; /* Ставим элементы друг под другом */
+    align-items: center; /* Выравниваем по центру */
+    margin-top: auto; /* Прижимает футер к низу */
+    gap: 12px; /* Расстояние между ценой и кнопкой */
 }
 
+/* Стили для цены */
 .price {
-    font-size: 1.15rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    color: #007bff; /* Primary color */
+    color: var(--dark-color);
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
 }
 
 .price span {
-    font-size: 0.9rem;
-    font-weight: 400;
-    color: #888;
-    margin-right: 0.25rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--gray-color);
 }
 
+/* Стили для кнопки "Подробнее" */
 .button {
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
-    padding: 8px 15px;
+    padding: 12px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
     border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    width: 100%; /* Растягиваем кнопку на всю ширину */
+    text-align: center; /* Центрируем текст в кнопке */
 }
 
 .button:hover {
-    background-color: #0056b3;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .card {
-        flex-basis: calc(33.33% - 1rem); /* 3 cards per row */
-        max-width: unset; /* Let flex-basis control width */
-    }
-}
-
-@media (max-width: 992px) {
-    .card {
-        flex-basis: calc(50% - 0.75rem); /* 2 cards per row */
-    }
-}
-
-@media (max-width: 768px) {
-    .card {
-        flex-basis: calc(50% - 0.75rem); /* Still 2 cards per row for tablets */
-        min-width: 250px; /* Ensure they don't get too small */
-    }
-    .title {
-        font-size: 1.1rem;
-    }
-    .description {
-        font-size: 0.85rem;
-    }
-    .price {
-        font-size: 1rem;
-    }
-    .button {
-        padding: 6px 12px;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .card {
-        flex-basis: 95%; /* Single card on very small screens */
-        margin: 0 auto 1.5rem; /* Center and add vertical spacing */
-    }
-    .image_container {
-        padding-bottom: 70%; /* Adjust aspect ratio for better mobile viewing */
-    }
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
 }

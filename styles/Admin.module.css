@@ -439,19 +439,17 @@
 /* Используем contentWrapper для плавного открытия/закрытия аккордеона */
 .accordionContentWrapper { 
     max-height: 0;
-    overflow-y: auto; /* ИСПРАВЛЕНО: для прокрутки */
-    overflow-x: hidden; /* Для предотвращения горизонтальной прокрутки */
+    overflow: hidden;
     transition: max-height 0.3s ease-out; /* Плавное открытие/закрытие */
 }
 .accordionContentWrapper.open {
-    max-height: 2000px; /* ИСПРАВЛЕНО: Увеличено значение для прокрутки большого количества элементов */
-    transition: max-height 0.5s ease-in-out;
+    max-height: 1000px; /* Достаточно большое значение для открытия, должно быть больше, чем макс. высота контента */
 }
 .tourGrid { 
     padding: 0 1.5rem 1.5rem; 
     display: grid; 
     /* ИСПРАВЛЕНО: Уточняем minmax для более компактного отображения */
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* ИСПРАВЛЕНО: minmax adjusted */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
     gap: 1.5rem; 
     align-items: stretch; /* Выравнивание элементов по высоте */
 }
@@ -463,9 +461,6 @@
     flex-direction: column;
     box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    /* ИСПРАВЛЕНО: Добавлено max-width для предотвращения растягивания, если мало элементов */
-    max-width: 350px; /* Adjust this value as needed to control card size */
-    justify-self: center; /* Center items within their grid cell */
 }
 .tourItemAdmin:hover {
     transform: translateY(-3px);
@@ -474,7 +469,7 @@
 .tourImageAdmin { 
     width: 100%; 
     height: 180px; /* Фиксированная высота для изображений */
-    object-fit: cover; /* ИСПРАВЛЕНО: Ensures image covers the area without stretching and maintains aspect ratio */
+    object-fit: cover; 
     border-bottom: 1px solid var(--grey-100); /* Разделитель */
 }
 .tourInfoAdmin { 

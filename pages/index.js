@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr'; // Для получения данных для каруселей и FAQ (если используются)
-import styles from '../styles/Home.module.css'; 
+import styles from '../styles/Home.module.css'; // ИСПРАВЛЕНО: Добавлен импорт стилей для Home.module.css
 
 // Динамические импорты для секций (для оптимизации загрузки)
 const Hero = dynamic(() => import('../components/Hero'));
@@ -13,7 +13,7 @@ const Carousel = dynamic(() => import('../components/Carousel'));
 const ContactSection = dynamic(() => import('../components/ContactSection'));
 const FAQ = dynamic(() => import('../components/FAQ'));
 const Modal = dynamic(() => import('../components/Modal'));
-const Notification = dynamic(() => import('../components/Notification')); 
+const Notification = dynamic(() => import('../components/Notification'));
 const ReviewForm = dynamic(() => import('../components/ReviewForm')); // Добавлен импорт ReviewForm
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false }); // Клиентский виджет
 
@@ -135,10 +135,8 @@ export default function Home() {
             <Hero onSearchClick={handleSearchClick} />
 
             {/* Tourvisor Widget Section */}
-            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
-            <section id="tourvisor" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
-                <div className={styles.section_overlay}></div>
-                <div className={`container ${styles.section_content_wrapper}`}>
+            <section id="tourvisor" className="section-padding light-bg">
+                <div className="container">
                     <h2 className="section-title">Подбор тура онлайн</h2>
                     <p style={{textAlign: 'center', marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px'}}>
                         Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
@@ -147,7 +145,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Hot Tours Section (без фонового изображения по умолчанию) */}
+            {/* Hot Tours Section */}
             <section id="hot-tours" className="section-padding">
                 <div className="container">
                     <h2 className="section-title">Горящие туры</h2>
@@ -158,16 +156,14 @@ export default function Home() {
             </section>
 
             {/* Popular Destinations Section */}
-            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
-            <section id="popular-destinations" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
-                <div className={styles.section_overlay}></div>
-                <div className={`container ${styles.section_content_wrapper}`}>
+            <section id="popular-destinations" className="section-padding light-bg">
+                <div className="container">
                     <h2 className="section-title">Популярные направления</h2>
                     <Carousel tours={popularTours} onTourInquiry={handleTourInquiry} />
                 </div>
             </section>
 
-            {/* Special Offers Section (без фонового изображения по умолчанию) */}
+            {/* Special Offers Section */}
             <section id="special-offers" className="section-padding">
                 <div className="container">
                     <h2 className="section-title">Выгодные предложения</h2>
@@ -176,10 +172,8 @@ export default function Home() {
             </section>
 
             {/* Reviews Section */}
-            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
-            <section id="reviews" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
-                <div className={styles.section_overlay}></div>
-                <div className={`container ${styles.section_content_wrapper}`}>
+            <section id="reviews" className="section-padding light-bg">
+                <div className="container">
                     <h2 className="section-title">Отзывы наших клиентов</h2>
                     {reviewsError && <p style={{textAlign: 'center', color: 'red'}}>Ошибка загрузки отзывов: {reviewsError.message}</p>}
                     {!reviewsData && !reviewsError && <p style={{textAlign: 'center'}}>Загрузка отзывов...</p>}
@@ -194,24 +188,15 @@ export default function Home() {
             </section>
 
             {/* FAQ Section */}
-            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
-            <section id="faq" className={`${styles['section-padding']} ${styles['section-with-bg']}`}>
-                <div className={styles.section_overlay}></div>
-                <div className={`container ${styles.section_content_wrapper}`}>
+            <section id="faq" className="section-padding">
+                <div className="container">
                     <h2 className="section-title">Популярные вопросы</h2>
                     <FAQ items={faqItems} />
                 </div>
             </section>
 
             {/* Contact Section */}
-            {/* ИСПРАВЛЕНО: Добавлены классы для фона и оверлея */}
-            <section id="page_contacts" className={`${styles.contacts_section} ${styles['section-padding']} ${styles['section-with-bg']}`}>
-                <div className={styles.section_overlay}></div>
-                <div className={`container ${styles.section_content_wrapper}`}>
-                    <ContactSection onFormSubmit={showNotification} />
-                </div>
-            </section>
-
+            <ContactSection onFormSubmit={showNotification} />
 
             {/* Modals */}
             {/* Модальное окно деталей тура */}
@@ -261,14 +246,14 @@ export default function Home() {
             </Modal>
 
 
-            {/* Уведомления теперь рендерятся внутри Modal */}
-            <Modal isOpen={notification.isOpen} onClose={closeNotification} title={notification.type === 'success' ? 'Успешно!' : 'Ошибка!'}>
-                <Notification
-                    message={notification.message}
-                    type={notification.type}
-                    onClose={closeNotification}
-                />
-            </Modal>
+            {/* Уведомление (всплывающее, не модальное) */}
+            <Notification
+                isOpen={notification.isOpen}
+                message={notification.message}
+                type={notification.type}
+                onClose={closeNotification}
+            />
         </>
     );
 }
+

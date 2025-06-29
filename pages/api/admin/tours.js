@@ -10,9 +10,18 @@ import formidable from 'formidable'; // Для обработки multipart/form
 import { v4 as uuidv4 } from 'uuid'; // Для генерации уникальных ID файлов
 
 // ОПРЕДЕЛЕНИЕ ПУТИ ДЛЯ ЗАГРУЗКИ ИЗОБРАЖЕНИЙ ВНУТРИ КОНТЕЙНЕРА COOLIFY
+// `process.cwd()` в Next.js продакшен сборке внутри контейнера Docker
+// будет указывать на корневую директорию приложения (обычно `/app`).
+// `public` - это стандартная директория Next.js для статических файлов,
+// которая должна быть доступна.
+// Если в Coolify настроено монтирование Host Path -> Container Path
+// `/var/lib/happytour_data/uploads` -> `/app/public/uploads` (или `/app/public/uploads/tours`),
+// то `path.join(process.cwd(), 'public', 'uploads', 'tours')` будет корректно
+// разрешаться в `/app/public/uploads/tours`.
 const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads', 'tours');
 
 // Отключаем встроенный парсер body Next.js для обработки FormData
+// Это необходимо, чтобы formidable мог полностью контролировать парсинг тела запроса.
 export const config = {
   api: {
     bodyParser: false,
@@ -88,7 +97,7 @@ export default async function handler(req, res) {
         let fields, files;
         try {
             // Парсим входящий запрос для получения полей формы и файлов
-            [fields, files] = await form.parse(req); // Use await here
+            [fields, files] = await form.parse(req);
             console.log('[SERVER] API received fields:', fields); 
             console.log('[SERVER] API received files:', files); 
         } catch (err) {
@@ -113,7 +122,6 @@ export default async function handler(req, res) {
             // image_url будет относительным путем от public директории
             // Проверяем существование uploadedFile.filepath перед использованием
             if (uploadedFile.filepath) {
-                // Use path.basename to get just the filename from the full path
                 imageUrl = `/uploads/tours/${path.basename(uploadedFile.filepath)}`;
                 console.log(`[SERVER] New image uploaded. Path: ${uploadedFile.filepath}, URL: ${imageUrl}`); 
             } else {
@@ -133,8 +141,11 @@ export default async function handler(req, res) {
                 const existingTour = await prisma.tour.findUnique({ where: { id: data.id } });
                 if (existingTour && existingTour.image_url) {
                     const oldImagePath = path.join(process.cwd(), 'public', existingTour.image_url);
+                    // Проверяем, существует ли файл и что новый URL отличается от старого,
+                    // чтобы не удалить только что загруженный файл, если formidable его переместил.
+                    // Также добавлена проверка, что файл вообще существует по старому пути
                     const oldFileExists = await fs.stat(oldImagePath).then(() => true).catch(() => false);
-                    if (oldFileExists && existingTour.image_url !== imageUrl) { // Only delete if actually replaced
+                    if (oldFileExists && existingTour.image_url !== imageUrl) {
                         await fs.unlink(oldImagePath);
                         console.log(`[SERVER] Удален старый файл изображения: ${oldImagePath}`); 
                     } else if (!oldFileExists) {
@@ -178,6 +189,7 @@ export default async function handler(req, res) {
             }
         } catch (error) {
             console.error(`[SERVER] Ошибка сохранения тура (${req.method}):`, error); 
+            // Добавляем более конкретную обработку ошибок Prisma, если есть
             if (error.code) {
                 console.error(`[SERVER] Prisma Error Code: ${error.code}`);
             }
@@ -188,6 +200,7 @@ export default async function handler(req, res) {
         // Удаление тура
         const { id } = req.body; // Получаем ID тура из тела запроса
 
+        // ИСПРАВЛЕНО: Добавлена валидация UUID для ID
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
         if (!isUuid) {
             console.error('[SERVER] Попытка удаления с невалидным ID (не UUID):', id); 
@@ -207,6 +220,7 @@ export default async function handler(req, res) {
             if (tourToDelete.image_url) {
                 const imagePath = path.join(process.cwd(), 'public', tourToDelete.image_url);
                 try {
+                    // Проверяем, существует ли файл перед попыткой удаления
                     if (await fs.stat(imagePath).then(() => true).catch(() => false)) {
                         await fs.unlink(imagePath); // Удаляем файл
                         console.log(`[SERVER] Файл изображения удален: ${imagePath}`); 

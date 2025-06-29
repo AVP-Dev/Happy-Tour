@@ -7,7 +7,8 @@
 }
 
 /* Global styles for sections (if not already in Globals.css) */
-.section-padding {
+/* Эти стили section-padding, section-title, container и light-bg предполагаются глобальными (из Globals.css) */
+/* .section-padding {
     padding: 60px 0;
 }
 
@@ -16,10 +17,21 @@
     font-weight: bold;
     text-align: center;
     margin-bottom: 2.5rem;
-    color: var(--primary-color-dark); /* Assuming a global color variable */
+    color: var(--primary-color-dark);
 }
 
-/* Styles for sections with background images */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.light-bg {
+    background-color: var(--light-color);
+} */
+
+
+/* Styles for sections with background images - теперь это не composes */
 .section-with-bg {
     position: relative;
     background-size: cover;
@@ -55,47 +67,72 @@
 /* Tourvisor Widget Section */
 #tourvisor {
     background-image: url('/img/search-tours-map.webp');
-    composes: section-with-bg; /* Inherit common background styles */
-    /* Удаляем light-bg, если он был, чтобы не конфликтовать */
-    background-color: transparent;
+    /* ИСПРАВЛЕНО: Прямое применение стилей вместо composes */
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    color: var(--white);
+    overflow: hidden;
+    background-color: transparent; /* Удаляем light-bg, если он был, чтобы не конфликтовать */
 }
 
-/* Hot Tours Section (no specific background image by default, keeps current styling) */
+/* Hot Tours Section (без фонового изображения по умолчанию) */
 /* #hot-tours */
 
 /* Popular Destinations Section */
 #popular-destinations {
     background-image: url('/img/tours-lagoon-bungalows.webp');
-    composes: section-with-bg; /* Inherit common background styles */
-    /* Удаляем light-bg, если он был, чтобы не конфликтовать */
-    background-color: transparent;
+    /* ИСПРАВЛЕНО: Прямое применение стилей вместо composes */
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    color: var(--white);
+    overflow: hidden;
+    background-color: transparent; /* Удаляем light-bg, если он был, чтобы не конфликтовать */
 }
 
-/* Special Offers Section (no specific background image by default, keeps current styling) */
+/* Special Offers Section (без фонового изображения по умолчанию) */
 /* #special-offers */
 
 /* Reviews Section */
 #reviews {
     background-image: url('/img/reviews-happy-couple.webp');
-    composes: section-with-bg; /* Inherit common background styles */
-    /* Удаляем light-bg, если он был, чтобы не конфликтовать */
-    background-color: transparent;
+    /* ИСПРАВЛЕНО: Прямое применение стилей вместо composes */
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    color: var(--white);
+    overflow: hidden;
+    background-color: transparent; /* Удаляем light-bg, если он был, чтобы не конфликтовать */
 }
 
 /* FAQ Section */
 #faq {
     background-image: url('/img/faq-clouds-minimal.webp');
-    composes: section-with-bg; /* Inherit common background styles */
-    /* Удаляем light-bg, если он был, чтобы не конфликтовать */
-    background-color: transparent;
+    /* ИСПРАВЛЕНО: Прямое применение стилей вместо composes */
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    color: var(--white);
+    overflow: hidden;
+    background-color: transparent; /* Удаляем light-bg, если он был, чтобы не конфликтовать */
 }
 
 /* Contact Section (Assuming contacts_section is already defined from previous code) */
 .contacts_section {
     background-image: url('/img/contacts-city-night.webp');
-    composes: section-with-bg; /* Inherit common background styles */
-    /* Удаляем light-bg, если он был, чтобы не конфликтовать */
-    background-color: transparent;
+    /* ИСПРАВЛЕНО: Прямое применение стилей вместо composes */
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    color: var(--white);
+    overflow: hidden;
+    background-color: transparent; /* Удаляем light-bg, если он был, чтобы не конфликтовать */
 }
 
 
@@ -182,27 +219,18 @@
 
 /* Utility classes (should be in Globals.css) */
 /* .container should be here or Globals.css */
-.container {
+/* .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 15px;
-}
+} */
 
 /* Light background for sections (remove if image background is used) */
-.light-bg {
-    background-color: var(--light-color); /* Assuming --light-color is defined globally */
-}
-
-/* General text colors (can be moved to Globals.css if used widely) */
-/* ИСПРАВЛЕНО: Этот блок перемещен в Globals.css */
-/* :root {
-    --primary-color: #007bff;
-    --primary-color-dark: #0056b3;
-    --light-color: #f8f9fa; 
-    --text-color: #333;
-    --white: #ffffff;
-    --grey-400: #94a3b8;
+/* .light-bg {
+    background-color: var(--light-color);
 } */
+
+/* General text colors (moved to Globals.css) */
 
 
 /* --- Responsive Adjustments --- */

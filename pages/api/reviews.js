@@ -17,6 +17,7 @@ async function verifyRecaptcha(token) {
         const response = await fetch(verificationUrl, { method: 'POST' });
         const data = await response.json();
         // reCAPTCHA v3 возвращает score, который должен быть >= 0.5 (обычно) для "человека"
+        console.log("reCAPTCHA verification response:", data); // ДОБАВЛЕНО ЛОГИРОВАНИЕ ОТВЕТА
         return data.success && data.score >= 0.5;
     } catch (error) {
         console.error("Ошибка при проверке ReCaptcha:", error);

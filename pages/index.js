@@ -13,7 +13,8 @@ const Carousel = dynamic(() => import('../components/Carousel'));
 const ContactSection = dynamic(() => import('../components/ContactSection'));
 const FAQ = dynamic(() => import('../components/FAQ'));
 const Modal = dynamic(() => import('../components/Modal'));
-const Notification = dynamic(() => import('../components/Notification'));
+// ИСПРАВЛЕНО: Notification теперь импортируется напрямую, т.к. будет внутри Modal
+const Notification = dynamic(() => import('../components/Notification')); 
 const ReviewForm = dynamic(() => import('../components/ReviewForm')); // Добавлен импорт ReviewForm
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false }); // Клиентский виджет
 
@@ -246,14 +247,14 @@ export default function Home() {
             </Modal>
 
 
-            {/* Уведомление (всплывающее, не модальное) */}
-            <Notification
-                isOpen={notification.isOpen}
-                message={notification.message}
-                type={notification.type}
-                onClose={closeNotification}
-            />
+            {/* ИСПРАВЛЕНО: Notification теперь рендерится внутри Modal */}
+            <Modal isOpen={notification.isOpen} onClose={closeNotification} title={notification.type === 'success' ? 'Успешно!' : 'Ошибка!'}>
+                <Notification
+                    message={notification.message}
+                    type={notification.type}
+                    onClose={closeNotification}
+                />
+            </Modal>
         </>
     );
 }
-

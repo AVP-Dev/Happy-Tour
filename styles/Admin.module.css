@@ -439,11 +439,14 @@
 /* Используем contentWrapper для плавного открытия/закрытия аккордеона */
 .accordionContentWrapper { 
     max-height: 0;
-    overflow: hidden;
+    /* ИСПРАВЛЕНО: overflow-y: auto для прокрутки, увеличено max-height */
+    overflow-y: auto; 
+    overflow-x: hidden; /* Для предотвращения горизонтальной прокрутки */
     transition: max-height 0.3s ease-out; /* Плавное открытие/закрытие */
 }
 .accordionContentWrapper.open {
-    max-height: 1000px; /* Достаточно большое значение для открытия, должно быть больше, чем макс. высота контента */
+    max-height: 2000px; /* Увеличено значение для прокрутки большого количества элементов */
+    transition: max-height 0.5s ease-in-out;
 }
 .tourGrid { 
     padding: 0 1.5rem 1.5rem; 

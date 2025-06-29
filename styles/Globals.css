@@ -40,9 +40,10 @@ p {
 
 /* CSS Variables */
 :root {
-    --primary-color: #007bff;
-    --primary-color-dark: #0056b3;
-    --secondary-color: #6c757d; /* Можно использовать для акцентов или кнопок */
+    /* ИСПРАВЛЕНО: Возвращены фирменные зеленые цвета */
+    --primary-color: #22c55e; /* Ваш фирменный зеленый */
+    --primary-color-dark: #16a34a; /* Темный оттенок зеленого */
+    --secondary-color: #6c757d; /* Нейтральный серый для второстепенных элементов */
     --light-color: #f8f9fa; /* Очень светлый серый */
     --text-color: #333;
     --white: #ffffff;
@@ -87,8 +88,6 @@ p {
 }
 
 /* Custom Swiper navigation buttons (global styles) */
-/* Это нужно, если ваши кнопки карусели не находятся внутри компонента Carousel.module.css */
-/* Но если они управляются из Carousel.module.css, эти стили могут быть не нужны или конфликтовать */
 .swiper-button-prev-custom,
 .swiper-button-next-custom {
     position: absolute;
@@ -102,7 +101,7 @@ p {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary-color);
+    color: var(--primary-color); /* Используем фирменный зеленый */
     cursor: pointer;
     transition: var(--transition);
     z-index: 10;
@@ -133,7 +132,7 @@ p {
 
 .swiper-button-prev-custom:hover,
 .swiper-button-next-custom:hover {
-    background-color: var(--primary-color);
+    background-color: var(--primary-color-dark); /* Темный оттенок зеленого при ховере */
     color: var(--white);
     transform: translateY(-50%) scale(1.05);
 }
@@ -160,7 +159,7 @@ p {
 }
 
 .swiper-pagination-custom .swiper-pagination-bullet-active {
-    background-color: var(--primary-color);
+    background-color: var(--primary-color); /* Используем фирменный зеленый */
     opacity: 1;
     width: 25px; /* Увеличить активный буллит */
     border-radius: 5px; /* Сделать его прямоугольным */

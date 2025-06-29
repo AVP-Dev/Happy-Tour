@@ -1,65 +1,38 @@
-import { Swiper, SwiperSlide } from 'swiper/react';
-// ИСПРАВЛЕНО: Импорт модулей Swiper теперь из 'swiper/modules'
-import { Navigation, Pagination, Autoplay } from 'swiper/modules'; 
+// components/Carousel.js
+import React from 'react';
 import TourCard from './TourCard';
-import ReviewCard from './ReviewCard'; 
-
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
+import ReviewCard from './ReviewCard';
+import styles from '../styles/Carousel.module.css';
 
 const Carousel = ({ tours, reviews, isReviewCarousel = false, onTourInquiry, onReadMore }) => {
     const items = isReviewCarousel ? reviews : tours;
 
-    // УЛУЧШЕННАЯ ПРОВЕРКА: Проверяем, что items является массивом.
-    // Это защитит сайт от падения, если API вернет ошибку вместо списка.
-    if (!Array.isArray(items) || items.length === 0) {
-        return <p style={{textAlign: 'center', padding: '1rem'}}>Информация в этой категории скоро появится.</p>;
+    // Проверяем, если количество элементов <= 2 (для центрирования)
+    // Убедимся, что items существует и не пуст, чтобы избежать ошибок
+    const isSmallCount = items && items.length > 0 && items.length <= 2;
+    // Применяем класс centeredContent, если количество маленькое
+    const carouselContentClass = `${styles.carouselContent} ${isSmallCount ? styles.centeredContent : ''}`;
+
+    if (!items || items.length === 0) {
+        return (
+            <p className={styles.noItemsMessage}>
+                {isReviewCarousel ? 'Пока нет опубликованных отзывов.' : 'Туры скоро появятся!'}
+            </p>
+        );
     }
 
-    const swiperParams = {
-        // ИСПРАВЛЕНО: Модули теперь передаются корректно
-        modules: [Navigation, Pagination, Autoplay],
-        spaceBetween: 30,
-        loop: items.length > 3, // Цикл включается, если элементов больше, чем может поместиться на экране
-        centeredSlides: false,
-        navigation: {
-            nextEl: '.swiper-button-next-custom',
-            prevEl: '.swiper-button-prev-custom',
-        },
-        pagination: { 
-            clickable: true,
-            el: '.swiper-pagination-custom',
-        },
-        autoplay: {
-            delay: 6000,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-        },
-        breakpoints: {
-            320: { slidesPerView: 1, spaceBetween: 20 },
-            768: { slidesPerView: 2, spaceBetween: 25 },
-            1024: { slidesPerView: 3, spaceBetween: 30 },
-            1280: { slidesPerView: 4, spaceBetween: 30 },
-        },
-    };
-
     return (
-        <div className="carousel-wrapper">
-            <Swiper {...swiperParams}>
-                {items.map((item, index) => (
-                    <SwiperSlide key={item.id || `slide-${index}`} style={{ height: 'auto' }}>
-                        {isReviewCarousel 
-                            ? <ReviewCard review={item} onReadMore={onReadMore} /> 
-                            : <TourCard tour={item} onTourInquiry={onTourInquiry} />
-                        }
-                    </SwiperSlide>
+        <div className={styles.carouselContainer}>
+            {/* Применяем динамический класс для центрирования */}
+            <div className={carouselContentClass}>
+                {items.map((item) => (
+                    isReviewCarousel ? (
+                        <ReviewCard key={item.id} review={item} onReadMore={() => onReadMore(item)} />
+                    ) : (
+                        <TourCard key={item.id} tour={item} onDetailsClick={onTourInquiry} />
+                    )
                 ))}
-            </Swiper>
-            {/* Эти элементы управления стилизуются в globals.css */}
-            <div className="swiper-button-prev-custom"></div>
-            <div className="swiper-button-next-custom"></div>
-            <div className="swiper-pagination-custom"></div>
+            </div>
         </div>
     );
 };

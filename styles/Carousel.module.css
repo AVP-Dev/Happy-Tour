@@ -1,0 +1,28 @@
+/* styles/Carousel.module.css */
+
+.carouselContainer {
+    overflow-x: auto;
+    padding-bottom: 1rem; /* Для видимости полосы прокрутки */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Для более плавной прокрутки на iOS */
+}
+
+.carouselContent {
+    display: flex;
+    gap: 1.5rem; /* Пространство между карточками */
+    padding: 0.5rem; /* Отступы вокруг контента, если нужны */
+    justify-content: flex-start; /* По умолчанию: элементы начинаются слева */
+    /* Теперь не нужно явно указывать flex-wrap: nowrap, так как это поведение по умолчанию для flex */
+}
+
+/* Новый стиль для центрирования при небольшомом количестве элементов */
+.centeredContent {
+    justify-content: center;
+}
+
+.noItemsMessage {
+    text-align: center;
+    padding: 2rem;
+    color: var(--grey-400); /* Предполагается наличие переменной global grey-400 или аналогичной */
+    font-style: italic;
+}

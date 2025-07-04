@@ -20,6 +20,7 @@ const ReviewForm = dynamic(() => import('../components/ReviewForm'));
 const ContactForm = dynamic(() => import('../components/ContactForm'));
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false });
 
+// Обертка для секций с фоновым изображением
 const SectionWrapper = ({ bgImage, children, ...rest }) => (
     <Box
         position="relative"
@@ -70,9 +71,6 @@ export default function Home({ tours, reviews }) {
         { q: 'Как забронировать тур?', a: 'Вы можете выбрать тур через наш онлайн-поиск и оставить заявку. Наш менеджер свяжется с вами в течение 15 минут для подтверждения деталей и обсуждения всех вопросов. Также вы всегда можете позвонить нам или прийти в офис.' },
         { q: 'Какие способы оплаты вы принимаете?', a: 'Мы предлагаем несколько удобных способов: оплата банковской картой онлайн через защищенную систему, оплата по QR-коду через ЕРИП, а также наличными или картой у нас в офисе. Возможна покупка тура в рассрочку.' },
         { q: 'Какие документы нужны для поездки?', a: 'Стандартный пакет включает действующий паспорт и медицинскую страховку. Для некоторых стран требуется виза. Мы предоставим полный список документов и поможем с оформлением визы.' },
-        { q: 'Что включено в стоимость тура?', a: 'Обычно в пакетный тур входит авиаперелет, проживание в отеле, трансфер (аэропорт-отель-аэропорт) и медицинская страховка. Тип питания и дополнительные услуги зависят от конкретного предложения.' },
-        { q: 'Можно ли отменить или изменить бронирование?', a: 'Да, это возможно. Условия отмены или внесения изменений зависят от правил туроператора и авиакомпании. Рекомендуем уточнять эти детали у менеджера при бронировании.' },
-        { q: 'Что делать, если возникли проблемы во время отдыха?', a: 'В ваших документах будут указаны все необходимые контакты: телефон вашего гида, представителя туроператора и круглосуточной службы поддержки. Мы всегда на связи и готовы помочь 24/7.' }
     ];
 
     const handleTourInquiry = (tour) => {
@@ -112,63 +110,59 @@ export default function Home({ tours, reviews }) {
 
             <Hero onSearchClick={() => document.getElementById('tourvisor')?.scrollIntoView({ behavior: 'smooth' })} />
 
-            <Box as="section" id="tourvisor" py={sectionPadding}>
-                <Container maxW="container.xl">
-                    <SectionHeading>Подбор тура онлайн</SectionHeading>
-                    <Text textAlign="center" mb={10} maxW="container.md" mx="auto" color="gray.600">
-                        Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
-                    </Text>
-                    <TourvisorWidget />
-                </Container>
-            </Box>
+            <SectionWrapper id="tourvisor" bgImage="/img/search-tours-map.webp">
+                <SectionHeading color="white">Подбор тура онлайн</SectionHeading>
+                <Text textAlign="center" mb={10} maxW="container.md" mx="auto" color="gray.200">
+                    Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
+                </Text>
+                <TourvisorWidget />
+            </SectionWrapper>
 
-            <Box as="section" id="hot-tours" py={sectionPadding}>
+            <SectionWrapper id="hot-tours" bgImage="/img/tours-lagoon-bungalows.webp">
+                <SectionHeading color="white">Горящие туры</SectionHeading>
+                <UniversalCarousel
+                    items={hotTours}
+                    renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
+                />
+            </SectionWrapper>
+            
+            <Box as="section" id="popular-destinations" py={sectionPadding}>
                 <Container maxW="container.xl">
-                    <SectionHeading>Горящие туры</SectionHeading>
+                    <SectionHeading>Популярные направления</SectionHeading>
                     <UniversalCarousel
-                        items={hotTours}
+                        items={popularTours}
                         renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
                     />
                 </Container>
             </Box>
-            
-            <SectionWrapper id="popular-destinations" bgImage="/img/tours-lagoon-bungalows.webp">
-                <SectionHeading color="white">Популярные направления</SectionHeading>
+
+            <SectionWrapper id="special-offers" bgImage="/img/reviews-happy-couple.webp">
+                <SectionHeading color="white">Выгодные предложения</SectionHeading>
                 <UniversalCarousel
-                    items={popularTours}
+                    items={specialOffers}
                     renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
                 />
             </SectionWrapper>
 
-            <Box as="section" id="special-offers" py={sectionPadding}>
+            <Box as="section" id="reviews" py={sectionPadding}>
                 <Container maxW="container.xl">
-                    <SectionHeading>Выгодные предложения</SectionHeading>
-                    <UniversalCarousel
-                        items={specialOffers}
-                        renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
+                    <SectionHeading>Отзывы наших клиентов</SectionHeading>
+                     <UniversalCarousel
+                        items={reviews}
+                        renderItem={(item) => <ReviewCard review={item} onReadMore={handleReadMoreReview} />}
                     />
+                    <Box textAlign="center" mt={10}>
+                        <Button onClick={handleOpenAddReviewModal} size="lg">
+                            Оставить отзыв
+                        </Button>
+                    </Box>
                 </Container>
             </Box>
 
-            <SectionWrapper id="reviews" bgImage="/img/reviews-happy-couple.webp">
-                <SectionHeading color="white">Отзывы наших клиентов</SectionHeading>
-                 <UniversalCarousel
-                    items={reviews}
-                    renderItem={(item) => <ReviewCard review={item} onReadMore={handleReadMoreReview} />}
-                />
-                <Box textAlign="center" mt={10}>
-                    <Button onClick={handleOpenAddReviewModal} size="lg">
-                        Оставить отзыв
-                    </Button>
-                </Box>
+            <SectionWrapper id="faq" bgImage="/img/faq-clouds-minimal.webp">
+                <SectionHeading color="white">Частые вопросы</SectionHeading>
+                <FAQ items={faqItems} />
             </SectionWrapper>
-
-            <Box as="section" id="faq" py={sectionPadding}>
-                <Container maxW="container.xl">
-                    <SectionHeading>Частые вопросы</SectionHeading>
-                    <FAQ items={faqItems} />
-                </Container>
-            </Box>
 
             <ContactSection id="contact-section" onFormSubmit={showNotification} />
 
@@ -177,7 +171,7 @@ export default function Home({ tours, reviews }) {
                 <ModalContent>
                     <ModalHeader>Заявка на тур</ModalHeader>
                     <ModalCloseButton />
-                    <ModalBody>
+                    <ModalBody pb={6}>
                         {selectedTour && (
                              <ContactForm
                                 tour={selectedTour}

@@ -21,23 +21,9 @@ export default async function handler(req, res) {
                 });
                 return res.status(200).json(reviews);
             } catch (error) {
-                console.error('Ошибка при получении отзывов:', error);
                 return res.status(500).json({ message: 'Ошибка сервера при получении отзывов.' });
             }
 
-        case 'POST': // Создание отзыва из админки
-            try {
-                const { author, text, rating, status } = req.body;
-                const newReview = await prisma.review.create({
-                    data: { author, text, rating: parseInt(rating, 10), status: status || 'pending', createdById: userId }
-                });
-                return res.status(201).json(newReview);
-            } catch (error) {
-                console.error('Ошибка при создании отзыва:', error);
-                return res.status(500).json({ message: 'Ошибка сервера при создании отзыва.' });
-            }
-
-        // ИСПРАВЛЕНО: Явно обрабатываем PATCH для обновления статуса
         case 'PATCH':
             try {
                 const { id, status } = req.body;
@@ -46,7 +32,7 @@ export default async function handler(req, res) {
                 }
                 const updatedReview = await prisma.review.update({
                     where: { id: id },
-                    data: { status, updatedById: userId }, // Также фиксируем, кто обновил
+                    data: { status, updatedById: userId },
                 });
                 return res.status(200).json(updatedReview);
             } catch (error) {
@@ -60,12 +46,11 @@ export default async function handler(req, res) {
                 await prisma.review.delete({ where: { id: id } });
                 return res.status(204).end();
             } catch (error) {
-                console.error('Ошибка при удалении отзыва:', error);
                 return res.status(500).json({ message: 'Ошибка сервера при удалении отзыва.' });
             }
             
         default:
-            res.setHeader('Allow', ['GET', 'POST', 'PATCH', 'DELETE']);
+            res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
             return res.status(405).json({ message: `Метод ${req.method} не разрешен` });
     }
 }

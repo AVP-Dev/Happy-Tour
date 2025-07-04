@@ -2,7 +2,7 @@
 import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    HStack, Text, Image, Box, Tooltip,
+    HStack, Text, Image, Box, Tooltip, Icon,
     Tag, IconButton, Switch
 } from '@chakra-ui/react';
 import { FaEdit, FaTrash, FaHotjar, FaStar, FaGift } from 'react-icons/fa';
@@ -37,7 +37,7 @@ const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
                             <Th>Категория</Th>
                             <Th isNumeric>Цена</Th>
                             <Th>Опубликован</Th>
-                            <Th>Действия</Th>
+                            <Th isNumeric>Действия</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -65,8 +65,8 @@ const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
                                         />
                                     </Tooltip>
                                 </Td>
-                                <Td>
-                                    <HStack spacing={2}>
+                                <Td isNumeric>
+                                    <HStack spacing={2} justify="flex-end">
                                         <Tooltip label="Редактировать" hasArrow>
                                             <IconButton
                                                 aria-label="Редактировать тур"

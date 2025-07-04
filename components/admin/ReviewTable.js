@@ -55,7 +55,7 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
                             <Th>Текст</Th>
                             <Th isNumeric>Рейтинг</Th>
                             <Th>Статус</Th>
-                            <Th>Действия</Th>
+                            <Th isNumeric>Действия</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -73,13 +73,14 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
                                         size="sm"
                                         borderColor={`${statusColors[review.status]}.300`}
                                         focusBorderColor={`${statusColors[review.status]}.500`}
+                                        w="150px"
                                     >
                                         <option value="pending">Ожидает</option>
                                         <option value="published">Опубликован</option>
                                         <option value="rejected">Отклонен</option>
                                     </Select>
                                 </Td>
-                                <Td>
+                                <Td isNumeric>
                                     <Tooltip label="Удалить" hasArrow>
                                         <IconButton
                                             aria-label="Удалить отзыв"

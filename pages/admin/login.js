@@ -13,6 +13,7 @@ import {
     Image,
     InputGroup,
     InputRightElement,
+    IconButton, // ИСПРАВЛЕНО: Добавлен импорт IconButton
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { signIn } from 'next-auth/react';

@@ -1,14 +1,13 @@
 // components/Carousel.js
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, A11y, Autoplay } from 'swiper/modules';
-import { Box, IconButton, HStack, Text } from '@chakra-ui/react'; // ИСПРАВЛЕНО: Добавлен импорт Text
+import { Box, IconButton, HStack, Text } from '@chakra-ui/react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import TourCardSkeleton from './TourCardSkeleton';
 
-// Импортируем базовые стили Swiper
 import 'swiper/css';
-import 'swiper/css/pagination'; // Только для логики, стили будут кастомные
+import 'swiper/css/pagination';
 
 const UniversalCarousel = ({
   items = [],
@@ -17,8 +16,12 @@ const UniversalCarousel = ({
   loadingSkeletons = 3,
   settings = {},
 }) => {
+  const [swiperInstance, setSwiperInstance] = useState(null);
+  const navigationPrevRef = useRef(null);
+  const navigationNextRef = useRef(null);
+  const paginationRef = useRef(null);
+
   if (isLoading) {
-    // Логика скелетонов остается прежней
     return (
       <HStack spacing={6} overflow="hidden">
         {[...Array(loadingSkeletons)].map((_, index) => (
@@ -41,9 +44,6 @@ const UniversalCarousel = ({
   }
 
   const canLoop = items.length >= 3 * 2;
-  const navigationPrevRef = React.useRef(null);
-  const navigationNextRef = React.useRef(null);
-  const paginationRef = React.useRef(null);
 
   const defaultSettings = {
     modules: [Navigation, Pagination, A11y, Autoplay],
@@ -67,17 +67,23 @@ const UniversalCarousel = ({
       bulletClass: 'swiper-pagination-bullet-custom',
       bulletActiveClass: 'swiper-pagination-bullet-active-custom',
     },
-    onBeforeInit: (swiper) => {
-        swiper.params.navigation.prevEl = navigationPrevRef.current;
-        swiper.params.navigation.nextEl = navigationNextRef.current;
-        swiper.params.pagination.el = paginationRef.current;
-    },
+    onInit: setSwiperInstance,
     breakpoints: {
       768: { slidesPerView: 2, spaceBetween: 24 },
       1024: { slidesPerView: 3, spaceBetween: 30 },
     },
     ...settings,
   };
+  
+  // ИСПРАВЛЕНО: Обновляем навигацию после того, как Swiper будет готов
+  useEffect(() => {
+    if (swiperInstance) {
+      swiperInstance.params.navigation.prevEl = navigationPrevRef.current;
+      swiperInstance.params.navigation.nextEl = navigationNextRef.current;
+      swiperInstance.navigation.init();
+      swiperInstance.navigation.update();
+    }
+  }, [swiperInstance]);
 
   return (
     <Box position="relative" px={{ base: 0, md: 12 }}>

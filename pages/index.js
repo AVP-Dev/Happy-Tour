@@ -5,19 +5,8 @@ import dynamic from 'next/dynamic';
 import prisma from '../lib/prisma';
 
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    useDisclosure,
-    useToast,
-    Button,
-    Box,
-    Text,
-    Heading,
-    Container
+    Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
+    useDisclosure, useToast, Button, Box, Text, Heading, Container
 } from '@chakra-ui/react';
 
 import TourCard from '../components/TourCard';
@@ -31,13 +20,36 @@ const ReviewForm = dynamic(() => import('../components/ReviewForm'));
 const ContactForm = dynamic(() => import('../components/ContactForm'));
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false });
 
-const SectionHeading = (props) => (
+const SectionWrapper = ({ bgImage, children, ...rest }) => (
+    <Box
+        position="relative"
+        py={{ base: 14, md: 20 }}
+        bgImage={`url(${bgImage})`}
+        bgSize="cover"
+        bgPosition="center"
+        bgAttachment="fixed"
+        _before={{
+            content: '""',
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            bg: 'rgba(0, 0, 0, 0.65)',
+        }}
+        {...rest}
+    >
+        <Container maxW="container.xl" position="relative" zIndex={1}>
+            {children}
+        </Container>
+    </Box>
+);
+
+const SectionHeading = ({ color = 'gray.800', ...props }) => (
     <Heading
         as="h2"
         size={{ base: 'xl', md: '2xl' }}
         textAlign="center"
         mb={{ base: 8, md: 12 }}
         fontWeight="bold"
+        color={color}
         {...props}
     />
 );
@@ -100,10 +112,10 @@ export default function Home({ tours, reviews }) {
 
             <Hero onSearchClick={() => document.getElementById('tourvisor')?.scrollIntoView({ behavior: 'smooth' })} />
 
-            <Box as="section" id="tourvisor" py={sectionPadding} bg="gray.50">
+            <Box as="section" id="tourvisor" py={sectionPadding}>
                 <Container maxW="container.xl">
                     <SectionHeading>Подбор тура онлайн</SectionHeading>
-                    <Text textAlign="center" mb={10} maxW="container.md" mx="auto">
+                    <Text textAlign="center" mb={10} maxW="container.md" mx="auto" color="gray.600">
                         Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
                     </Text>
                     <TourvisorWidget />
@@ -119,16 +131,14 @@ export default function Home({ tours, reviews }) {
                     />
                 </Container>
             </Box>
-
-            <Box as="section" id="popular-destinations" py={sectionPadding} bg="gray.50">
-                <Container maxW="container.xl">
-                    <SectionHeading>Популярные направления</SectionHeading>
-                    <UniversalCarousel
-                        items={popularTours}
-                        renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
-                    />
-                </Container>
-            </Box>
+            
+            <SectionWrapper id="popular-destinations" bgImage="/img/tours-lagoon-bungalows.webp">
+                <SectionHeading color="white">Популярные направления</SectionHeading>
+                <UniversalCarousel
+                    items={popularTours}
+                    renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
+                />
+            </SectionWrapper>
 
             <Box as="section" id="special-offers" py={sectionPadding}>
                 <Container maxW="container.xl">
@@ -140,20 +150,18 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            <Box as="section" id="reviews" py={sectionPadding} bg="gray.50">
-                <Container maxW="container.xl">
-                    <SectionHeading>Отзывы наших клиентов</SectionHeading>
-                     <UniversalCarousel
-                        items={reviews}
-                        renderItem={(item) => <ReviewCard review={item} onReadMore={handleReadMoreReview} />}
-                    />
-                    <Box textAlign="center" mt={10}>
-                        <Button onClick={handleOpenAddReviewModal} size="lg">
-                            Оставить отзыв
-                        </Button>
-                    </Box>
-                </Container>
-            </Box>
+            <SectionWrapper id="reviews" bgImage="/img/reviews-happy-couple.webp">
+                <SectionHeading color="white">Отзывы наших клиентов</SectionHeading>
+                 <UniversalCarousel
+                    items={reviews}
+                    renderItem={(item) => <ReviewCard review={item} onReadMore={handleReadMoreReview} />}
+                />
+                <Box textAlign="center" mt={10}>
+                    <Button onClick={handleOpenAddReviewModal} size="lg">
+                        Оставить отзыв
+                    </Button>
+                </Box>
+            </SectionWrapper>
 
             <Box as="section" id="faq" py={sectionPadding}>
                 <Container maxW="container.xl">

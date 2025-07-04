@@ -3,8 +3,19 @@ import { extendTheme } from '@chakra-ui/react';
 
 const styles = {
   global: {
-    'html, body': { color: 'gray.800', lineHeight: 'tall', bg: 'white' },
-    a: { color: 'brand.600', _hover: { textDecoration: 'none', color: 'brand.700' } },
+    'html, body': {
+      color: 'gray.800',
+      lineHeight: 'tall',
+      // ИЗМЕНЕНО: Задаем приятный, ненавязчивый фон для всего сайта
+      bg: 'gray.50', 
+    },
+    a: {
+      color: 'brand.600',
+      _hover: {
+        textDecoration: 'none',
+        color: 'brand.700',
+      },
+    },
   },
 };
 
@@ -28,7 +39,7 @@ const components = {
       solid: (props) => ({
         ...(props.colorScheme === 'brand' && {
           bg: 'brand.500', color: 'white',
-          _hover: { bg: 'brand.600' },
+          _hover: { bg: 'brand.600', _disabled: { bg: 'brand.500' } },
           _active: { bg: 'brand.700' }
         }),
       }),
@@ -51,12 +62,12 @@ const components = {
         mb: 3,
         transition: 'border-color 0.2s ease-in-out',
         _last: { mb: 0 },
-        _expanded: { borderColor: 'brand.500' }, // ИЗМЕНЕНО: Подсветка рамки
+        _expanded: { borderColor: 'brand.500' },
       },
       button: {
         p: 4,
         fontWeight: 'semibold',
-        _hover: { bg: 'gray.50' },
+        _hover: { bg: 'white' },
       },
       panel: { pt: 2, pb: 5, px: 4, lineHeight: '1.7' },
       icon: { fontSize: '1.2em' },

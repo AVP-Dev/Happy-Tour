@@ -3,7 +3,7 @@ import { Box, Button, Container, Flex, Heading, Text, VStack } from '@chakra-ui/
 
 const Hero = ({ onSearchClick }) => {
     return (
-        <Box as="section" id="home" position="relative">
+        <Box as="section" id="home" position="relative" bg="#f7fafc">
             <Flex
                 align="center"
                 justify="center"
@@ -52,10 +52,10 @@ const Hero = ({ onSearchClick }) => {
                     </VStack>
                 </Container>
             </Flex>
-            {/* ИЗМЕНЕНО: Добавлен фигурный разделитель для плавного перехода */}
+            {/* Добавлен фигурный разделитель для плавного перехода */}
             <Box
                 position="absolute"
-                bottom={0}
+                bottom="-1px" // Небольшое смещение для идеального прилегания
                 left={0}
                 width="100%"
                 overflow="hidden"

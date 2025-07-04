@@ -7,42 +7,36 @@ import {
 } from '@chakra-ui/react';
 import { FaUpload } from 'react-icons/fa';
 
-const TourForm = ({ initialData = {}, onSubmit, isSubmitting, onCancel }) => {
+const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
     const isEditing = !!initialData?.id;
     const toast = useToast();
     const fileInputRef = useRef(null);
 
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        price: 0,
-        currency: 'BYN',
-        category: 'hot',
-        published: true,
+    const getInitialState = (data) => ({
+        title: data?.title || '',
+        description: data?.description || '',
+        price: data?.price || 0,
+        currency: data?.currency || 'BYN',
+        category: data?.category || 'hot',
+        published: isEditing ? data.published : true,
     });
+
+    const [formData, setFormData] = useState(getInitialState(initialData));
     const [image, setImage] = useState({
         file: null,
-        previewUrl: null,
+        previewUrl: initialData?.image_url || null,
     });
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        if (isEditing && initialData) {
-            setFormData({
-                id: initialData.id,
-                title: initialData.title || '',
-                description: initialData.description || '',
-                price: initialData.price || 0,
-                currency: initialData.currency || 'BYN',
-                category: initialData.category || 'hot',
-                published: initialData.published,
-            });
+        if (initialData) {
+            setFormData(getInitialState(initialData));
             setImage({
                 file: null,
                 previewUrl: initialData.image_url || null,
             });
         }
-    }, [initialData, isEditing]);
+    }, [initialData]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -78,7 +72,7 @@ const TourForm = ({ initialData = {}, onSubmit, isSubmitting, onCancel }) => {
         e.preventDefault();
         if (!validate()) return;
 
-        let finalImageUrl = isEditing ? image.previewUrl : null;
+        let finalImageUrl = image.previewUrl;
 
         if (image.file) {
             const fileFormData = new FormData();
@@ -95,7 +89,12 @@ const TourForm = ({ initialData = {}, onSubmit, isSubmitting, onCancel }) => {
             }
         }
         
-        const finalData = { ...formData, image_url: finalImageUrl };
+        // ИСПРАВЛЕНО: Явно передаем ID тура при редактировании
+        const finalData = { 
+            ...formData, 
+            image_url: finalImageUrl,
+            ...(isEditing && { id: initialData.id }) // Добавляем id, если это редактирование
+        };
         onSubmit(finalData);
     };
 

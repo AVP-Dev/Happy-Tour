@@ -8,34 +8,26 @@ const Hero = ({ onSearchClick }) => {
             id="home"
             align="center"
             justify="center"
-            minHeight="95vh" // Немного уменьшили высоту для лучшего восприятия
+            minHeight="95vh"
             position="relative"
             textAlign="center"
             color="white"
-            _before={{
+            // ИЗМЕНЕНО: Возвращаем фоновое изображение
+            bgImage="url('/img/hero-background.webp')"
+            bgSize="cover"
+            bgPosition="center"
+            bgAttachment="fixed" // Эффект параллакса
+            _after={{ // Оверлей для читаемости текста
                 content: '""',
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 right: 0,
                 bottom: 0,
-                bgImage: "url('/img/hero-background.webp')",
-                bgSize: "cover",
-                bgPosition: "center",
-                zIndex: -1,
-            }}
-            _after={{
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                bg: 'rgba(0, 0, 0, 0.55)', // Чуть темнее для контраста
-                zIndex: -1,
+                bg: 'rgba(0, 0, 0, 0.55)',
             }}
         >
-            <Container maxW="container.md">
+            <Container maxW="container.md" position="relative" zIndex={1}>
                 <VStack spacing={6}>
                     <Heading
                         as="h1"

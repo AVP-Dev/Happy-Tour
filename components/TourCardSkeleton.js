@@ -1,23 +1,33 @@
 // components/TourCardSkeleton.js
-// Этот компонент отображает заглушку (скелетон) для карточки тура во время загрузки данных.
-
 import React from 'react';
-import styles from '../styles/TourCardSkeleton.module.css';
+import { Box, VStack, HStack, Skeleton, AspectRatio } from '@chakra-ui/react';
 
 const TourCardSkeleton = () => {
   return (
-    <div className={styles.card}>
-      <div className={styles.image}></div>
-      <div className={styles.content}>
-        <div className={styles.title}></div>
-        <div className={styles.description}></div>
-        <div className={styles.description_short}></div>
-        <div className={styles.footer}>
-          <div className={styles.price}></div>
-          <div className={styles.button}></div>
-        </div>
-      </div>
-    </div>
+    <Box
+        bg="white"
+        borderRadius="xl"
+        overflow="hidden"
+        boxShadow="lg"
+        height="100%"
+    >
+        <AspectRatio ratio={16 / 9}>
+            <Skeleton />
+        </AspectRatio>
+      
+        <VStack p={5} align="stretch" spacing={4}>
+            <Skeleton height="24px" width="80%" />
+            <VStack align="stretch" spacing={2}>
+                <Skeleton height="16px" />
+                <Skeleton height="16px" />
+                <Skeleton height="16px" width="60%" />
+            </VStack>
+            <HStack justify="space-between" align="center" pt={3} borderTop="1px solid" borderColor="gray.200">
+                <Skeleton height="28px" width="100px" />
+                <Skeleton height="40px" width="110px" borderRadius="lg" />
+            </HStack>
+        </VStack>
+    </Box>
   );
 };
 

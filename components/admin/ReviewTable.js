@@ -2,7 +2,7 @@
 import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    Button, HStack, Text, Select, useToast, Tooltip
+    HStack, Text, Select, useToast, Tooltip, IconButton, Box
 } from '@chakra-ui/react';
 import { FaTrash } from 'react-icons/fa';
 
@@ -20,7 +20,7 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
     const handleStatusChange = async (reviewId, newStatus) => {
         await onUpdateStatus(reviewId, newStatus);
         toast({
-            title: `Статус отзыва обновлен на: ${newStatus}.`,
+            title: `Статус отзыва обновлен.`,
             status: 'success',
             duration: 3000,
             isClosable: true,
@@ -28,7 +28,6 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
     };
 
     const handleDeleteClick = async (reviewId) => {
-        // Используем стандартное подтверждение, так как Chakra UI модальное окно требует больше кода
         if (window.confirm('Вы уверены, что хотите удалить этот отзыв?')) {
             await onDelete(reviewId);
             toast({
@@ -40,69 +39,64 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
         }
     };
 
-    return (
-        <TableContainer>
-            <Table variant="simple" size="sm">
-                <Thead>
-                    <Tr>
-                        <Th>Автор</Th>
-                        <Th>Текст</Th>
-                        <Th isNumeric>Рейтинг</Th>
-                        <Th>Дата</Th>
-                        {/* --- ИЗМЕНЕНИЕ: Новая колонка --- */}
-                        <Th>Кем создан</Th>
-                        {/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */}
-                        <Th>Статус</Th>
-                        <Th>Действия</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {reviews.map((review) => (
-                        <Tr key={review.id}>
-                            <Td>{review.author}</Td>
-                            <Td maxW="250px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={review.text}>
-                                {review.text}
-                            </Td>
-                            <Td isNumeric>{review.rating} / 5</Td>
-                            <Td>{new Date(review.date).toLocaleDateString()}</Td>
-                            
-                            {/* --- ИЗМЕНЕНИЕ: Отображение имени создателя --- */}
-                            <Td>
-                                <Tooltip label={review.createdBy?.email} placement="top">
-                                   <Text cursor="default">{review.createdBy?.name || 'Клиент'}</Text>
-                                </Tooltip>
-                            </Td>
-                            {/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */}
+    const statusColors = {
+        pending: 'yellow',
+        published: 'green',
+        rejected: 'red',
+    };
 
-                            <Td>
-                                <Select
-                                    value={review.status}
-                                    onChange={(e) => handleStatusChange(review.id, e.target.value)}
-                                    size="sm"
-                                    bg={review.status === 'published' ? 'green.100' : review.status === 'pending' ? 'yellow.100' : 'red.100'}
-                                >
-                                    <option value="pending">Ожидает</option>
-                                    <option value="published">Опубликован</option>
-                                    <option value="rejected">Отклонен</option>
-                                </Select>
-                            </Td>
-                            <Td>
-                                <HStack spacing={2}>
-                                    <Button
-                                        size="sm"
-                                        leftIcon={<FaTrash />}
-                                        colorScheme="red"
-                                        onClick={() => handleDeleteClick(review.id)}
-                                    >
-                                        Удалить
-                                    </Button>
-                                </HStack>
-                            </Td>
+    return (
+        <Box bg="white" rounded="lg" shadow="md" overflow="hidden">
+            <TableContainer>
+                <Table variant="simple" size="md">
+                    <Thead bg="gray.50">
+                        <Tr>
+                            <Th>Автор</Th>
+                            <Th>Текст</Th>
+                            <Th isNumeric>Рейтинг</Th>
+                            <Th>Статус</Th>
+                            <Th>Действия</Th>
                         </Tr>
-                    ))}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                    </Thead>
+                    <Tbody>
+                        {reviews.map((review) => (
+                            <Tr key={review.id} _hover={{ bg: 'gray.50' }}>
+                                <Td fontWeight="medium">{review.author}</Td>
+                                <Td maxW="350px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={review.text}>
+                                    {review.text}
+                                </Td>
+                                <Td isNumeric>{review.rating} / 5</Td>
+                                <Td>
+                                    <Select
+                                        value={review.status}
+                                        onChange={(e) => handleStatusChange(review.id, e.target.value)}
+                                        size="sm"
+                                        borderColor={`${statusColors[review.status]}.300`}
+                                        focusBorderColor={`${statusColors[review.status]}.500`}
+                                    >
+                                        <option value="pending">Ожидает</option>
+                                        <option value="published">Опубликован</option>
+                                        <option value="rejected">Отклонен</option>
+                                    </Select>
+                                </Td>
+                                <Td>
+                                    <Tooltip label="Удалить" hasArrow>
+                                        <IconButton
+                                            aria-label="Удалить отзыв"
+                                            icon={<FaTrash />}
+                                            size="sm"
+                                            variant="ghost"
+                                            colorScheme="red"
+                                            onClick={() => handleDeleteClick(review.id)}
+                                        />
+                                    </Tooltip>
+                                </Td>
+                            </Tr>
+                        ))}
+                    </Tbody>
+                </Table>
+            </TableContainer>
+        </Box>
     );
 };
 

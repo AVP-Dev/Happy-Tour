@@ -5,19 +5,23 @@ import {
     FormErrorMessage, InputGroup, InputRightElement,
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
+import { useSession } from 'next-auth/react';
 
 const UserForm = ({ initialData = {}, onSubmit, isSubmitting, onCancel }) => {
-    // --- ИЗМЕНЕНИЕ: Добавлено поле name ---
+    const { data: session } = useSession();
     const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'admin' });
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
     const isEditing = !!initialData.id;
 
+    // Определяем, редактирует ли super_admin свой собственный профиль
+    const isSuperAdminEditingSelf = session?.user?.role === 'super_admin' && session?.user?.id === initialData.id;
+
     useEffect(() => {
         if (isEditing) {
             setFormData({
                 id: initialData.id,
-                name: initialData.name || '', // <--- ДОБАВЛЕНО
+                name: initialData.name || '',
                 email: initialData.email || '',
                 role: initialData.role || 'admin',
                 password: '',
@@ -33,13 +37,11 @@ const UserForm = ({ initialData = {}, onSubmit, isSubmitting, onCancel }) => {
 
     const validate = () => {
         const newErrors = {};
+        if (!formData.name.trim()) newErrors.name = 'Имя обязательно для заполнения';
         if (!formData.email.includes('@')) newErrors.email = 'Введите корректный email';
         if (!isEditing && (!formData.password || formData.password.length < 6)) {
             newErrors.password = 'Пароль обязателен (минимум 6 символов)';
         }
-        // --- ИЗМЕНЕНИЕ: Добавлена валидация имени ---
-        if (!formData.name.trim()) newErrors.name = 'Имя обязательно для заполнения';
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -52,7 +54,6 @@ const UserForm = ({ initialData = {}, onSubmit, isSubmitting, onCancel }) => {
 
     return (
         <VStack as="form" onSubmit={handleFormSubmit} spacing={4}>
-            {/* --- ИЗМЕНЕНИЕ: Добавлено поле для ввода имени --- */}
             <FormControl isInvalid={errors.name} isRequired>
                 <FormLabel>Имя</FormLabel>
                 <Input name="name" type="text" value={formData.name} onChange={handleChange} />
@@ -84,15 +85,18 @@ const UserForm = ({ initialData = {}, onSubmit, isSubmitting, onCancel }) => {
                 <FormErrorMessage>{errors.password}</FormErrorMessage>
             </FormControl>
 
-            <FormControl isRequired>
+            <FormControl isRequired isDisabled={isSuperAdminEditingSelf}>
                 <FormLabel>Роль</FormLabel>
                 <Select name="role" value={formData.role} onChange={handleChange}>
                     <option value="admin">Admin</option>
                     <option value="super_admin">Super Admin</option>
                 </Select>
+                {isSuperAdminEditingSelf && (
+                    <FormErrorMessage>Super Admin не может изменить свою роль.</FormErrorMessage>
+                )}
             </FormControl>
 
-            <Button type="submit" colorScheme="green" isLoading={isSubmitting} width="full" mt={4}>
+            <Button type="submit" colorScheme="brand" isLoading={isSubmitting} width="full" mt={4}>
                 {isEditing ? 'Сохранить' : 'Создать пользователя'}
             </Button>
             <Button variant="ghost" onClick={onCancel} width="full">

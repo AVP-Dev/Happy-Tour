@@ -1,0 +1,64 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:/app/data/dev.db"
+}
+
+model Tour {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  price       Float
+  currency    String    @default("BYN")
+  category    String    @default("hot")
+  image_url   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // --- ИЗМЕНЕНИЕ: Тур по умолчанию опубликован ---
+  published   Boolean   @default(true)
+  // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+  createdById String?
+  updatedById String?
+  createdBy   AdminUser? @relation("CreatedTours", fields: [createdById], references: [id])
+  updatedBy   AdminUser? @relation("UpdatedTours", fields: [updatedById], references: [id])
+
+  @@map("tours")
+}
+
+model Review {
+  id          String     @id @default(uuid())
+  author      String
+  text        String
+  rating      Int
+  date        DateTime   @default(now())
+  status      String     @default("pending")
+  updatedAt   DateTime   @updatedAt
+
+  createdById String?
+  createdBy   AdminUser? @relation("CreatedReviews", fields: [createdById], references: [id])
+
+  @@map("reviews")
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdTours   Tour[]     @relation("CreatedTours")
+  updatedTours   Tour[]     @relation("UpdatedTours")
+  createdReviews Review[]   @relation("CreatedReviews")
+
+  @@map("admin_users")
+}

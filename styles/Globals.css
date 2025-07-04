@@ -1,0 +1,155 @@
+/* --- CSS Variables --- */
+:root {
+    /* Main site variables */
+    --primary-color: #4CAF50;
+    --primary-dark: #388E3C;
+    --secondary-color: #FFC107;
+    --dark-color: #212121;
+    --light-color: #f8f9fa;
+    --gray-color: #757575;
+    --white-color: #ffffff;
+    --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+
+    /* Admin panel variables */
+    --admin-primary-color: #28a745;
+    --admin-primary-hover-color: #218838;
+    --admin-danger-color: #dc3545;
+    --admin-danger-hover-color: #c82333;
+    --admin-secondary-color: #6c757d;
+    --admin-secondary-hover-color: #5a6268;
+    --admin-edit-color: #0d6efd;
+    --admin-edit-hover-color: #0b5ed7;
+    --admin-bg-color: #f8f9fa;
+    --admin-sidebar-bg: #ffffff;
+    --admin-content-bg: #ffffff;
+    --admin-text-color: #212529;
+    --admin-text-muted-color: #6c757d;
+    --admin-border-color: #dee2e6;
+    --admin-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --admin-shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+
+    /* --- ИЗМЕНЕНИЕ: Обновлены семейства шрифтов --- */
+    --font-family-main: 'Roboto', sans-serif; /* Основной шрифт для текста */
+    --font-family-headings: 'Montserrat', sans-serif; /* Шрифт для заголовков */
+    --font-family-admin: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; /* Шрифт для админки */
+    --border-radius-sm: 0.375rem; /* 6px */
+    --border-radius-md: 0.5rem;   /* 8px */
+    --transition-speed: 0.2s;
+}
+
+/* --- ИЗМЕНЕНИЕ: Правило @import удалено, так как шрифты теперь подключаются в _document.js для лучшей производительности --- */
+/* @import url('...'); */
+
+
+/* --- Basic styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    /* --- ИЗМЕНЕНИЕ: body теперь будет использовать --font-family-main (Roboto) --- */
+    font-family: var(--font-family-main);
+    line-height: 1.6;
+    color: var(--dark-color);
+    background-color: var(--white-color);
+    overflow-x: hidden; /* Protection against accidental horizontal scrolling */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- ИЗМЕНЕНИЕ: Заголовки используют --font-family-headings (Montserrat) --- */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-headings);
+    line-height: 1.2;
+    margin-bottom: 0.5em;
+    color: var(--dark-color);
+    font-weight: 700; /* Делаем заголовки более жирными по умолчанию */
+}
+
+/* Class to block scrolling when modals are open */
+body.no-scroll,
+.bodyModalOpen {
+    overflow: hidden !important; /* Added !important to ensure scrolling is blocked */
+}
+
+/* --- Main website components --- */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+section {
+    padding: 80px 0;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 50px;
+    font-size: 2.5rem;
+    color: var(--dark-color);
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background-color: var(--primary-color);
+    margin: 15px auto 0;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: var(--font-family-headings); /* Кнопки тоже могут использовать шрифт заголовков для акцента */
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--box-shadow);
+}
+
+/* --- Responsiveness for mobile --- */
+@media (max-width: 768px) {
+    section {
+        padding: 40px 0;
+    }
+    .section-title {
+        font-size: 2rem;
+        margin-bottom: 30px;
+    }
+}
+
+/* --- Global animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}

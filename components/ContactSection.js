@@ -1,0 +1,88 @@
+// components/ContactSection.js
+import AnimateOnScroll from './AnimateOnScroll';
+import ContactForm from './ContactForm';
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import {
+    Box,
+    Container,
+    Heading,
+    SimpleGrid,
+    VStack,
+    HStack,
+    Text,
+    Link,
+    Icon,
+    Divider,
+} from '@chakra-ui/react';
+
+// Стилизованный заголовок, как в pages/index.js, для консистентности
+const SectionHeading = (props) => (
+    <Heading
+        as="h2"
+        size={{ base: 'xl', md: '2xl' }}
+        textAlign="center"
+        mb={{ base: 8, md: 12 }}
+        fontWeight="bold"
+        {...props}
+    />
+);
+
+const ContactInfoItem = ({ icon, children, href }) => (
+    <HStack spacing={4} align="flex-start">
+        <Icon as={icon} mt={1} color="brand.500" />
+        {href ? (
+            <Link href={href} _hover={{ textDecoration: 'none', color: 'brand.600' }}>{children}</Link>
+        ) : (
+            <Text>{children}</Text>
+        )}
+    </HStack>
+);
+
+const ContactSection = ({ onFormSubmit }) => {
+    return (
+        <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}>
+            <AnimateOnScroll>
+                <Box as="section" id="contact-section" py={{ base: 16, md: 24 }} bg="gray.50">
+                    <Container maxW="container.xl">
+                        <SectionHeading>Свяжитесь с нами</SectionHeading>
+                        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 10, lg: 16 }}>
+                            <VStack spacing={6} align="flex-start">
+                                <Heading as="h3" size="lg">Мы всегда на связи</Heading>
+                                <ContactInfoItem icon={FaMapMarkerAlt}>
+                                    г. Минск, ул. Немига, дом 40, 1 этаж
+                                </ContactInfoItem>
+                                <ContactInfoItem icon={FaMapMarkerAlt}>
+                                    г. Речица, ул. Советская, дом 80, 1 этаж
+                                </ContactInfoItem>
+                                <ContactInfoItem icon={FaPhoneAlt} href="tel:+375447886761">
+                                    +375 (44) 788-67-61
+                                </ContactInfoItem>
+                                <ContactInfoItem icon={FaPhoneAlt} href="tel:+375445615142">
+                                    +375 (44) 561-51-42
+                                </ContactInfoItem>
+                                <ContactInfoItem icon={FaEnvelope} href="mailto:info@happytour.by">
+                                    info@happytour.by
+                                </ContactInfoItem>
+                                <Box pt={4} w="100%">
+                                    <Divider />
+                                    <Heading as="h4" size="md" mt={6} mb={3}>Режим работы:</Heading>
+                                    <Text>Пн-Пт: 10:00-19:00</Text>
+                                    <Text>Сб: 10:00-16:00, Вс: Выходной</Text>
+                                </Box>
+                            </VStack>
+                            <VStack spacing={6} align="flex-start">
+                                <Heading as="h3" size="lg">Оставьте заявку онлайн</Heading>
+                                <Box w="100%" p={{ base: 6, md: 8 }} bg="white" borderRadius="lg" boxShadow="md">
+                                    <ContactForm onFormSubmit={onFormSubmit} />
+                                </Box>
+                            </VStack>
+                        </SimpleGrid>
+                    </Container>
+                </Box>
+            </AnimateOnScroll>
+        </GoogleReCaptchaProvider>
+    );
+};
+
+export default ContactSection;

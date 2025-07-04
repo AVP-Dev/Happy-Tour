@@ -1,29 +1,46 @@
 import nodemailer from 'nodemailer';
 
+// Функция для валидации токена reCAPTCHA (аналогична той, что в reviews.js)
+async function validateRecaptcha(token) {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    if (process.env.NODE_ENV !== 'production' && !secretKey) {
+        return { success: true };
+    }
+    if (!secretKey) {
+        return { success: false, message: "Сервис проверки временно недоступен." };
+    }
+    try {
+        const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `secret=${secretKey}&response=${token}`,
+        });
+        const data = await response.json();
+        if (data.success && data.score >= 0.5) {
+            return { success: true };
+        } else {
+            return { success: false, message: "Проверка на робота не пройдена." };
+        }
+    } catch (error) {
+        return { success: false, message: "Произошла внутренняя ошибка при проверке." };
+    }
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Метод не разрешен' });
     }
 
-    const { name, email, phone, message, recaptchaToken } = req.body;
+    const { name, contact, message, recaptchaToken, tour } = req.body;
 
-    if (!name || !email || !phone) {
-        return res.status(400).send('Пожалуйста, заполните все обязательные поля.');
+    if (!name || !contact) {
+        return res.status(400).json({ message: 'Пожалуйста, заполните все обязательные поля.' });
     }
 
     // --- Проверка reCAPTCHA ---
-    try {
-        const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-        const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`;
-        const recaptchaResponse = await fetch(verificationUrl, { method: 'POST' });
-        const recaptchaData = await recaptchaResponse.json();
-
-        if (!recaptchaData.success || recaptchaData.score < 0.5) {
-            return res.status(400).send('Вы не прошли проверку на робота.');
-        }
-    } catch (error) {
-        console.error("Recaptcha Error:", error);
-        return res.status(500).send('Ошибка при проверке reCAPTCHA.');
+    const recaptchaResult = await validateRecaptcha(recaptchaToken);
+    if (!recaptchaResult.success) {
+        return res.status(400).json({ message: recaptchaResult.message });
     }
 
     // --- Настройка отправки Email ---
@@ -40,22 +57,38 @@ export default async function handler(req, res) {
     const emailHtml = `
         <h2>Новая заявка с сайта Happy Tour</h2>
         <p><strong>Имя:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Телефон:</strong> ${phone}</p>
-        <p><strong>Сообщение:</strong> ${message || 'Нет'}</p>
+        <p><strong>Контакт:</strong> ${contact}</p>
+        <p><strong>Сообщение:</strong></p>
+        <p>${message.replace(/\n/g, '<br>') || 'Нет'}</p>
+        ${tour ? `
+            <hr>
+            <h3>Запрос по туру: ${tour.title}</h3>
+            <p><strong>Цена:</strong> ${tour.price} ${tour.currency}</p>
+        ` : ''}
     `;
 
-    // --- Настройка уведомления в Telegram ---
+    const telegramMessage = `
+*Новая заявка с сайта Happy Tour*
+
+*Имя:* ${name}
+*Контакт:* ${contact}
+*Сообщение:* ${message || 'Нет'}
+${tour ? `
+---
+*Запрос по туру:* ${tour.title}
+*Цена:* ${tour.price} ${tour.currency}
+` : ''}
+    `;
+
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-    const telegramMessage = `*Новая заявка с сайта Happy Tour*\n\n*Имя:* ${name}\n*Телефон:* ${phone}\n*Email:* ${email}\n*Сообщение:* ${message || 'Нет'}`;
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
     try {
         await transporter.sendMail({
             from: `"Happy Tour" <${process.env.SMTP_USER}>`,
             to: 'info@happytour.by',
-            subject: 'Новая заявка с сайта',
+            subject: tour ? `Заявка на тур: ${tour.title}` : 'Новая заявка с сайта',
             html: emailHtml,
         });
 
@@ -71,9 +104,9 @@ export default async function handler(req, res) {
             });
         }
 
-        return res.status(200).send('Спасибо! Ваша заявка отправлена. Мы свяжемся с вами в ближайшее время.');
+        return res.status(200).json({ message: 'Спасибо! Ваша заявка отправлена. Мы свяжемся с вами в ближайшее время.' });
     } catch (error) {
         console.error("Mail/Telegram Error:", error);
-        return res.status(500).send('Произошла ошибка при отправке формы.');
+        return res.status(500).json({ message: 'Произошла ошибка при отправке формы.' });
     }
 }

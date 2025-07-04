@@ -1,18 +1,19 @@
 // pages/api/reviews.js
 import prisma from '../../lib/prisma';
+import { getSession } from 'next-auth/react';
 
+// Функция для валидации токена reCAPTCHA
 async function validateRecaptcha(token) {
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-
-    if (!secretKey) {
-        console.error("Критическая ошибка: RECAPTCHA_SECRET_KEY не установлен.");
-        // В продакшене всегда возвращаем ошибку, если ключа нет.
-        if (process.env.NODE_ENV === 'production') {
-            return { success: false, message: "Сервис проверки временно недоступен." };
-        }
-        // В режиме разработки можно пропустить проверку для удобства.
+    // В режиме разработки можно пропустить проверку для удобства
+    if (process.env.NODE_ENV !== 'production' && !secretKey) {
         console.warn("Проверка reCAPTCHA пропущена в режиме разработки.");
         return { success: true };
+    }
+    
+    if (!secretKey) {
+        console.error("Критическая ошибка: RECAPTCHA_SECRET_KEY не установлен.");
+        return { success: false, message: "Сервис проверки временно недоступен." };
     }
 
     try {
@@ -21,32 +22,20 @@ async function validateRecaptcha(token) {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `secret=${secretKey}&response=${token}`,
         });
-
-        if (!response.ok) {
-            console.error(`Ошибка при обращении к Google reCAPTCHA: ${response.statusText}`);
-            return { success: false, message: "Не удалось связаться с сервисом проверки." };
-        }
-
         const data = await response.json();
-        
-        // --- ИЗМЕНЕНИЕ: Улучшенная логика проверки и возврата ошибок ---
-        if (!data.success) {
-            console.warn("Проверка reCAPTCHA не удалась. Причина:", data['error-codes']);
-            return { success: false, message: "Проверка на робота не пройдена. Попробуйте еще раз." };
+
+        if (data.success && data.score >= 0.5) {
+            return { success: true };
+        } else {
+            console.warn("Проверка reCAPTCHA не удалась:", data['error-codes'] || `score: ${data.score}`);
+            return { success: false, message: "Проверка на робота не пройдена." };
         }
-
-        if (data.score < 0.5) {
-            console.log(`Низкий рейтинг reCAPTCHA: ${data.score}. Действие заблокировано.`);
-            return { success: false, message: "Ваша активность показалась подозрительной. Попробуйте позже." };
-        }
-
-        return { success: true };
-
     } catch (error) {
-        console.error("Непредвиденная ошибка при проверке reCAPTCHA:", error);
+        console.error("Ошибка при проверке reCAPTCHA:", error);
         return { success: false, message: "Произошла внутренняя ошибка при проверке." };
     }
 }
+
 
 export default async function handler(req, res) {
     if (req.method === 'GET') {
@@ -57,7 +46,6 @@ export default async function handler(req, res) {
             });
             return res.status(200).json(reviews);
         } catch (error) {
-            console.error('Ошибка при получении отзывов:', error);
             return res.status(500).json({ message: 'Ошибка сервера при получении отзывов.' });
         }
     }
@@ -65,20 +53,22 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         const { author, text, rating, token } = req.body;
 
+        // --- ДОБАВЛЕНО: Проверка reCAPTCHA ---
         if (!token) {
             return res.status(400).json({ message: 'Токен reCAPTCHA отсутствует.' });
         }
-
-        // --- ИЗМЕНЕНИЕ: Получаем объект с результатом проверки ---
         const recaptchaResult = await validateRecaptcha(token);
         if (!recaptchaResult.success) {
-            // Возвращаем клиенту осмысленное сообщение об ошибке
             return res.status(400).json({ message: recaptchaResult.message });
         }
+        // --- КОНЕЦ ПРОВЕРКИ ---
 
         if (!author || !text || !rating || rating < 1 || rating > 5) {
             return res.status(400).json({ message: 'Все поля и оценка обязательны для заполнения.' });
         }
+        
+        // Попытаемся получить сессию, чтобы связать отзыв с админом, если он его оставил
+        const session = await getSession({ req });
 
         try {
             const newReview = await prisma.review.create({
@@ -86,7 +76,9 @@ export default async function handler(req, res) {
                     author,
                     text,
                     rating: parseInt(rating),
-                    status: 'pending',
+                    status: 'pending', // Все новые отзывы требуют модерации
+                    // Если отзыв оставляет залогиненный админ, привязываем его ID
+                    createdById: session?.user?.role.includes('admin') ? session.user.id : null,
                 },
             });
             return res.status(201).json({ message: 'Спасибо! Ваш отзыв отправлен на модерацию.', review: newReview });

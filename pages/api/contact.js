@@ -7,6 +7,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ message: 'Метод не разрешен' });
     }
 
+    // ИЗМЕНЕНИЕ: Принимаем единое поле 'contact'
     const { name, contact, message, recaptchaToken, tour } = req.body;
 
     if (!name || !contact) {
@@ -28,11 +29,12 @@ export default async function handler(req, res) {
         },
     });
 
+    // ИЗМЕНЕНИЕ: Обновляем шаблоны сообщений
     const emailHtml = `
         <h2>Новая заявка с сайта Happy Tour</h2>
         <p><strong>Имя:</strong> ${name}</p>
         <p><strong>Контакт:</strong> ${contact}</p>
-        <p><strong>Сообщение:</strong></p>
+        <p><strong>Описание:</strong></p>
         <p>${message.replace(/\n/g, '<br>') || 'Нет'}</p>
         ${tour ? `
             <hr>
@@ -46,7 +48,7 @@ export default async function handler(req, res) {
 
 *Имя:* ${name}
 *Контакт:* ${contact}
-*Сообщение:* ${message || 'Нет'}
+*Описание:* ${message || 'Нет'}
 ${tour ? `
 ---
 *Запрос по туру:* ${tour.title}

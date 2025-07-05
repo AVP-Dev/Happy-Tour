@@ -221,24 +221,41 @@ export default function Home({ tours, reviews }) {
     );
 }
 
-// ИЗМЕНЕНИЕ: Исправлена сериализация данных для getStaticProps
+// ИЗМЕНЕНИЕ: Надежная сериализация данных и логирование для отладки
 export async function getStaticProps() {
+    console.log("--- [getStaticProps] Запуск получения данных ---");
     try {
         const tours = await prisma.tour.findMany({
             where: { published: true },
             orderBy: { createdAt: 'desc' },
         });
+        console.log(`[getStaticProps] Найдено туров: ${tours.length}`);
 
         const reviews = await prisma.review.findMany({
             where: { status: 'published' },
             orderBy: { date: 'desc' },
         });
+        console.log(`[getStaticProps] Найдено отзывов: ${reviews.length}`);
 
-        // Безопасный способ сериализации данных из Prisma.
-        // Он правильно обрабатывает специальные типы данных, такие как Date и Decimal,
-        // преобразуя их в строки, которые Next.js может безопасно передать на клиент.
-        const serializedTours = JSON.parse(JSON.stringify(tours));
-        const serializedReviews = JSON.parse(JSON.stringify(reviews));
+        // Явная и безопасная сериализация данных.
+        // Это предотвращает ошибки, связанные со специальными типами данных Prisma (Decimal, DateTime).
+        const serializedTours = tours.map(tour => ({
+            ...tour,
+            // .toString() - самый надежный способ для типа Decimal
+            price: tour.price.toString(),
+            // .toISOString() - стандартный и безопасный способ для дат
+            createdAt: tour.createdAt.toISOString(),
+            updatedAt: tour.updatedAt.toISOString(),
+        }));
+
+        const serializedReviews = reviews.map(review => ({
+            ...review,
+            date: review.date.toISOString(),
+            createdAt: review.createdAt.toISOString(),
+            updatedAt: review.updatedAt.toISOString(),
+        }));
+
+        console.log("--- [getStaticProps] Данные успешно сериализованы ---");
 
         return {
             props: {
@@ -248,7 +265,12 @@ export async function getStaticProps() {
             revalidate: 600, // Пересобирать страницу в фоне не чаще, чем раз в 10 минут
         };
     } catch (error) {
-        console.error("Ошибка в getStaticProps:", error);
+        // Выводим полную ошибку в консоль сервера для диагностики
+        console.error("--- КРИТИЧЕСКАЯ ОШИБКА в getStaticProps ---");
+        console.error(error);
+        console.error("-----------------------------------------");
+        
+        // Возвращаем пустые массивы, чтобы страница не падала в случае ошибки
         return {
             props: {
                 tours: [],

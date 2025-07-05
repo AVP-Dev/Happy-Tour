@@ -1,38 +1,30 @@
 // components/Hero.js
 import { Box, Button, Container, Flex, Heading, Text, VStack } from '@chakra-ui/react';
-import Image from 'next/image';
 
+// ОТКАТ ИЗМЕНЕНИЙ: Возвращаемся к проверенной реализации фона через CSS.
+// Это устранит "тормоза" при прокрутке на некоторых устройствах.
 const Hero = ({ onSearchClick }) => {
     return (
-        <Box as="section" id="home" position="relative" minHeight="100vh" color="white">
-            {/* ИЗМЕНЕНИЕ: Используем next/image для фонового изображения */}
-            <Image
-                src="/img/hero-background.webp"
-                alt="Красивый пляж с пальмами на закате"
-                layout="fill"
-                objectFit="cover"
-                objectPosition="center"
-                quality={90}
-                priority // Загружаем это изображение в первую очередь, так как оно на первом экране
-            />
-            
-            {/* Оверлей для затемнения */}
-            <Box
-                position="absolute"
-                top={0} left={0} right={0} bottom={0}
-                bg="rgba(0, 0, 0, 0.55)"
-                zIndex={1}
-            />
-
+        <Box as="section" id="home" position="relative">
             <Flex
                 align="center"
                 justify="center"
                 minHeight="100vh"
                 position="relative"
                 textAlign="center"
-                zIndex={2} // Контент должен быть над оверлеем
+                color="white"
+                bgImage="url('/img/hero-background.webp')"
+                bgSize="cover"
+                bgPosition="center"
+                bgAttachment="fixed" // Этот параметр обеспечивает плавный параллакс-эффект
+                _after={{
+                    content: '""',
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    bg: 'rgba(0, 0, 0, 0.55)',
+                }}
             >
-                <Container maxW="container.md">
+                <Container maxW="container.md" position="relative" zIndex={1}>
                     <VStack spacing={6}>
                         <Heading
                             as="h1"

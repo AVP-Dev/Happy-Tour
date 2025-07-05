@@ -1,20 +1,40 @@
 // pages/api/contact.js
 import nodemailer from 'nodemailer';
-// ИЗМЕНЕНИЕ: Импортируем единую функцию валидации
+import { z } from 'zod';
 import { validateRecaptcha } from '../../lib/recaptcha';
+
+// ИЗМЕНЕНИЕ: Определяем схему валидации для входящих данных с помощью Zod.
+// Это гарантирует, что мы работаем только с корректными и безопасными данными.
+const contactSchema = z.object({
+    name: z.string().trim().min(2, { message: 'Имя должно содержать минимум 2 символа.' }),
+    contact: z.string().trim().min(5, { message: 'Пожалуйста, укажите корректный контакт для связи.' }),
+    message: z.string().trim().min(10, { message: 'Сообщение должно содержать минимум 10 символов.' }),
+    recaptchaToken: z.string(),
+    // Название тура не является обязательным, так как форма может быть отправлена не со страницы тура.
+    tourTitle: z.string().optional(),
+});
+
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Метод не разрешен' });
     }
 
-    const { name, contact, message, recaptchaToken, tour } = req.body;
+    // ИЗМЕНЕНИЕ: Безопасная валидация тела запроса по схеме.
+    const validationResult = contactSchema.safeParse(req.body);
 
-    if (!name || !contact) {
-        return res.status(400).json({ message: 'Пожалуйста, заполните все обязательные поля.' });
+    // Если валидация не пройдена, отправляем ошибку 400 с подробностями.
+    if (!validationResult.success) {
+        return res.status(400).json({ 
+            message: 'Данные формы неверны.',
+            errors: validationResult.error.flatten().fieldErrors,
+        });
     }
 
-    // --- Проверка reCAPTCHA с помощью общей функции ---
+    // Теперь мы работаем с гарантированно корректными данными.
+    const { name, contact, message, recaptchaToken, tourTitle } = validationResult.data;
+
+    // --- Проверка reCAPTCHA ---
     const recaptchaResult = await validateRecaptcha(recaptchaToken);
     if (!recaptchaResult.success) {
         return res.status(400).json({ message: recaptchaResult.message });
@@ -24,7 +44,7 @@ export default async function handler(req, res) {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        secure: true, // true для 465, false для других портов
+        secure: process.env.SMTP_PORT == 465, // true для 465, false для других портов
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASSWORD,
@@ -36,11 +56,10 @@ export default async function handler(req, res) {
         <p><strong>Имя:</strong> ${name}</p>
         <p><strong>Контакт:</strong> ${contact}</p>
         <p><strong>Сообщение:</strong></p>
-        <p>${message.replace(/\n/g, '<br>') || 'Нет'}</p>
-        ${tour ? `
+        <p>${message.replace(/\n/g, '<br>')}</p>
+        ${tourTitle ? `
             <hr>
-            <h3>Запрос по туру: ${tour.title}</h3>
-            <p><strong>Цена:</strong> ${tour.price} ${tour.currency}</p>
+            <h3>Запрос по туру: ${tourTitle}</h3>
         ` : ''}
     `;
 
@@ -49,11 +68,10 @@ export default async function handler(req, res) {
 
 *Имя:* ${name}
 *Контакт:* ${contact}
-*Сообщение:* ${message || 'Нет'}
-${tour ? `
+*Сообщение:* ${message}
+${tourTitle ? `
 ---
-*Запрос по туру:* ${tour.title}
-*Цена:* ${tour.price} ${tour.currency}
+*Запрос по туру:* ${tourTitle}
 ` : ''}
     `;
 
@@ -64,8 +82,8 @@ ${tour ? `
     try {
         await transporter.sendMail({
             from: `"Happy Tour" <${process.env.SMTP_USER}>`,
-            to: 'info@happytour.by',
-            subject: tour ? `Заявка на тур: ${tour.title}` : 'Новая заявка с сайта',
+            to: process.env.EMAIL_TO || 'info@happytour.by',
+            subject: tourTitle ? `Заявка на тур: ${tourTitle}` : 'Новая заявка с сайта',
             html: emailHtml,
         });
 
@@ -83,7 +101,7 @@ ${tour ? `
 
         return res.status(200).json({ message: 'Спасибо! Ваша заявка отправлена. Мы свяжемся с вами в ближайшее время.' });
     } catch (error) {
-        console.error("Mail/Telegram Error:", error);
-        return res.status(500).json({ message: 'Произошла ошибка при отправке формы.' });
+        console.error("Ошибка при отправке уведомлений:", error);
+        return res.status(500).json({ message: 'Произошла внутренняя ошибка сервера при отправке формы.' });
     }
 }

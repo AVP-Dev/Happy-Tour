@@ -7,7 +7,7 @@ const Hero = ({ onSearchClick }) => {
             <Flex
                 align="center"
                 justify="center"
-                minHeight="95vh"
+                minHeight="100vh" // Изменено с 95vh на 100vh
                 position="relative"
                 textAlign="center"
                 color="white"

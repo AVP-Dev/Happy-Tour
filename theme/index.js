@@ -2,11 +2,6 @@
 import { extendTheme } from '@chakra-ui/react';
 
 const theme = extendTheme({
-  // Оптимизация шрифтов остается, она работает корректно
-  fonts: {
-    heading: 'var(--font-montserrat), sans-serif',
-    body: 'var(--font-roboto), sans-serif',
-  },
   colors: {
     brand: {
       50: '#E6FFFA',
@@ -22,17 +17,19 @@ const theme = extendTheme({
     },
   },
   components: {
-    // ОТКАТ ИЗМЕНЕНИЙ: Убираем кастомные стили для кнопок.
-    // Это вернет цвета кнопок к стандартным значениям Chakra UI.
     Button: {
       baseStyle: {
         fontWeight: 'bold',
         borderRadius: 'lg',
       },
-    },
-    Heading: {
-      baseStyle: {
-        fontFamily: 'heading',
+      variants: {
+        solid: (props) => ({
+          bg: props.colorScheme === 'brand' ? 'brand.500' : undefined,
+          color: props.colorScheme === 'brand' ? 'white' : undefined,
+          _hover: {
+            bg: props.colorScheme === 'brand' ? 'brand.600' : undefined,
+          },
+        }),
       },
     },
   },

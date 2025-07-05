@@ -15,7 +15,6 @@ import {
     Heading,
     Image,
 } from '@chakra-ui/react';
-import NextImage from 'next/image'; // ИСПОЛЬЗУЕМ next/image для оптимизации
 
 export default function ContactForm({ onFormSubmit, onClose, tour }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +42,7 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         }
     };
 
-    const validateForm = useCallback(() => {
+    const validateForm = () => {
         const newErrors = {};
         if (!formData.name.trim()) {
             newErrors.name = 'Пожалуйста, представьтесь.';
@@ -56,7 +55,7 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [formData]);
+    };
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
@@ -69,7 +68,7 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, recaptchaToken, tourTitle: tour?.title })
+                body: JSON.stringify({ ...formData, recaptchaToken, tour })
             });
             const data = await res.json();
             if (res.ok) {
@@ -83,29 +82,24 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [executeRecaptcha, formData, onFormSubmit, onClose, validateForm, tour]);
-    
-    // ИСПРАВЛЕНИЕ: Преобразуем цену в число перед использованием .toFixed()
-    const priceAsNumber = tour ? Number(tour.price) : 0;
+    }, [executeRecaptcha, formData, onFormSubmit, onClose, tour]);
 
     return (
         <Box as="form" onSubmit={handleSubmit} noValidate>
             <VStack spacing={4}>
                 {tour && (
                     <Flex align="center" w="100%" p={3} bg="gray.50" borderRadius="md">
-                        <Box boxSize="60px" position="relative" borderRadius="md" overflow="hidden">
-                            <NextImage
-                                src={tour.image_url || `https://placehold.co/100x100/38B2AC/E6FFFA?text=Tour`}
-                                alt={tour.title}
-                                layout="fill"
-                                objectFit="cover"
-                            />
-                        </Box>
-                        <Box ml={4}>
+                        <Image
+                            src={tour.image_url || `https://placehold.co/100x100/48BB78/FFFFFF?text=Tour`}
+                            alt={tour.title}
+                            boxSize="60px"
+                            borderRadius="md"
+                            objectFit="cover"
+                        />
+                        <Box ml={3}>
                             <Heading as="h4" size="sm" noOfLines={2}>{tour.title}</Heading>
                             <Text fontWeight="bold" color="brand.600" fontSize="md">
-                                {/* Используем числовую переменную для форматирования */}
-                                от {!isNaN(priceAsNumber) ? priceAsNumber.toFixed(0) : tour.price} {tour.currency}
+                                от {tour.price?.toFixed(0)} {tour.currency}
                             </Text>
                         </Box>
                     </Flex>

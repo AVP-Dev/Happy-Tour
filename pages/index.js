@@ -9,11 +9,9 @@ import {
     useDisclosure, useToast, Button, Box, Text, Heading, Container
 } from '@chakra-ui/react';
 
-// Компоненты
 import TourCard from '../components/TourCard';
 import ReviewCard from '../components/ReviewCard';
 
-// Динамические импорты для улучшения производительности
 const Hero = dynamic(() => import('../components/Hero'));
 const UniversalCarousel = dynamic(() => import('../components/Carousel'));
 const ContactSection = dynamic(() => import('../components/ContactSection'));
@@ -52,6 +50,8 @@ export default function Home({ tours, reviews }) {
         { q: "Что такое 'горящий тур' и в чем подвох?", a: "Никакого подвоха! 'Горящий тур' — это прекрасная возможность отдохнуть по очень выгодной цене. Туроператоры снижают стоимость на туры с вылетом в ближайшие дни, чтобы гарантированно заполнить места. Это тот же качественный отдых, но со скидкой за вашу спонтанность." },
         { q: "Что делать, если мои планы изменятся?", a: "Мы понимаем, что жизнь непредсказуема. Условия отмены или переноса тура зависят от правил авиакомпании и отеля. Мы всегда подбираем максимально гибкие варианты и честно рассказываем обо всех условиях. Для полного спокойствия рекомендуем оформить страховку от невыезда." },
         { q: "Как не ошибиться с выбором отеля?", a: "Доверьтесь нам! Мы знаем отели не по картинкам, а по реальным отзывам наших туристов. Расскажите, чего вы ждете от отдыха, и мы подберем идеальный вариант: тихий отель для двоих, веселый — для всей семьи или с лучшим пляжем на побережье. Ваш комфорт — наш главный приоритет." },
+        { q: "Почему иногда просят доплатить 'топливный сбор'?", a: "Это редкая, но возможная ситуация. Топливный сбор — это плата авиакомпании за изменение цен на авиатопливо. Мы всегда стараемся включать все сборы в итоговую стоимость, но если авиакомпания вводит его после бронирования, мы честно и прозрачно информируем вас об этом." },
+        { q: "Нужно ли мне платить за подбор тура?", a: "Нет, наши услуги по подбору тура и консультации абсолютно бесплатны. Вы платите только за сам тур по цене туроператора, без каких-либо скрытых комиссий. Наша работа — найти для вас лучший вариант, а нашу комиссию нам платит туроператор." }
     ];
 
     const handleTourInquiry = (tour) => {
@@ -98,58 +98,50 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            {hotTours.length > 0 && (
-                <Box as="section" id="hot-tours" py={sectionPadding}>
-                    <Container maxW="container.xl">
-                        <SectionHeading>Горящие туры</SectionHeading>
-                        <UniversalCarousel
-                            items={hotTours}
-                            renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
-                        />
-                    </Container>
-                </Box>
-            )}
+            <Box as="section" id="hot-tours" py={sectionPadding}>
+                 <Container maxW="container.xl">
+                    <SectionHeading>Горящие туры</SectionHeading>
+                    <UniversalCarousel
+                        items={hotTours}
+                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                    />
+                </Container>
+            </Box>
             
-            {popularTours.length > 0 && (
-                <Box as="section" id="popular-destinations" py={sectionPadding}>
-                    <Container maxW="container.xl">
-                        <SectionHeading>Популярные направления</SectionHeading>
-                        <UniversalCarousel
-                            items={popularTours}
-                            renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
-                        />
-                    </Container>
-                </Box>
-            )}
+            <Box as="section" id="popular-destinations" py={sectionPadding}>
+                <Container maxW="container.xl">
+                    <SectionHeading>Популярные направления</SectionHeading>
+                    <UniversalCarousel
+                        items={popularTours}
+                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                    />
+                </Container>
+            </Box>
 
-            {specialOffers.length > 0 && (
-                <Box as="section" id="special-offers" py={sectionPadding}>
-                    <Container maxW="container.xl">
-                        <SectionHeading>Выгодные предложения</SectionHeading>
-                        <UniversalCarousel
-                            items={specialOffers}
-                            renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
-                        />
-                    </Container>
-                </Box>
-            )}
+            <Box as="section" id="special-offers" py={sectionPadding}>
+                <Container maxW="container.xl">
+                    <SectionHeading>Выгодные предложения</SectionHeading>
+                    <UniversalCarousel
+                        items={specialOffers}
+                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                    />
+                </Container>
+            </Box>
 
-            {reviews.length > 0 && (
-                <Box as="section" id="reviews" py={sectionPadding}>
-                    <Container maxW="container.xl">
-                        <SectionHeading>Отзывы наших клиентов</SectionHeading>
-                        <UniversalCarousel
-                            items={reviews}
-                            renderItem={(item) => <ReviewCard review={item} onReadMore={handleReadMoreReview} />}
-                        />
-                        <Box textAlign="center" mt={10}>
-                            <Button onClick={handleOpenAddReviewModal} size="lg">
-                                Оставить отзыв
-                            </Button>
-                        </Box>
-                    </Container>
-                </Box>
-            )}
+            <Box as="section" id="reviews" py={sectionPadding}>
+                <Container maxW="container.xl">
+                    <SectionHeading>Отзывы наших клиентов</SectionHeading>
+                     <UniversalCarousel
+                        items={reviews}
+                        renderItem={(item) => <ReviewCard review={item} onReadMore={handleReadMoreReview} />}
+                    />
+                    <Box textAlign="center" mt={10}>
+                        <Button onClick={handleOpenAddReviewModal} size="lg">
+                            Оставить отзыв
+                        </Button>
+                    </Box>
+                </Container>
+            </Box>
 
             <Box as="section" id="faq" py={sectionPadding}>
                 <Container maxW="container.xl">
@@ -160,7 +152,6 @@ export default function Home({ tours, reviews }) {
             
             <ContactSection id="contact-section" onFormSubmit={showNotification} />
 
-            {/* Модальные окна */}
             <Modal isOpen={isTourModalOpen} onClose={onCloseTourModal} size="xl" isCentered>
                 <ModalOverlay />
                 <ModalContent>
@@ -196,7 +187,9 @@ export default function Home({ tours, reviews }) {
                                 onClose={onCloseReviewModal}
                                 onReviewSubmitted={(options) => {
                                     showNotification(options);
-                                    if (options.type === 'success') onCloseReviewModal();
+                                    if (options.type === 'success') {
+                                        onCloseReviewModal();
+                                    }
                                 }}
                             />
                         )}
@@ -219,22 +212,8 @@ export async function getStaticProps() {
             orderBy: { date: 'desc' },
         });
 
-        // ИСПРАВЛЕНИЕ: Преобразуем Decimal в Number, а Date в ISO строку.
-        // Это самый безопасный и правильный способ передать данные из сервера в компонент.
-        const serializedTours = tours.map(tour => ({
-            ...tour,
-            price: Number(tour.price), // Преобразуем в число
-            createdAt: tour.createdAt.toISOString(),
-            updatedAt: tour.updatedAt.toISOString(),
-        }));
-
-        const serializedReviews = reviews.map(review => ({
-            ...review,
-            rating: Number(review.rating), // Убедимся, что рейтинг - это число
-            date: review.date.toISOString(),
-            createdAt: review.createdAt.toISOString(),
-            updatedAt: review.updatedAt.toISOString(),
-        }));
+        const serializedTours = JSON.parse(JSON.stringify(tours));
+        const serializedReviews = JSON.parse(JSON.stringify(reviews));
 
         return {
             props: {
@@ -244,7 +223,7 @@ export async function getStaticProps() {
             revalidate: 600,
         };
     } catch (error) {
-        console.error("Критическая ошибка в getStaticProps:", error);
+        console.error("Error in getStaticProps:", error);
         return {
             props: {
                 tours: [],

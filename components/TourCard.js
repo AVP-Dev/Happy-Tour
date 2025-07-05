@@ -1,11 +1,9 @@
 // components/TourCard.js
 import React from 'react';
-import Image from 'next/image'; // ИЗМЕНЕНИЕ: Импортируем Image из next/image
-import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio } from '@chakra-ui/react';
+import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio, Image } from '@chakra-ui/react';
 import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
-// ИЗМЕНЕНИЕ: Добавлен `index` для определения приоритета загрузки
-const TourCard = ({ tour, onTourInquiry, index }) => {
+const TourCard = ({ tour, onTourInquiry }) => {
   if (!tour) {
     return null;
   }
@@ -24,7 +22,6 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
   };
 
   const categoryDetails = getCategoryDetails(tour.category);
-  const imageUrl = tour.image_url || `https://placehold.co/600x400/38B2AC/E6FFFA?text=${encodeURIComponent(tour.title || 'Happy Tour')}`;
 
   return (
     <Flex
@@ -43,16 +40,11 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
     >
       <Box position="relative">
         <AspectRatio ratio={16 / 9}>
-            {/* ИЗМЕНЕНИЕ: Используем next/image для оптимизации */}
             <Image
-              src={imageUrl}
-              alt={tour.title || 'Фотография тура'}
-              fill // Используем fill вместо layout="fill" в новых версиях Next.js
-              style={{ objectFit: 'cover' }}
-              // Загружаем первые 2 картинки в карусели без ленивой загрузки для улучшения LCP
-              priority={index < 2} 
-              // Помогаем Next.js выбрать правильный размер изображения на разных экранах
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              src={tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour'}
+              alt={tour.title || 'Тур'}
+              objectFit="cover"
+              style={{ borderRadius: '0.75rem 0.75rem 0 0' }}
             />
         </AspectRatio>
         <Tag

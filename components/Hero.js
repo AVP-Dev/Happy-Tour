@@ -1,8 +1,6 @@
 // components/Hero.js
 import { Box, Button, Container, Flex, Heading, Text, VStack } from '@chakra-ui/react';
 
-// ОТКАТ ИЗМЕНЕНИЙ: Возвращаемся к проверенной реализации фона через CSS.
-// Это устранит "тормоза" при прокрутке на некоторых устройствах.
 const Hero = ({ onSearchClick }) => {
     return (
         <Box as="section" id="home" position="relative">
@@ -16,7 +14,7 @@ const Hero = ({ onSearchClick }) => {
                 bgImage="url('/img/hero-background.webp')"
                 bgSize="cover"
                 bgPosition="center"
-                bgAttachment="fixed" // Этот параметр обеспечивает плавный параллакс-эффект
+                bgAttachment="fixed"
                 _after={{
                     content: '""',
                     position: 'absolute',
@@ -48,7 +46,6 @@ const Hero = ({ onSearchClick }) => {
                             height="56px"
                             px={8}
                             fontSize="lg"
-                            colorScheme="brand"
                         >
                             Подобрать тур
                         </Button>

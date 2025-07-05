@@ -2,7 +2,7 @@
 import AnimateOnScroll from './AnimateOnScroll';
 import ContactForm from './ContactForm';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+// import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'; // Закомментировать этот импорт
 import {
     Box, Container, Heading, SimpleGrid, VStack, HStack, Text, Link, Icon, Divider
 } from '@chakra-ui/react';
@@ -31,9 +31,9 @@ const ContactInfoItem = ({ icon, children, href }) => (
 
 const ContactSection = ({ onFormSubmit }) => {
     return (
-        <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}>
+        // // --- ВРЕМЕННО ЗАКОММЕНТИРОВАН ПРОВАЙДЕР RECAPTCHA ДЛЯ ОТЛАДКИ ---
+        // <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}>
             <AnimateOnScroll>
-                {/* ИЗМЕНЕНО: Убрана обертка SectionWrapper, возвращен простой фон */}
                 <Box as="section" id="contact-section" py={{ base: 14, md: 20 }} bg="gray.50">
                     <Container maxW="container.xl">
                         <SectionHeading>Свяжитесь с нами</SectionHeading>
@@ -72,7 +72,7 @@ const ContactSection = ({ onFormSubmit }) => {
                     </Container>
                 </Box>
             </AnimateOnScroll>
-        </GoogleReCaptchaProvider>
+        // </GoogleReCaptchaProvider> // Закомментировать эту закрывающую скобку
     );
 };
 

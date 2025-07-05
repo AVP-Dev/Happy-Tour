@@ -7,8 +7,7 @@ const Hero = ({ onSearchClick }) => {
             <Flex
                 align="center"
                 justify="center"
-                // Изменено minHeight на 100vh, чтобы Hero занимал всю высоту экрана
-                minHeight="100vh" 
+                minHeight="95vh"
                 position="relative"
                 textAlign="center"
                 color="white"
@@ -47,17 +46,13 @@ const Hero = ({ onSearchClick }) => {
                             height="56px"
                             px={8}
                             fontSize="lg"
-                            // Добавлены стили для кнопки, чтобы она соответствовала общему дизайну
-                            colorScheme="brand" 
-                            bg="brand.500"
-                            _hover={{ bg: "brand.600" }}
                         >
                             Подобрать тур
                         </Button>
                     </VStack>
                 </Container>
             </Flex>
-            {/* Волна-разделитель удалена, так как Hero теперь занимает всю высоту */}
+            {/* Волна-разделитель удалена */}
         </Box>
     );
 };

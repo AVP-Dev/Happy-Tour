@@ -1,67 +1,56 @@
 // pages/api/admin/reviews.js
+import { getServerSession } from 'next-auth/next';
 import prisma from '../../../lib/prisma';
-import { getSession } from 'next-auth/react';
+import { authOptions } from '../auth/[...nextauth]';
 
 export default async function handler(req, res) {
-    const session = await getSession({ req });
+    const session = await getServerSession(req, res, authOptions);
 
-    // Проверка аутентификации и роли администратора
-    if (!session || !session.user || session.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Доступ запрещен. Требуются права администратора.' });
+    if (!session || !['admin', 'super_admin'].includes(session.user.role)) {
+        return res.status(403).json({ message: 'Доступ запрещен' });
     }
 
-    if (req.method === 'GET') {
-        try {
-            const reviews = await prisma.review.findMany({
-                orderBy: { createdAt: 'desc' },
-            });
-            return res.status(200).json(reviews);
-        } catch (error) {
-            console.error('Ошибка при получении отзывов:', error);
-            return res.status(500).json({ message: 'Не удалось получить отзывы.' });
-        }
-    } else if (req.method === 'PUT') {
-        // Редактирование отзыва
-        const { id, author, text, rating, status } = req.body;
+    const userId = session.user.id;
 
-        if (!id || !author || !text || !rating || !status) {
-            return res.status(400).json({ message: 'Все поля отзыва обязательны для обновления.' });
-        }
+    switch (req.method) {
+        case 'GET':
+            try {
+                const reviews = await prisma.review.findMany({
+                    orderBy: { date: 'desc' },
+                    include: { createdBy: { select: { name: true, email: true } } }
+                });
+                return res.status(200).json(reviews);
+            } catch (error) {
+                return res.status(500).json({ message: 'Ошибка сервера при получении отзывов.' });
+            }
 
-        try {
-            const updatedReview = await prisma.review.update({
-                where: { id },
-                data: {
-                    author,
-                    text,
-                    rating: parseInt(rating), // Убедитесь, что рейтинг является числом
-                    status,
-                },
-            });
-            return res.status(200).json({ message: 'Отзыв успешно обновлен.', review: updatedReview });
-        } catch (error) {
-            console.error('Ошибка при обновлении отзыва:', error);
-            return res.status(500).json({ message: 'Не удалось обновить отзыв.' });
-        }
-    } else if (req.method === 'DELETE') {
-        // Удаление отзыва
-        const { id } = req.query; // ID отзыва будет в query параметрах для DELETE запроса
+        case 'PATCH':
+            try {
+                const { id, status } = req.body;
+                if (!id || !status) {
+                    return res.status(400).json({ message: 'Отсутствуют ID или статус для обновления.' });
+                }
+                const updatedReview = await prisma.review.update({
+                    where: { id: id },
+                    data: { status, updatedById: userId },
+                });
+                return res.status(200).json(updatedReview);
+            } catch (error) {
+                console.error('Ошибка при обновлении статуса отзыва:', error);
+                return res.status(500).json({ message: 'Ошибка сервера при обновлении статуса.' });
+            }
 
-        if (!id) {
-            return res.status(400).json({ message: 'ID отзыва обязателен для удаления.' });
-        }
-
-        try {
-            await prisma.review.delete({
-                where: { id },
-            });
-            return res.status(200).json({ message: 'Отзыв успешно удален.' });
-        } catch (error) {
-            console.error('Ошибка при удалении отзыва:', error);
-            return res.status(500).json({ message: 'Не удалось удалить отзыв.' });
-        }
-    } else {
-        res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
+        case 'DELETE':
+            try {
+                const { id } = req.query;
+                await prisma.review.delete({ where: { id: id } });
+                return res.status(204).end();
+            } catch (error) {
+                return res.status(500).json({ message: 'Ошибка сервера при удалении отзыва.' });
+            }
+            
+        default:
+            res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
+            return res.status(405).json({ message: `Метод ${req.method} не разрешен` });
     }
 }

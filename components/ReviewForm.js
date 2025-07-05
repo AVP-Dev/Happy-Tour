@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import {
     FormControl, FormLabel, Input, Textarea, Button, Box, Flex,
-    useToast, FormErrorMessage, Text, Select, VStack
+    useToast, FormErrorMessage, Text, Select, VStack, HStack // Добавлен HStack
 } from '@chakra-ui/react';
-// import { GoogleReCaptcha, useGoogleReCaptcha } from 'react-google-recaptcha-v3'; // Закомментировать этот импорт
+import { GoogleReCaptcha, useGoogleReCaptcha } from 'react-google-recaptcha-v3'; // Убедимся, что импорт useGoogleReCaptcha есть
 import { StarIcon } from '@chakra-ui/icons';
 
 const ReviewForm = ({ onClose, onReviewSubmitted }) => {
@@ -15,7 +15,7 @@ const ReviewForm = ({ onClose, onReviewSubmitted }) => {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // const { executeRecaptcha } = useGoogleReCaptcha(); // Закомментировать эту строку
+    const { executeRecaptcha } = useGoogleReCaptcha(); // Используем хук из глобального провайдера
 
     const validate = () => {
         const newErrors = {};
@@ -32,58 +32,51 @@ const ReviewForm = ({ onClose, onReviewSubmitted }) => {
 
         setIsSubmitting(true);
 
-        // // --- ВРЕМЕННО ЗАКОММЕНТИРОВАН КОД RECAPTCHA ДЛЯ ОТЛАДКИ ---
-        // if (!executeRecaptcha) {
-        //     console.log('Execute recaptcha not yet available');
-        //     toast({
-        //         title: 'Ошибка.',
-        //         description: 'ReCAPTCHA не загружена. Пожалуйста, попробуйте еще раз.',
-        //         status: 'error',
-        //         duration: 5000,
-        //         isClosable: true,
-        //         position: 'top-right',
-        //     });
-        //     setIsSubmitting(false);
-        //     return;
-        // }
-        // try {
-        //     const token = await executeRecaptcha('submit_review');
-        //     if (!token) {
-        //         throw new Error('ReCAPTCHA верификация не удалась.');
-        //     }
-        // // --- КОНЕЦ ВРЕМЕННО ЗАКОММЕНТИРОВАННОГО КОДА ---
+        if (!executeRecaptcha) {
+            console.log('Execute recaptcha not yet available');
+            toast({
+                title: 'Ошибка.',
+                description: 'ReCAPTCHA не загружена. Пожалуйста, попробуйте еще раз.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+                position: 'top-right',
+            });
+            setIsSubmitting(false);
+            return;
+        }
 
-            try { // Открывающий try для всего блока
-                const response = await fetch('/api/reviews', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // 'X-Recaptcha-Token': token, // Закомментировать эту строку
-                    },
-                    body: JSON.stringify({ author, rating, text }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Ошибка при отправке отзыва.');
-                }
-
-                onReviewSubmitted({ type: 'success', message: 'Ваш отзыв успешно отправлен и будет опубликован после модерации!' });
-                setAuthor('');
-                setRating(0);
-                setText('');
-                onClose();
-            } catch (error) {
-                console.error('Ошибка отправки отзыва:', error);
-                onReviewSubmitted({ type: 'error', message: error.message || 'Не удалось отправить отзыв. Пожалуйста, попробуйте еще раз.' });
-            } finally {
-                setIsSubmitting(false);
+        try {
+            const token = await executeRecaptcha('submit_review');
+            if (!token) {
+                throw new Error('ReCAPTCHA верификация не удалась.');
             }
-        // } catch (error) { // Закрывающий catch для блока reCAPTCHA
-        //     console.error('ReCAPTCHA error:', error);
-        //     onReviewSubmitted({ type: 'error', message: error.message || 'Ошибка верификации ReCAPTCHA. Пожалуйста, попробуйте еще раз.' });
-        //     setIsSubmitting(false);
-        // }
+
+            const response = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Recaptcha-Token': token, // Отправляем токен на сервер
+                },
+                body: JSON.stringify({ author, rating, text }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Ошибка при отправке отзыва.');
+            }
+
+            onReviewSubmitted({ type: 'success', message: 'Ваш отзыв успешно отправлен и будет опубликован после модерации!' });
+            setAuthor('');
+            setRating(0);
+            setText('');
+            onClose();
+        } catch (error) {
+            console.error('Ошибка отправки отзыва:', error);
+            onReviewSubmitted({ type: 'error', message: error.message || 'Не удалось отправить отзыв. Пожалуйста, попробуйте еще раз.' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -117,11 +110,10 @@ const ReviewForm = ({ onClose, onReviewSubmitted }) => {
                     <FormErrorMessage>{errors.text}</FormErrorMessage>
                 </FormControl>
 
-                {/* // --- ВРЕМЕННО ЗАКОММЕНТИРОВАН КОМПОНЕНТ RECAPTCHA --- */}
-                {/* {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
+                {/* Компонент GoogleReCaptcha нужен для инициализации скрипта и получения токена */}
+                {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
                     <GoogleReCaptcha onVerify={() => {}} />
-                )} */}
-                {/* // --- КОНЕЦ ВРЕМЕННО ЗАКОММЕНТИРОВАННОГО КОДА --- */}
+                )}
 
                 <Button type="submit" colorScheme="blue" size="lg" isLoading={isSubmitting} loadingText="Отправка" mt={6} w="full">
                     Оставить отзыв

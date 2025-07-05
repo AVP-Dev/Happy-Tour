@@ -2,7 +2,7 @@
 import AnimateOnScroll from './AnimateOnScroll';
 import ContactForm from './ContactForm';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
-// import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'; // Закомментировать этот импорт
+// import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'; // Эту строку удаляем
 import {
     Box, Container, Heading, SimpleGrid, VStack, HStack, Text, Link, Icon, Divider
 } from '@chakra-ui/react';
@@ -31,48 +31,46 @@ const ContactInfoItem = ({ icon, children, href }) => (
 
 const ContactSection = ({ onFormSubmit }) => {
     return (
-        // // --- ВРЕМЕННО ЗАКОММЕНТИРОВАН ПРОВАЙДЕР RECAPTCHA ДЛЯ ОТЛАДКИ ---
-        // <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}>
-            <AnimateOnScroll>
-                <Box as="section" id="contact-section" py={{ base: 14, md: 20 }} bg="gray.50">
-                    <Container maxW="container.xl">
-                        <SectionHeading>Свяжитесь с нами</SectionHeading>
-                        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 10, lg: 16 }}>
-                            <VStack spacing={6} align="flex-start">
-                                <Heading as="h3" size="lg">Мы всегда на связи</Heading>
-                                <ContactInfoItem icon={FaMapMarkerAlt}>
-                                    г. Минск, ул. Немига, дом 40, 1 этаж
-                                </ContactInfoItem>
-                                <ContactInfoItem icon={FaMapMarkerAlt}>
-                                    г. Речица, ул. Советская, дом 80, 1 этаж
-                                </ContactInfoItem>
-                                <ContactInfoItem icon={FaPhoneAlt} href="tel:+375447886761">
-                                    +375 (44) 788-67-61
-                                </ContactInfoItem>
-                                <ContactInfoItem icon={FaPhoneAlt} href="tel:+375445615142">
-                                    +375 (44) 561-51-42
-                                </ContactInfoItem>
-                                <ContactInfoItem icon={FaEnvelope} href="mailto:info@happytour.by">
-                                    info@happytour.by
-                                </ContactInfoItem>
-                                <Box pt={4} w="100%">
-                                    <Divider />
-                                    <Heading as="h4" size="md" mt={6} mb={3}>Режим работы:</Heading>
-                                    <Text color="gray.600">Пн-Пт: 10:00-19:00</Text>
-                                    <Text color="gray.600">Сб: 10:00-16:00, Вс: Выходной</Text>
-                                </Box>
-                            </VStack>
-                            <VStack spacing={6} align="flex-start">
-                                <Heading as="h3" size="lg">Оставьте заявку онлайн</Heading>
-                                <Box w="100%" p={{ base: 6, md: 8 }} bg="white" borderRadius="lg" boxShadow="md">
-                                    <ContactForm onFormSubmit={onFormSubmit} />
-                                </Box>
-                            </VStack>
-                        </SimpleGrid>
-                    </Container>
-                </Box>
-            </AnimateOnScroll>
-        // </GoogleReCaptchaProvider> // Закомментировать эту закрывающую скобку
+        // Удаляем обертку GoogleReCaptchaProvider
+        <AnimateOnScroll>
+            <Box as="section" id="contact-section" py={{ base: 14, md: 20 }} bg="gray.50">
+                <Container maxW="container.xl">
+                    <SectionHeading>Свяжитесь с нами</SectionHeading>
+                    <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 10, lg: 16 }}>
+                        <VStack spacing={6} align="flex-start">
+                            <Heading as="h3" size="lg">Мы всегда на связи</Heading>
+                            <ContactInfoItem icon={FaMapMarkerAlt}>
+                                г. Минск, ул. Немига, дом 40, 1 этаж
+                            </ContactInfoItem>
+                            <ContactInfoItem icon={FaMapMarkerAlt}>
+                                г. Речица, ул. Советская, дом 80, 1 этаж
+                            </ContactInfoItem>
+                            <ContactInfoItem icon={FaPhoneAlt} href="tel:+375447886761">
+                                +375 (44) 788-67-61
+                            </ContactInfoItem>
+                            <ContactInfoItem icon={FaPhoneAlt} href="tel:+375445615142">
+                                +375 (44) 561-51-42
+                            </ContactInfoItem>
+                            <ContactInfoItem icon={FaEnvelope} href="mailto:info@happytour.by">
+                                info@happytour.by
+                            </ContactInfoItem>
+                            <Box pt={4} w="100%">
+                                <Divider />
+                                <Heading as="h4" size="md" mt={6} mb={3}>Режим работы:</Heading>
+                                <Text color="gray.600">Пн-Пт: 10:00-19:00</Text>
+                                <Text color="gray.600">Сб: 10:00-16:00, Вс: Выходной</Text>
+                            </Box>
+                        </VStack>
+                        <VStack spacing={6} align="flex-start">
+                            <Heading as="h3" size="lg">Оставьте заявку онлайн</Heading>
+                            <Box w="100%" p={{ base: 6, md: 8 }} bg="white" borderRadius="lg" boxShadow="md">
+                                <ContactForm onFormSubmit={onFormSubmit} />
+                            </Box>
+                        </VStack>
+                    </SimpleGrid>
+                </Container>
+            </Box>
+        </AnimateOnScroll>
     );
 };
 

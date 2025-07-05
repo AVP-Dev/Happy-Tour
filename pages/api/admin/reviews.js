@@ -21,6 +21,7 @@ export default async function handler(req, res) {
                 });
                 return res.status(200).json(reviews);
             } catch (error) {
+                console.error('Ошибка сервера при получении отзывов:', error); // Добавлен console.error
                 return res.status(500).json({ message: 'Ошибка сервера при получении отзывов.' });
             }
 
@@ -32,12 +33,20 @@ export default async function handler(req, res) {
                 }
                 const updatedReview = await prisma.review.update({
                     where: { id: id },
-                    data: { status, updatedById: userId },
+                    data: {
+                        status,
+                        // updatedById: userId, // ЭТА СТРОКА УДАЛЕНА, так как Prisma не находит это поле
+                    },
                 });
                 return res.status(200).json(updatedReview);
             } catch (error) {
                 console.error('Ошибка при обновлении статуса отзыва:', error);
-                return res.status(500).json({ message: 'Ошибка сервера при обновлении статуса.' });
+                // Проверяем, является ли ошибка PrismaClientValidationError
+                if (error.code === 'P2025') {
+                    return res.status(404).json({ message: 'Отзыв с таким ID не найден.' });
+                }
+                // Для других ошибок Prisma или общих ошибок
+                return res.status(500).json({ message: 'Ошибка сервера при обновлении статуса.', error: error.message });
             }
 
         case 'DELETE':
@@ -46,7 +55,11 @@ export default async function handler(req, res) {
                 await prisma.review.delete({ where: { id: id } });
                 return res.status(204).end();
             } catch (error) {
-                return res.status(500).json({ message: 'Ошибка сервера при удалении отзыва.' });
+                console.error('Ошибка сервера при удалении отзыва:', error); // Добавлен console.error
+                if (error.code === 'P2025') {
+                    return res.status(404).json({ message: 'Отзыв с таким ID не найден.' });
+                }
+                return res.status(500).json({ message: 'Ошибка сервера при удалении отзыва.', error: error.message });
             }
             
         default:

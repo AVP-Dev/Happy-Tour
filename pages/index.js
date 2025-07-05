@@ -20,8 +20,8 @@ const ReviewForm = dynamic(() => import('../components/ReviewForm'));
 const ContactForm = dynamic(() => import('../components/ContactForm'));
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false });
 
-// Обертка для секций с фоновым изображением (только для TourvisorWidget)
-const SectionWithBackground = ({ bgImage, children, ...rest }) => (
+// Обертка для секций с фоновым изображением
+const SectionWrapper = ({ bgImage, children, ...rest }) => (
     <Box
         position="relative"
         py={{ base: 14, md: 20 }}
@@ -110,42 +110,23 @@ export default function Home({ tours, reviews }) {
 
             <Hero onSearchClick={() => document.getElementById('tourvisor')?.scrollIntoView({ behavior: 'smooth' })} />
 
-            {/* TourvisorWidget остается с фоновым изображением */}
-            <SectionWithBackground id="tourvisor" bgImage="/img/search-tours-map.webp">
+            <SectionWrapper id="tourvisor" bgImage="/img/search-tours-map.webp">
                 <SectionHeading color="white">Подбор тура онлайн</SectionHeading>
                 <Text textAlign="center" mb={10} maxW="container.md" mx="auto" color="gray.200">
                     Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
                 </Text>
                 <TourvisorWidget />
-            </SectionWithBackground>
+            </SectionWrapper>
 
-            {/* Горящие туры - пример с легким градиентом */}
-            <Box
-                as="section"
-                id="hot-tours"
-                py={sectionPadding}
-                bg="linear-gradient(to bottom, #f7fafc, #edf2f7)" // Легкий градиент от светло-серого к более светлому
-            >
-                <Container maxW="container.xl">
-                    <SectionHeading>Горящие туры</SectionHeading>
-                    <UniversalCarousel
-                        items={hotTours}
-                        renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
-                    />
-                </Container>
-            </Box>
+            <SectionWrapper id="hot-tours" bgImage="/img/tours-lagoon-bungalows.webp">
+                <SectionHeading color="white">Горящие туры</SectionHeading>
+                <UniversalCarousel
+                    items={hotTours}
+                    renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
+                />
+            </SectionWrapper>
             
-            {/* Популярные направления - пример с SVG-паттерном */}
-            <Box
-                as="section"
-                id="popular-destinations"
-                py={sectionPadding}
-                // SVG-паттерн с точками. Кодируется в base64 для использования как background-image.
-                // Это очень легкий и производительный способ добавить текстуру.
-                bgImage={`url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M0 0h3v3H0V0zm3 3h3v3H3V3z'/%3E%3C/g%3E%3C/svg%3E")`}
-                bgRepeat="repeat"
-                bg="white" // Основной цвет фона, если паттерн прозрачный
-            >
+            <Box as="section" id="popular-destinations" py={sectionPadding}>
                 <Container maxW="container.xl">
                     <SectionHeading>Популярные направления</SectionHeading>
                     <UniversalCarousel
@@ -155,18 +136,14 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            {/* Выгодные предложения - без фонового изображения, простой фон */}
-            <Box as="section" id="special-offers" py={sectionPadding} bg="gray.50">
-                <Container maxW="container.xl">
-                    <SectionHeading>Выгодные предложения</SectionHeading>
-                    <UniversalCarousel
-                        items={specialOffers}
-                        renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
-                    />
-                </Container>
-            </Box>
+            <SectionWrapper id="special-offers" bgImage="/img/reviews-happy-couple.webp">
+                <SectionHeading color="white">Выгодные предложения</SectionHeading>
+                <UniversalCarousel
+                    items={specialOffers}
+                    renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
+                />
+            </SectionWrapper>
 
-            {/* Отзывы наших клиентов - без фонового изображения, простой фон */}
             <Box as="section" id="reviews" py={sectionPadding}>
                 <Container maxW="container.xl">
                     <SectionHeading>Отзывы наших клиентов</SectionHeading>
@@ -182,13 +159,10 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            {/* Частые вопросы - без фонового изображения, простой фон */}
-            <Box as="section" id="faq" py={sectionPadding} bg="gray.50">
-                <Container maxW="container.xl">
-                    <SectionHeading>Частые вопросы</SectionHeading>
-                    <FAQ items={faqItems} />
-                </Container>
-            </Box>
+            <SectionWrapper id="faq" bgImage="/img/faq-clouds-minimal.webp">
+                <SectionHeading color="white">Частые вопросы</SectionHeading>
+                <FAQ items={faqItems} />
+            </SectionWrapper>
 
             <ContactSection id="contact-section" onFormSubmit={showNotification} />
 

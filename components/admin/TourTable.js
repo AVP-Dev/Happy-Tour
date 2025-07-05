@@ -2,24 +2,37 @@
 import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    HStack, Text, Switch, useToast, Tooltip, IconButton, Box, VStack, Flex // Убедимся, что HStack импортирован
+    HStack, Text, Image, Box, Tooltip, Icon,
+    Tag, IconButton, Switch
 } from '@chakra-ui/react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
 const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
-    const toast = useToast();
 
-    if (!tours || tours.length === 0) {
-        return <Text>Туры не найдены.</Text>;
-    }
+    const CategoryTag = ({ category }) => {
+        const details = {
+            hot: { icon: FaHotjar, color: 'red', label: 'Горящий' },
+            popular: { icon: FaStar, color: 'orange', label: 'Популярный' },
+            special: { icon: FaGift, color: 'purple', label: 'Выгодный' },
+        }[category] || { icon: FaStar, color: 'gray', label: category };
+
+        return (
+            <Tag size="sm" variant="subtle" colorScheme={details.color}>
+                <HStack spacing={1}>
+                    <Icon as={details.icon} />
+                    <Text>{details.label}</Text>
+                </HStack>
+            </Tag>
+        );
+    };
 
     return (
         <Box bg="white" rounded="lg" shadow="md" overflow="hidden">
-            {/* Таблица для больших экранов */}
-            <TableContainer display={{ base: 'none', md: 'block' }}>
+            <TableContainer>
                 <Table variant="simple" size="md">
                     <Thead bg="gray.50">
                         <Tr>
+                            <Th>Фото</Th>
                             <Th>Название</Th>
                             <Th>Категория</Th>
                             <Th isNumeric>Цена</Th>
@@ -30,18 +43,30 @@ const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
                     <Tbody>
                         {tours.map((tour) => (
                             <Tr key={tour.id} _hover={{ bg: 'gray.50' }}>
-                                <Td fontWeight="medium">{tour.title}</Td>
-                                <Td>{tour.category}</Td>
-                                <Td isNumeric>{tour.price} {tour.currency}</Td>
                                 <Td>
-                                    <Switch
-                                        isChecked={tour.published}
-                                        onChange={() => onTogglePublished(tour.id, !tour.published)}
-                                        colorScheme="green"
+                                    <Image
+                                        src={tour.image_url}
+                                        boxSize="60px"
+                                        objectFit="cover"
+                                        borderRadius="md"
+                                        alt={tour.title}
+                                        fallbackSrc="https://placehold.co/60x60/eee/ccc?text=Нет"
                                     />
                                 </Td>
+                                <Td fontWeight="medium" maxW="300px" whiteSpace="normal">{tour.title}</Td>
+                                <Td><CategoryTag category={tour.category} /></Td>
+                                <Td isNumeric fontWeight="semibold">{`${tour.price?.toFixed(0)} ${tour.currency}`}</Td>
+                                <Td>
+                                    <Tooltip label={tour.published ? 'Снять с публикации' : 'Опубликовать'}>
+                                        <Switch
+                                            colorScheme="brand"
+                                            isChecked={tour.published}
+                                            onChange={() => onTogglePublished(tour.id, !tour.published)}
+                                        />
+                                    </Tooltip>
+                                </Td>
                                 <Td isNumeric>
-                                    <HStack spacing={2} justifyContent="flex-end">
+                                    <HStack spacing={2} justify="flex-end">
                                         <Tooltip label="Редактировать" hasArrow>
                                             <IconButton
                                                 aria-label="Редактировать тур"
@@ -69,49 +94,6 @@ const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
                     </Tbody>
                 </Table>
             </TableContainer>
-
-            {/* Карточки для мобильных экранов */}
-            <VStack spacing={4} align="stretch" display={{ base: 'flex', md: 'none' }} p={4}>
-                {tours.map((tour) => (
-                    <Box key={tour.id} p={4} borderWidth="1px" borderRadius="lg" shadow="sm" bg="white">
-                        <HStack justifyContent="space-between" mb={2}>
-                            <Text fontWeight="bold" fontSize="lg">{tour.title}</Text>
-                            <HStack spacing={2}>
-                                <Tooltip label="Редактировать" hasArrow>
-                                    <IconButton
-                                        aria-label="Редактировать тур"
-                                        icon={<FaEdit />}
-                                        size="sm"
-                                        variant="ghost"
-                                        colorScheme="blue"
-                                        onClick={() => onEdit(tour)}
-                                    />
-                                </Tooltip>
-                                <Tooltip label="Удалить" hasArrow>
-                                    <IconButton
-                                        aria-label="Удалить тур"
-                                        icon={<FaTrash />}
-                                        size="sm"
-                                        variant="ghost"
-                                        colorScheme="red"
-                                        onClick={() => onDelete(tour.id)}
-                                    />
-                                </Tooltip>
-                            </HStack>
-                        </HStack>
-                        <Text mb={2} color="gray.600">Категория: {tour.category}</Text>
-                        <Text mb={2} color="gray.600">Цена: {tour.price} {tour.currency}</Text>
-                        <Flex justifyContent="space-between" alignItems="center" mt={3}>
-                            <Text fontSize="sm" color="gray.500">Опубликован:</Text>
-                            <Switch
-                                isChecked={tour.published}
-                                onChange={() => onTogglePublished(tour.id, !tour.published)}
-                                colorScheme="green"
-                            />
-                        </Flex>
-                    </Box>
-                ))}
-            </VStack>
         </Box>
     );
 };

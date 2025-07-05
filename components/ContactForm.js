@@ -1,143 +1,203 @@
 // components/ContactForm.js
-import { useState, useEffect, useCallback } from 'react';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { useState } from 'react';
 import {
     Box,
     Button,
     FormControl,
     FormLabel,
-    FormErrorMessage,
     Input,
     Textarea,
     VStack,
-    Flex,
-    Text,
     Heading,
-    Image,
+    Text,
+    useToast,
+    FormErrorMessage,
 } from '@chakra-ui/react';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'; // Импорт хука reCAPTCHA
 
-export default function ContactForm({ onFormSubmit, onClose, tour }) {
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const initialMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
-    
-    // ИЗМЕНЕНО: Структура полей формы
+const ContactForm = () => {
     const [formData, setFormData] = useState({
         name: '',
-        contact: '', // Единое поле для контакта
-        message: initialMessage
+        email: '',
+        message: '',
     });
     const [errors, setErrors] = useState({});
-
-    const { executeRecaptcha } = useGoogleReCaptcha();
-
-    useEffect(() => {
-        const newMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
-        setFormData(prev => ({ ...prev, message: newMessage }));
-    }, [tour]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const toast = useToast();
+    const { executeRecaptcha } = useGoogleReCaptcha(); // Инициализация хука reCAPTCHA
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: null }));
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        // Очищаем ошибку при изменении поля
+        if (errors[e.target.name]) {
+            setErrors(prev => ({ ...prev, [e.target.name]: undefined }));
         }
     };
 
-    // ИЗМЕНЕНО: Логика валидации
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.name.trim()) {
-            newErrors.name = 'Пожалуйста, представьтесь.';
+        if (!formData.name.trim()) newErrors.name = 'Имя обязательно';
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email обязателен';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Некорректный формат Email';
         }
-        if (!formData.contact.trim()) {
-            newErrors.contact = 'Укажите способ для связи.';
-        }
-        if (!formData.message.trim()) {
-            newErrors.message = 'Напишите, пожалуйста, ваше сообщение.';
-        }
+        if (!formData.message.trim()) newErrors.message = 'Сообщение обязательно';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = useCallback(async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validateForm() || !executeRecaptcha) return;
+
+        if (!validateForm()) {
+            toast({
+                title: "Ошибка валидации",
+                description: "Пожалуйста, заполните все обязательные поля.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        if (!executeRecaptcha) {
+            console.error('reCAPTCHA не загружен!');
+            toast({
+                title: "Ошибка reCAPTCHA",
+                description: "reCAPTCHA не загружена. Пожалуйста, попробуйте еще раз.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
 
         setIsSubmitting(true);
-        const recaptchaToken = await executeRecaptcha('contact_form');
-
         try {
-            // ВАЖНО: API теперь будет получать поле 'contact' вместо 'email' и 'phone'
-            const res = await fetch('/api/contact', {
+            const token = await executeRecaptcha('contact_form_submit'); // Получаем токен reCAPTCHA
+
+            const response = await fetch('/api/contact', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, recaptchaToken })
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ...formData, recaptchaToken: token }), // Отправляем токен с данными формы
             });
-            const data = await res.json();
-            if (res.ok) {
-                onFormSubmit?.({ type: 'success', message: data.message || 'Ваше сообщение успешно отправлено!' });
-                onClose?.();
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast({
+                    title: 'Сообщение отправлено!',
+                    description: 'Мы свяжемся с вами в ближайшее время.',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                });
+                setFormData({ name: '', email: '', message: '' });
+                setErrors({}); // Очищаем ошибки после успешной отправки
             } else {
-                onFormSubmit?.({ type: 'error', message: data.message || 'Произошла ошибка.' });
+                toast({
+                    title: 'Ошибка отправки.',
+                    description: data.message || 'Что-то пошло не так. Попробуйте еще раз.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
             }
         } catch (error) {
-            onFormSubmit?.({ type: 'error', message: 'Не удалось связаться с сервером.' });
+            console.error('Ошибка отправки формы:', error);
+            toast({
+                title: 'Ошибка отправки.',
+                description: 'Не удалось отправить сообщение. Пожалуйста, попробуйте позже.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
         } finally {
             setIsSubmitting(false);
         }
-    }, [executeRecaptcha, formData, onFormSubmit, onClose, validateForm]);
+    };
 
     return (
-        <Box as="form" onSubmit={handleSubmit} noValidate>
-            <VStack spacing={4}>
-                {tour && (
-                    <Flex align="center" w="100%" p={3} bg="gray.50" borderRadius="md">
-                        <Image
-                            src={tour.image_url || `https://placehold.co/100x100/48BB78/FFFFFF?text=Tour`}
-                            alt={tour.title}
-                            boxSize="60px"
-                            borderRadius="md"
-                            objectFit="cover"
-                        />
-                        <Box ml={3}>
-                            <Heading as="h4" size="sm" noOfLines={2}>{tour.title}</Heading>
-                            <Text fontWeight="bold" color="brand.600" fontSize="md">
-                                от {tour.price?.toFixed(0)} {tour.currency}
-                            </Text>
-                        </Box>
-                    </Flex>
-                )}
+        <Box
+            as="form"
+            onSubmit={handleSubmit}
+            p={8}
+            borderRadius="lg"
+            boxShadow="xl"
+            bg="white"
+            maxW="lg"
+            mx="auto"
+            my={10}
+        >
+            <VStack spacing={6}>
+                <Heading as="h3" size="lg" textAlign="center" color="brand.500">
+                    Свяжитесь с нами
+                </Heading>
+                <Text textAlign="center" color="gray.600">
+                    Есть вопросы? Отправьте нам сообщение, и мы с радостью ответим.
+                </Text>
 
-                <FormControl isRequired isInvalid={!!errors.name}>
+                <FormControl id="name" isRequired isInvalid={!!errors.name}>
                     <FormLabel>Ваше имя</FormLabel>
-                    <Input name="name" value={formData.name} onChange={handleChange} />
+                    <Input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Введите ваше имя"
+                        focusBorderColor="brand.500"
+                        borderRadius="md"
+                    />
                     <FormErrorMessage>{errors.name}</FormErrorMessage>
                 </FormControl>
 
-                <FormControl isRequired isInvalid={!!errors.contact}>
-                    <FormLabel>Контакт (Telegram, Viber, Email или Телефон)</FormLabel>
-                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="@username, +375..., email@..." />
-                    <FormErrorMessage>{errors.contact}</FormErrorMessage>
+                <FormControl id="email" isRequired isInvalid={!!errors.email}>
+                    <FormLabel>Ваш Email</FormLabel>
+                    <Input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Введите ваш Email"
+                        focusBorderColor="brand.500"
+                        borderRadius="md"
+                    />
+                    <FormErrorMessage>{errors.email}</FormErrorMessage>
                 </FormControl>
 
-                <FormControl isRequired isInvalid={!!errors.message}>
+                <FormControl id="message" isRequired isInvalid={!!errors.message}>
                     <FormLabel>Ваше сообщение</FormLabel>
-                    <Textarea name="message" value={formData.message} onChange={handleChange} rows={4} />
+                    <Textarea
+                        name="message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Напишите ваше сообщение здесь..."
+                        size="sm"
+                        rows={6}
+                        focusBorderColor="brand.500"
+                        borderRadius="md"
+                    />
                     <FormErrorMessage>{errors.message}</FormErrorMessage>
                 </FormControl>
 
                 <Button
                     type="submit"
                     colorScheme="brand"
+                    size="lg"
+                    width="full"
+                    mt={4}
                     isLoading={isSubmitting}
                     loadingText="Отправка..."
-                    width="100%"
-                    size="lg"
-                    mt={2}
+                    borderRadius="md"
                 >
-                    Отправить заявку
+                    Отправить сообщение
                 </Button>
             </VStack>
         </Box>
     );
-}
+};
+
+export default ContactForm;

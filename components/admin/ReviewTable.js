@@ -2,10 +2,10 @@
 import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    HStack, Text, Select, useToast, Tooltip, IconButton, Box, VStack, Flex,
+    HStack, Text, Select, useToast, Tooltip, IconButton, Box, VStack, Flex, // Добавлен HStack
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Button, useDisclosure
 } from '@chakra-ui/react';
-import { FaTrash, FaEdit } from 'react-icons/fa'; // Добавил FaEdit на случай, если понадобится для будущих расширений
+import { FaTrash } from 'react-icons/fa';
 
 const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
     const toast = useToast();

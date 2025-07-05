@@ -44,7 +44,6 @@ export default function Home({ tours, reviews }) {
     const popularTours = tours.filter(tour => tour.category === 'popular');
     const specialOffers = tours.filter(tour => tour.category === 'special');
     
-    // ИЗМЕНЕНИЕ: Обновлен и дополнен список вопросов и ответов
     const faqItems = [
         { 
             q: "Какие документы мне понадобятся?", 
@@ -222,6 +221,7 @@ export default function Home({ tours, reviews }) {
     );
 }
 
+// ИЗМЕНЕНИЕ: Исправлена сериализация данных для getStaticProps
 export async function getStaticProps() {
     try {
         const tours = await prisma.tour.findMany({
@@ -234,24 +234,18 @@ export async function getStaticProps() {
             orderBy: { date: 'desc' },
         });
 
-        const serializedTours = tours.map(tour => ({
-            ...tour,
-            createdAt: tour.createdAt.toISOString(),
-            updatedAt: tour.updatedAt.toISOString(),
-        }));
-        const serializedReviews = reviews.map(review => ({
-            ...review,
-            date: review.date.toISOString(),
-            ...(review.createdAt && { createdAt: review.createdAt.toISOString() }),
-            updatedAt: review.updatedAt.toISOString(),
-        }));
+        // Безопасный способ сериализации данных из Prisma.
+        // Он правильно обрабатывает специальные типы данных, такие как Date и Decimal,
+        // преобразуя их в строки, которые Next.js может безопасно передать на клиент.
+        const serializedTours = JSON.parse(JSON.stringify(tours));
+        const serializedReviews = JSON.parse(JSON.stringify(reviews));
 
         return {
             props: {
                 tours: serializedTours,
                 reviews: serializedReviews,
             },
-            revalidate: 600,
+            revalidate: 600, // Пересобирать страницу в фоне не чаще, чем раз в 10 минут
         };
     } catch (error) {
         console.error("Ошибка в getStaticProps:", error);

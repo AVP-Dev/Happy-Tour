@@ -11,8 +11,9 @@ const Footer = () => {
         { href: "https://www.instagram.com/happytour.by?igsh=ZHV6b3BjODFqMjZv", label: "Instagram", icon: FaInstagram },
     ];
 
+    // ИЗМЕНЕНИЕ: Добавлен `as="footer"` для семантической корректности.
     return (
-        <Box bg="#1a1a1a" color="white" borderTop="5px solid" borderColor="brand.500">
+        <Box as="footer" bg="#1a1a1a" color="white" borderTop="5px solid" borderColor="brand.500">
             <Container maxW="container.xl" py={{ base: 8, md: 10 }}>
                 <VStack spacing={8}>
                     <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8} w="100%" textAlign={{ base: 'center', md: 'left' }}>
@@ -20,7 +21,6 @@ const Footer = () => {
                         <VStack spacing={4} align={{ base: 'center', md: 'flex-start' }}>
                             <Link as={NextLink} href="/" display="flex" alignItems="center" _hover={{ opacity: 0.8 }}>
                                 <Image src="/img/logo.png" alt="Happy Tour Logo" h="40px" />
-                                {/* ИЗМЕНЕНО: Цвет текста изменен на брендовый */}
                                 <Text as="span" fontSize="1.5rem" fontWeight="700" ml={3} color="brand.400">
                                     Happy Tour
                                 </Text>

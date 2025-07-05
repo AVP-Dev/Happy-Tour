@@ -79,6 +79,7 @@ const Header = () => {
     const linkColor = isScrolled || isNotHomePage ? 'gray.700' : 'white';
     const textShadow = isScrolled || isNotHomePage ? 'none' : '1px 1px 3px rgba(0,0,0,0.4)';
 
+    // Этот Box уже использует семантический тег <header>. Изменения не требуются.
     return (
         <Box as="header" {...headerStyles}>
             <Container maxW="container.xl">

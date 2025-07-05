@@ -1,30 +1,7 @@
+// pages/api/contact.js
 import nodemailer from 'nodemailer';
-
-// Функция для валидации токена reCAPTCHA (аналогична той, что в reviews.js)
-async function validateRecaptcha(token) {
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    if (process.env.NODE_ENV !== 'production' && !secretKey) {
-        return { success: true };
-    }
-    if (!secretKey) {
-        return { success: false, message: "Сервис проверки временно недоступен." };
-    }
-    try {
-        const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `secret=${secretKey}&response=${token}`,
-        });
-        const data = await response.json();
-        if (data.success && data.score >= 0.5) {
-            return { success: true };
-        } else {
-            return { success: false, message: "Проверка на робота не пройдена." };
-        }
-    } catch (error) {
-        return { success: false, message: "Произошла внутренняя ошибка при проверке." };
-    }
-}
+// ИЗМЕНЕНИЕ: Импортируем единую функцию валидации
+import { validateRecaptcha } from '../../lib/recaptcha';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -37,7 +14,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Пожалуйста, заполните все обязательные поля.' });
     }
 
-    // --- Проверка reCAPTCHA ---
+    // --- Проверка reCAPTCHA с помощью общей функции ---
     const recaptchaResult = await validateRecaptcha(recaptchaToken);
     if (!recaptchaResult.success) {
         return res.status(400).json({ message: recaptchaResult.message });
@@ -47,7 +24,7 @@ export default async function handler(req, res) {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        secure: true,
+        secure: true, // true для 465, false для других портов
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASSWORD,

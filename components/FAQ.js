@@ -7,28 +7,42 @@ import {
     AccordionIcon,
     Box,
     Text,
+    VStack,
 } from '@chakra-ui/react';
 
 const FAQ = ({ items = [] }) => {
     return (
         <Box maxW="800px" mx="auto">
-            <Accordion allowToggle>
+            <VStack as={Accordion} allowToggle spacing={4} align="stretch">
                 {items.map((item, index) => (
-                    <AccordionItem key={index}>
+                    <AccordionItem 
+                        key={index} 
+                        borderWidth="1px" 
+                        borderRadius="lg" 
+                        boxShadow="sm"
+                        overflow="hidden" // Добавлено для корректного скругления фона
+                        _last={{ mb: "0" }}
+                    >
                         <h2>
-                            <AccordionButton>
+                            <AccordionButton 
+                                p={5} 
+                                _hover={{ bg: 'gray.50' }}
+                                // ИЗМЕНЕНИЕ: Более выразительные цвета для открытого состояния
+                                _expanded={{ bg: 'brand.500', color: 'white' }}
+                            >
                                 <Box as="span" flex="1" textAlign="left">
-                                    <Text>{item.q}</Text>
+                                    {/* ИЗМЕНЕНИЕ: Убран fontWeight, так как цвет уже дает акцент */}
+                                    <Text fontSize="lg" fontWeight="semibold">{item.q}</Text>
                                 </Box>
-                                <AccordionIcon />
+                                <AccordionIcon fontSize="2xl" />
                             </AccordionButton>
                         </h2>
-                        <AccordionPanel>
-                            {item.a}
+                        <AccordionPanel pb={5} px={5} bg="white">
+                            <Text color="gray.700">{item.a}</Text>
                         </AccordionPanel>
                     </AccordionItem>
                 ))}
-            </Accordion>
+            </VStack>
         </Box>
     );
 };

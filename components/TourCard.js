@@ -1,9 +1,12 @@
 // components/TourCard.js
 import React from 'react';
-import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio, Image } from '@chakra-ui/react';
+// ИЗМЕНЕНИЕ: Импортируем Image из next/image
+import NextImage from 'next/image';
+import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio } from '@chakra-ui/react';
 import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
-const TourCard = ({ tour, onTourInquiry }) => {
+// ИЗМЕНЕНИЕ: Добавлен `index` для определения приоритета загрузки
+const TourCard = ({ tour, onTourInquiry, index }) => {
   if (!tour) {
     return null;
   }
@@ -35,17 +38,21 @@ const TourCard = ({ tour, onTourInquiry }) => {
             transform: 'translateY(-5px)',
             boxShadow: 'xl',
         }}
-        height="100%" // Занимает всю высоту родительского контейнера (для слайдера)
-        role="group" // Для дочерних _groupHover эффектов
+        height="100%"
+        role="group"
     >
       <Box position="relative">
         <AspectRatio ratio={16 / 9}>
-            <Image
+            {/* ИЗМЕНЕНИЕ: Используем NextImage для оптимизации */}
+            <NextImage
               src={tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour'}
               alt={tour.title || 'Тур'}
+              layout="fill"
               objectFit="cover"
-              transition="transform 0.4s ease-out"
-              _groupHover={{ transform: 'scale(1.05)' }} // Эффект увеличения при наведении на карточку
+              // Загружаем первые 2 картинки в карусели без ленивой загрузки для улучшения LCP
+              priority={index < 2} 
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              style={{ borderRadius: '0.75rem 0.75rem 0 0' }} // Сохраняем скругление
             />
         </AspectRatio>
         <Tag
@@ -55,6 +62,7 @@ const TourCard = ({ tour, onTourInquiry }) => {
           position="absolute"
           top={4}
           left={4}
+          zIndex={1} // Убедимся, что тег над картинкой
         >
           <HStack spacing={2}>
             <Box as={categoryDetails.icon} />

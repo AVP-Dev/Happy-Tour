@@ -7,7 +7,8 @@ const Hero = ({ onSearchClick }) => {
             <Flex
                 align="center"
                 justify="center"
-                minHeight="95vh"
+                // ИЗМЕНЕНИЕ: Высота установлена в 100vh для полного заполнения экрана
+                minHeight="100vh"
                 position="relative"
                 textAlign="center"
                 color="white"
@@ -52,7 +53,6 @@ const Hero = ({ onSearchClick }) => {
                     </VStack>
                 </Container>
             </Flex>
-            {/* Волна-разделитель удалена */}
         </Box>
     );
 };

@@ -10,9 +10,12 @@ const CookieBanner = dynamic(() => import('./CookieBanner'), { ssr: false });
 
 const Layout = ({ children }) => {
     return (
-        <Flex direction="column" minHeight="100vh">
+        // Простой Flex без каких-либо стилей фона
+        <Flex 
+            direction="column" 
+            minHeight="100vh"
+        >
             <Header />
-            {/* Box с flexGrow={1} заставляет main занять все доступное пространство */}
             <Box as="main" flexGrow={1}>
                 {children}
             </Box>

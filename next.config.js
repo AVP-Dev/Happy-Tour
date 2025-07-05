@@ -5,16 +5,22 @@ const nextConfig = {
     remotePatterns: [
       {
         // Этот паттерн разрешает изображения с вашего собственного сервера.
-        // Так как сайт и фото на одном VPS, мы указываем домен сайта.
-        protocol: 'https', // Используйте 'http', если на VPS нет SSL-сертификата, или 'https' при наличии
+        protocol: 'https',
         hostname: 'happytour.by',
         port: '',
-        pathname: '/**', // Разрешаем все пути (например, /uploads/...)
+        pathname: '/**',
       },
       {
-        // Этот паттерн нужен для аватарок пользователей, если вы используете Google Auth
+        // Этот паттерн нужен для аватарок пользователей Google Auth
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        // ИЗМЕНЕНИЕ: Добавлен домен для плейсхолдеров
+        protocol: 'https',
+        hostname: 'placehold.co',
         port: '',
         pathname: '/**',
       },

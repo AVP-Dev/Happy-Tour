@@ -1,46 +1,8 @@
 // pages/api/reviews.js
 import prisma from '../../lib/prisma';
 import { getSession } from 'next-auth/react';
-
-async function validateRecaptcha(token) {
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-
-    // --- ОТЛАДКА: Проверяем, загружен ли ключ ---
-    console.log(`[reCAPTCHA Debug] RECAPTCHA_SECRET_KEY is: ${secretKey ? 'Loaded' : 'NOT LOADED'}`);
-
-    if (!secretKey) {
-        if (process.env.NODE_ENV === 'production') {
-            return { success: false, message: "Сервис проверки временно недоступен (ключ не найден)." };
-        }
-        console.warn("Проверка reCAPTCHA пропущена в режиме разработки.");
-        return { success: true };
-    }
-
-    try {
-        const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `secret=${secretKey}&response=${token}`,
-        });
-        
-        // --- ОТЛАДКА: Логируем статус ответа от Google ---
-        console.log(`[reCAPTCHA Debug] Google API response status: ${response.status}`);
-
-        const data = await response.json();
-        console.log('[reCAPTCHA Debug] Google API response data:', data);
-
-        if (data.success && data.score >= 0.5) {
-            return { success: true };
-        } else {
-            return { success: false, message: "Проверка на робота не пройдена." };
-        }
-    } catch (error) {
-        // --- ОТЛАДКА: Логируем полную ошибку сети ---
-        console.error("[reCAPTCHA Debug] Network or fetch error:", error);
-        return { success: false, message: "Ошибка сети при проверке reCAPTCHA." };
-    }
-}
-
+// ИЗМЕНЕНИЕ: Импортируем единую функцию валидации
+import { validateRecaptcha } from '../../lib/recaptcha';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -48,13 +10,15 @@ export default async function handler(req, res) {
         return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    const { author, text, rating, token } = req.body;
+    // ИЗМЕНЕНИЕ: Используем стандартизированное имя `recaptchaToken`
+    const { author, text, rating, recaptchaToken } = req.body;
 
-    if (!token) {
+    if (!recaptchaToken) {
         return res.status(400).json({ message: 'Токен reCAPTCHA отсутствует.' });
     }
     
-    const recaptchaResult = await validateRecaptcha(token);
+    // Используем общую функцию для проверки
+    const recaptchaResult = await validateRecaptcha(recaptchaToken);
     if (!recaptchaResult.success) {
         return res.status(400).json({ message: recaptchaResult.message });
     }
@@ -71,7 +35,8 @@ export default async function handler(req, res) {
                 author,
                 text,
                 rating: parseInt(rating),
-                status: 'pending',
+                status: 'pending', // Отзыв ожидает модерации
+                // Привязываем отзыв к админу, если он авторизован
                 createdById: session?.user?.role.includes('admin') ? session.user.id : null,
             },
         });

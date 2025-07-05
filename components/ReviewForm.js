@@ -73,19 +73,20 @@ export default function ReviewForm({ onClose, onReviewSubmitted }) {
         }
 
         setIsSubmitting(true);
-        const token = await executeRecaptcha('review_form');
+        const recaptchaToken = await executeRecaptcha('review_form');
 
         try {
             const response = await fetch('/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, rating, token }),
+                // ИЗМЕНЕНИЕ: Отправляем токен под стандартизированным именем `recaptchaToken`
+                body: JSON.stringify({ ...formData, rating, recaptchaToken }),
             });
             const data = await response.json();
 
             if (response.ok) {
                 onReviewSubmitted?.({ type: 'success', message: data.message || 'Спасибо за ваш отзыв!' });
-                setTimeout(() => onClose?.(), 2000);
+                onClose?.();
             } else {
                 throw new Error(data.message || 'Произошла неизвестная ошибка.');
             }
@@ -94,7 +95,7 @@ export default function ReviewForm({ onClose, onReviewSubmitted }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [executeRecaptcha, formData, rating, onReviewSubmitted, onClose, validateForm]);
+    }, [executeRecaptcha, formData, rating, onReviewSubmitted, onClose]);
 
     return (
         <Box as="form" onSubmit={handleSubmit} noValidate>

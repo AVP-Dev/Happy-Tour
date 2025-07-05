@@ -6,8 +6,8 @@ const styles = {
     'html, body': {
       color: 'gray.800',
       lineHeight: 'tall',
-      // ИЗМЕНЕНО: Задаем приятный, ненавязчивый фон для всего сайта
-      bg: 'gray.50', 
+      // Базовый фон, который и дает нам светло-серый цвет
+      bg: 'gray.50',
     },
     a: {
       color: 'brand.600',
@@ -54,26 +54,11 @@ const components = {
   },
   Accordion: {
     baseStyle: {
-      container: { border: 'none' },
       item: {
-        border: '1px solid',
-        borderColor: 'gray.200',
-        borderRadius: 'lg',
-        bg: 'white', // Добавляем белый фон для контраста с новым фоном сайта
-        mb: 3,
-        transition: 'border-color 0.2s ease-in-out',
-        _last: { mb: 0 },
-        _expanded: { borderColor: 'brand.500' },
+        bg: 'white',
       },
-      button: {
-        p: 4,
-        fontWeight: 'semibold',
-        _hover: { bg: 'gray.100' },
-      },
-      panel: { pt: 2, pb: 5, px: 4, lineHeight: '1.7' },
-      icon: { fontSize: '1.2em' },
-    },
-  },
+    }
+  }
 };
 
 const theme = extendTheme({ colors, fonts, styles, components });

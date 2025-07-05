@@ -20,29 +20,6 @@ const ReviewForm = dynamic(() => import('../components/ReviewForm'));
 const ContactForm = dynamic(() => import('../components/ContactForm'));
 const TourvisorWidget = dynamic(() => import('../components/TourvisorWidget'), { ssr: false });
 
-// Обертка для секций с фоновым изображением
-const SectionWrapper = ({ bgImage, children, ...rest }) => (
-    <Box
-        position="relative"
-        py={{ base: 14, md: 20 }}
-        bgImage={`url(${bgImage})`}
-        bgSize="cover"
-        bgPosition="center"
-        bgAttachment="fixed"
-        _before={{
-            content: '""',
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            bg: 'rgba(0, 0, 0, 0.65)',
-        }}
-        {...rest}
-    >
-        <Container maxW="container.xl" position="relative" zIndex={1}>
-            {children}
-        </Container>
-    </Box>
-);
-
 const SectionHeading = ({ color = 'gray.800', ...props }) => (
     <Heading
         as="h2"
@@ -67,10 +44,36 @@ export default function Home({ tours, reviews }) {
     const popularTours = tours.filter(tour => tour.category === 'popular');
     const specialOffers = tours.filter(tour => tour.category === 'special');
     
+    // ИЗМЕНЕНИЕ: Обновлен и дополнен список вопросов и ответов
     const faqItems = [
-        { q: 'Как забронировать тур?', a: 'Вы можете выбрать тур через наш онлайн-поиск и оставить заявку. Наш менеджер свяжется с вами в течение 15 минут для подтверждения деталей и обсуждения всех вопросов. Также вы всегда можете позвонить нам или прийти в офис.' },
-        { q: 'Какие способы оплаты вы принимаете?', a: 'Мы предлагаем несколько удобных способов: оплата банковской картой онлайн через защищенную систему, оплата по QR-коду через ЕРИП, а также наличными или картой у нас в офисе. Возможна покупка тура в рассрочку.' },
-        { q: 'Какие документы нужны для поездки?', a: 'Стандартный пакет включает действующий паспорт и медицинскую страховку. Для некоторых стран требуется виза. Мы предоставим полный список документов и поможем с оформлением визы.' },
+        { 
+            q: "Какие документы мне понадобятся?", 
+            a: "Все просто: вам нужен действующий загранпаспорт. Авиабилеты, ваучер на отель и страховку мы оформим и предоставим вам. Если для выбранной страны нужна виза — мы подробно проконсультируем и поможем с ее оформлением. С нами вы не забудете ни одной важной бумаги!" 
+        },
+        { 
+            q: "Страховка уже в цене? Я защищен?", 
+            a: "Безусловно! Базовая медицинская страховка, покрывающая неотложные случаи, уже включена в каждый наш тур. Если вы хотите чувствовать себя еще увереннее — например, планируете активный отдых — мы предложим расширенные варианты страховки." 
+        },
+        { 
+            q: "Что такое 'горящий тур' и в чем подвох?", 
+            a: "Никакого подвоха! 'Горящий тур' — это прекрасная возможность отдохнуть по очень выгодной цене. Туроператоры снижают стоимость на туры с вылетом в ближайшие дни, чтобы гарантированно заполнить места. Это тот же качественный отдых, но со скидкой за вашу спонтанность." 
+        },
+        { 
+            q: "Что делать, если мои планы изменятся?", 
+            a: "Мы понимаем, что жизнь непредсказуема. Условия отмены или переноса тура зависят от правил авиакомпании и отеля. Мы всегда подбираем максимально гибкие варианты и честно рассказываем обо всех условиях. Для полного спокойствия рекомендуем оформить страховку от невыезда." 
+        },
+        { 
+            q: "Как не ошибиться с выбором отеля?", 
+            a: "Доверьтесь нам! Мы знаем отели не по картинкам, а по реальным отзывам наших туристов. Расскажите, чего вы ждете от отдыха, и мы подберем идеальный вариант: тихий отель для двоих, веселый — для всей семьи или с лучшим пляжем на побережье. Ваш комфорт — наш главный приоритет." 
+        },
+        { 
+            q: "Почему иногда просят доплатить 'топливный сбор'?", 
+            a: "Это редкая, но возможная ситуация. Топливный сбор — это плата авиакомпании за изменение цен на авиатопливо. Мы всегда стараемся включать все сборы в итоговую стоимость, но если авиакомпания вводит его после бронирования, мы честно и прозрачно информируем вас об этом." 
+        },
+        {
+            q: "Нужно ли мне платить за подбор тура?",
+            a: "Нет, наши услуги по подбору тура и консультации абсолютно бесплатны. Вы платите только за сам тур по цене туроператора, без каких-либо скрытых комиссий. Наша работа — найти для вас лучший вариант, а нашу комиссию нам платит туроператор."
+        }
     ];
 
     const handleTourInquiry = (tour) => {
@@ -110,39 +113,42 @@ export default function Home({ tours, reviews }) {
 
             <Hero onSearchClick={() => document.getElementById('tourvisor')?.scrollIntoView({ behavior: 'smooth' })} />
 
-            <SectionWrapper id="tourvisor" bgImage="/img/search-tours-map.webp">
-                <SectionHeading color="white">Подбор тура онлайн</SectionHeading>
-                <Text textAlign="center" mb={10} maxW="container.md" mx="auto" color="gray.200">
-                    Воспользуйтесь нашим удобным поиском для быстрого подбора тура вашей мечты.
-                </Text>
-                <TourvisorWidget />
-            </SectionWrapper>
+            <Box as="section" id="tourvisor" py={sectionPadding}>
+                <Container maxW="container.xl">
+                    <SectionHeading>Подбор тура онлайн</SectionHeading>
+                    <TourvisorWidget />
+                </Container>
+            </Box>
 
-            <SectionWrapper id="hot-tours" bgImage="/img/tours-lagoon-bungalows.webp">
-                <SectionHeading color="white">Горящие туры</SectionHeading>
-                <UniversalCarousel
-                    items={hotTours}
-                    renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
-                />
-            </SectionWrapper>
+            <Box as="section" id="hot-tours" py={sectionPadding}>
+                 <Container maxW="container.xl">
+                    <SectionHeading>Горящие туры</SectionHeading>
+                    <UniversalCarousel
+                        items={hotTours}
+                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                    />
+                </Container>
+            </Box>
             
             <Box as="section" id="popular-destinations" py={sectionPadding}>
                 <Container maxW="container.xl">
                     <SectionHeading>Популярные направления</SectionHeading>
                     <UniversalCarousel
                         items={popularTours}
-                        renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
+                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
                     />
                 </Container>
             </Box>
 
-            <SectionWrapper id="special-offers" bgImage="/img/reviews-happy-couple.webp">
-                <SectionHeading color="white">Выгодные предложения</SectionHeading>
-                <UniversalCarousel
-                    items={specialOffers}
-                    renderItem={(item) => <TourCard tour={item} onTourInquiry={handleTourInquiry} />}
-                />
-            </SectionWrapper>
+            <Box as="section" id="special-offers" py={sectionPadding}>
+                <Container maxW="container.xl">
+                    <SectionHeading>Выгодные предложения</SectionHeading>
+                    <UniversalCarousel
+                        items={specialOffers}
+                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                    />
+                </Container>
+            </Box>
 
             <Box as="section" id="reviews" py={sectionPadding}>
                 <Container maxW="container.xl">
@@ -159,11 +165,13 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            <SectionWrapper id="faq" bgImage="/img/faq-clouds-minimal.webp">
-                <SectionHeading color="white">Частые вопросы</SectionHeading>
-                <FAQ items={faqItems} />
-            </SectionWrapper>
-
+            <Box as="section" id="faq" py={sectionPadding}>
+                <Container maxW="container.xl">
+                    <SectionHeading>Частые вопросы</SectionHeading>
+                    <FAQ items={faqItems} />
+                </Container>
+            </Box>
+            
             <ContactSection id="contact-section" onFormSubmit={showNotification} />
 
             <Modal isOpen={isTourModalOpen} onClose={onCloseTourModal} size="xl" isCentered>
@@ -195,10 +203,6 @@ export default function Home({ tours, reviews }) {
                         {selectedReview ? (
                             <Box>
                                 <Text fontStyle="italic" mb={4}>"{selectedReview.text}"</Text>
-                                <Text fontWeight="bold" textAlign="right">- {selectedReview.author}</Text>
-                                <Text fontSize="sm" textAlign="right" color="gray.500">
-                                    {new Date(selectedReview.date).toLocaleDateString('ru-RU')}
-                                </Text>
                             </Box>
                         ) : (
                             <ReviewForm
@@ -218,7 +222,7 @@ export default function Home({ tours, reviews }) {
     );
 }
 
-export async function getServerSideProps() {
+export async function getStaticProps() {
     try {
         const tours = await prisma.tour.findMany({
             where: { published: true },
@@ -238,6 +242,7 @@ export async function getServerSideProps() {
         const serializedReviews = reviews.map(review => ({
             ...review,
             date: review.date.toISOString(),
+            ...(review.createdAt && { createdAt: review.createdAt.toISOString() }),
             updatedAt: review.updatedAt.toISOString(),
         }));
 
@@ -246,9 +251,10 @@ export async function getServerSideProps() {
                 tours: serializedTours,
                 reviews: serializedReviews,
             },
+            revalidate: 600,
         };
     } catch (error) {
-        console.error("Ошибка в getServerSideProps:", error);
+        console.error("Ошибка в getStaticProps:", error);
         return {
             props: {
                 tours: [],

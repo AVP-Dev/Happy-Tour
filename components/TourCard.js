@@ -1,7 +1,6 @@
 // components/TourCard.js
 import React from 'react';
-// ИЗМЕНЕНИЕ: Импортируем Image из next/image
-import NextImage from 'next/image';
+import Image from 'next/image'; // ИЗМЕНЕНИЕ: Импортируем Image из next/image
 import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio } from '@chakra-ui/react';
 import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
@@ -25,6 +24,7 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
   };
 
   const categoryDetails = getCategoryDetails(tour.category);
+  const imageUrl = tour.image_url || `https://placehold.co/600x400/38B2AC/E6FFFA?text=${encodeURIComponent(tour.title || 'Happy Tour')}`;
 
   return (
     <Flex
@@ -43,16 +43,16 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
     >
       <Box position="relative">
         <AspectRatio ratio={16 / 9}>
-            {/* ИЗМЕНЕНИЕ: Используем NextImage для оптимизации */}
-            <NextImage
-              src={tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour'}
-              alt={tour.title || 'Тур'}
-              layout="fill"
-              objectFit="cover"
+            {/* ИЗМЕНЕНИЕ: Используем next/image для оптимизации */}
+            <Image
+              src={imageUrl}
+              alt={tour.title || 'Фотография тура'}
+              fill // Используем fill вместо layout="fill" в новых версиях Next.js
+              style={{ objectFit: 'cover' }}
               // Загружаем первые 2 картинки в карусели без ленивой загрузки для улучшения LCP
               priority={index < 2} 
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              style={{ borderRadius: '0.75rem 0.75rem 0 0' }} // Сохраняем скругление
+              // Помогаем Next.js выбрать правильный размер изображения на разных экранах
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
         </AspectRatio>
         <Tag
@@ -62,7 +62,7 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
           position="absolute"
           top={4}
           left={4}
-          zIndex={1} // Убедимся, что тег над картинкой
+          zIndex={1}
         >
           <HStack spacing={2}>
             <Box as={categoryDetails.icon} />

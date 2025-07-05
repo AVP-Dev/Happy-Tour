@@ -1,13 +1,17 @@
 // components/admin/ReviewTable.js
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    HStack, Text, Select, useToast, Tooltip, IconButton, Box
+    Text, Select, Tooltip, IconButton, Box, Badge,
+    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
+    AlertDialogContent, AlertDialogOverlay, Button, useDisclosure
 } from '@chakra-ui/react';
 import { FaTrash } from 'react-icons/fa';
 
 const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
-    const toast = useToast();
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const cancelRef = useRef();
+    const [reviewToDelete, setReviewToDelete] = useState(null);
 
     if (isLoading) {
         return <Text>Загрузка отзывов...</Text>;
@@ -17,26 +21,16 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
         return <Text>Отзывы не найдены.</Text>;
     }
 
-    const handleStatusChange = async (reviewId, newStatus) => {
-        await onUpdateStatus(reviewId, newStatus);
-        toast({
-            title: `Статус отзыва обновлен.`,
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-        });
+    const handleDeleteClick = (reviewId) => {
+        setReviewToDelete(reviewId);
+        onOpen();
     };
 
-    const handleDeleteClick = async (reviewId) => {
-        if (window.confirm('Вы уверены, что хотите удалить этот отзыв?')) {
-            await onDelete(reviewId);
-            toast({
-                title: 'Отзыв удален.',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
+    const confirmDelete = () => {
+        if (reviewToDelete) {
+            onDelete(reviewToDelete);
         }
+        onClose();
     };
 
     const statusColors = {
@@ -44,33 +38,40 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
         published: 'green',
         rejected: 'red',
     };
+    
+    const statusText = {
+        pending: 'Ожидает',
+        published: 'Опубликован',
+        rejected: 'Отклонен',
+    };
 
     return (
-        <Box bg="white" rounded="lg" shadow="md" overflow="hidden">
+        <Box bg="white" rounded="lg" shadow="md">
+            {/* ИЗМЕНЕНИЕ: TableContainer делает таблицу адаптивной */}
             <TableContainer>
-                <Table variant="simple" size="md">
-                    <Thead bg="gray.50">
+                <Table variant="simple">
+                    <Thead>
                         <Tr>
                             <Th>Автор</Th>
-                            <Th>Текст</Th>
-                            <Th isNumeric>Рейтинг</Th>
+                            <Th>Отзыв</Th>
+                            <Th>Рейтинг</Th>
+                            <Th>Дата</Th>
                             <Th>Статус</Th>
                             <Th isNumeric>Действия</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
                         {reviews.map((review) => (
-                            <Tr key={review.id} _hover={{ bg: 'gray.50' }}>
+                            <Tr key={review.id}>
                                 <Td fontWeight="medium">{review.author}</Td>
-                                <Td maxW="350px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={review.text}>
-                                    {review.text}
-                                </Td>
-                                <Td isNumeric>{review.rating} / 5</Td>
+                                <Td maxW="400px" whiteSpace="normal">{review.text}</Td>
+                                <Td>{'⭐'.repeat(review.rating)}</Td>
+                                <Td>{new Date(review.date).toLocaleDateString('ru-RU')}</Td>
                                 <Td>
                                     <Select
-                                        value={review.status}
-                                        onChange={(e) => handleStatusChange(review.id, e.target.value)}
                                         size="sm"
+                                        value={review.status}
+                                        onChange={(e) => onUpdateStatus(review.id, e.target.value)}
                                         borderColor={`${statusColors[review.status]}.300`}
                                         focusBorderColor={`${statusColors[review.status]}.500`}
                                         w="150px"
@@ -97,6 +98,32 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
                     </Tbody>
                 </Table>
             </TableContainer>
+
+            {/* ИЗМЕНЕНИЕ: Модальное окно для подтверждения удаления */}
+            <AlertDialog
+                isOpen={isOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={onClose}
+            >
+                <AlertDialogOverlay>
+                    <AlertDialogContent>
+                        <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                            Удалить отзыв
+                        </AlertDialogHeader>
+                        <AlertDialogBody>
+                            Вы уверены? Это действие нельзя будет отменить.
+                        </AlertDialogBody>
+                        <AlertDialogFooter>
+                            <Button ref={cancelRef} onClick={onClose}>
+                                Отмена
+                            </Button>
+                            <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                                Удалить
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
         </Box>
     );
 };

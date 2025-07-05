@@ -1,14 +1,6 @@
-// Happy-Tour-main/pages/admin/reviews.js
-// Страница управления отзывами в административной панели.
-
+// pages/admin/reviews.js
 import React, { useState, useEffect } from 'react';
-import {
-    Box,
-    Heading,
-    useToast,
-    Spinner,
-    Flex
-} from '@chakra-ui/react';
+import { Box, Heading, useToast, Spinner, Flex } from '@chakra-ui/react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import ReviewTable from '../../components/admin/ReviewTable';
 import { useSession } from 'next-auth/react';
@@ -22,70 +14,93 @@ const AdminReviewsPage = () => {
     const [reviews, setReviews] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Эффект для загрузки отзывов и защиты маршрута.
     useEffect(() => {
-        if (status === 'loading') return; // Ничего не делаем, пока сессия загружается
-
+        if (status === 'loading') return;
         if (status === 'unauthenticated') {
-            router.replace('/admin/login'); // Если не авторизован, на страницу входа
+            router.replace('/admin/login');
             return;
         }
-
-        // --- ИСПРАВЛЕНО: Проверяем, что роль пользователя 'admin' или 'super_admin' ---
-        if (status === 'authenticated') {
-            const userRole = session?.user?.role;
-            if (!['admin', 'super_admin'].includes(userRole)) {
-                router.replace('/'); // Если роль не подходит, перенаправляем на главную
-            } else {
-                fetchReviews(); // Если все в порядке, загружаем отзывы
-            }
+        if (session && !['admin', 'super_admin'].includes(session.user.role)) {
+            router.replace('/');
+        } else {
+            fetchReviews();
         }
     }, [session, status, router]);
 
-    // Функция для получения списка отзывов с сервера.
     const fetchReviews = async () => {
         setIsLoading(true);
         try {
             const response = await fetch('/api/admin/reviews');
-            if (!response.ok) {
-                throw new Error('Не удалось получить отзывы');
-            }
+            if (!response.ok) throw new Error('Не удалось получить отзывы');
             const data = await response.json();
             setReviews(data);
         } catch (error) {
-            console.error('Ошибка при получении отзывов:', error);
-            toast({
-                title: 'Ошибка.',
-                description: 'Не удалось загрузить отзывы.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-            });
+            toast({ title: 'Ошибка.', description: error.message, status: 'error', duration: 5000, isClosable: true });
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Обработчик обновления статуса отзыва.
+    // ИЗМЕНЕНИЕ: Реализована логика обновления статуса
     const handleUpdateReviewStatus = async (reviewId, newStatus) => {
-        // ... (остальной код без изменений)
+        try {
+            const response = await fetch('/api/admin/reviews', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: reviewId, status: newStatus }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Не удалось обновить статус');
+            }
+            
+            // Обновляем состояние локально для мгновенного отклика UI
+            setReviews(prevReviews =>
+                prevReviews.map(review =>
+                    review.id === reviewId ? { ...review, status: newStatus } : review
+                )
+            );
+
+            toast({ title: 'Статус обновлен!', status: 'success', duration: 3000, isClosable: true });
+        } catch (error) {
+            toast({ title: 'Ошибка.', description: error.message, status: 'error', duration: 5000, isClosable: true });
+        }
     };
 
-    // Обработчик удаления отзыва.
+    // ИЗМЕНЕНИЕ: Реализована логика удаления
     const handleDeleteReview = async (reviewId) => {
-        // ... (остальной код без изменений)
+        try {
+            const response = await fetch('/api/admin/reviews', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: reviewId }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Не удалось удалить отзыв');
+            }
+            
+            // Удаляем отзыв из локального состояния
+            setReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
+            
+            toast({ title: 'Отзыв удален.', status: 'success', duration: 3000, isClosable: true });
+        } catch (error) {
+            toast({ title: 'Ошибка.', description: error.message, status: 'error', duration: 5000, isClosable: true });
+        }
     };
 
-    // Отображаем спиннер во время загрузки сессии.
-    if (status === 'loading') {
+    if (status === 'loading' || isLoading) {
         return (
-            <Flex justify="center" align="center" minH="100vh">
-                <Spinner size="xl" color="green.500" />
-            </Flex>
+            <AdminLayout>
+                <Flex justify="center" align="center" minH="50vh">
+                    <Spinner size="xl" color="brand.500" />
+                </Flex>
+            </AdminLayout>
         );
     }
     
-    // Рендерим страницу только если пользователь авторизован и имеет нужную роль.
     if (status === 'authenticated' && ['admin', 'super_admin'].includes(session?.user?.role)) {
         return (
             <AdminLayout>
@@ -102,7 +117,6 @@ const AdminReviewsPage = () => {
         );
     }
 
-    // В противном случае ничего не рендерим (так как уже произошло перенаправление).
     return null;
 };
 

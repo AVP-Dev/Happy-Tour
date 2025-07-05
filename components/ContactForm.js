@@ -15,15 +15,15 @@ import {
     Heading,
     Image,
 } from '@chakra-ui/react';
+import NextImage from 'next/image'; // ИСПОЛЬЗУЕМ next/image для оптимизации
 
 export default function ContactForm({ onFormSubmit, onClose, tour }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const initialMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
     
-    // ИЗМЕНЕНО: Структура полей формы
     const [formData, setFormData] = useState({
         name: '',
-        contact: '', // Единое поле для контакта
+        contact: '',
         message: initialMessage
     });
     const [errors, setErrors] = useState({});
@@ -43,8 +43,7 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         }
     };
 
-    // ИЗМЕНЕНО: Логика валидации
-    const validateForm = () => {
+    const validateForm = useCallback(() => {
         const newErrors = {};
         if (!formData.name.trim()) {
             newErrors.name = 'Пожалуйста, представьтесь.';
@@ -57,7 +56,7 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    };
+    }, [formData]);
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
@@ -67,11 +66,10 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         const recaptchaToken = await executeRecaptcha('contact_form');
 
         try {
-            // ВАЖНО: API теперь будет получать поле 'contact' вместо 'email' и 'phone'
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, recaptchaToken })
+                body: JSON.stringify({ ...formData, recaptchaToken, tourTitle: tour?.title })
             });
             const data = await res.json();
             if (res.ok) {
@@ -85,24 +83,29 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [executeRecaptcha, formData, onFormSubmit, onClose, validateForm]);
+    }, [executeRecaptcha, formData, onFormSubmit, onClose, validateForm, tour]);
+    
+    // ИСПРАВЛЕНИЕ: Преобразуем цену в число перед использованием .toFixed()
+    const priceAsNumber = tour ? Number(tour.price) : 0;
 
     return (
         <Box as="form" onSubmit={handleSubmit} noValidate>
             <VStack spacing={4}>
                 {tour && (
                     <Flex align="center" w="100%" p={3} bg="gray.50" borderRadius="md">
-                        <Image
-                            src={tour.image_url || `https://placehold.co/100x100/48BB78/FFFFFF?text=Tour`}
-                            alt={tour.title}
-                            boxSize="60px"
-                            borderRadius="md"
-                            objectFit="cover"
-                        />
-                        <Box ml={3}>
+                        <Box boxSize="60px" position="relative" borderRadius="md" overflow="hidden">
+                            <NextImage
+                                src={tour.image_url || `https://placehold.co/100x100/38B2AC/E6FFFA?text=Tour`}
+                                alt={tour.title}
+                                layout="fill"
+                                objectFit="cover"
+                            />
+                        </Box>
+                        <Box ml={4}>
                             <Heading as="h4" size="sm" noOfLines={2}>{tour.title}</Heading>
                             <Text fontWeight="bold" color="brand.600" fontSize="md">
-                                от {tour.price?.toFixed(0)} {tour.currency}
+                                {/* Используем числовую переменную для форматирования */}
+                                от {!isNaN(priceAsNumber) ? priceAsNumber.toFixed(0) : tour.price} {tour.currency}
                             </Text>
                         </Box>
                     </Flex>

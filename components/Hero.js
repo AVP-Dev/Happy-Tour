@@ -1,29 +1,38 @@
 // components/Hero.js
 import { Box, Button, Container, Flex, Heading, Text, VStack } from '@chakra-ui/react';
+import Image from 'next/image';
 
 const Hero = ({ onSearchClick }) => {
     return (
-        <Box as="section" id="home" position="relative">
+        <Box as="section" id="home" position="relative" minHeight="100vh" color="white">
+            {/* ИЗМЕНЕНИЕ: Используем next/image для фонового изображения */}
+            <Image
+                src="/img/hero-background.webp"
+                alt="Красивый пляж с пальмами на закате"
+                layout="fill"
+                objectFit="cover"
+                objectPosition="center"
+                quality={90}
+                priority // Загружаем это изображение в первую очередь, так как оно на первом экране
+            />
+            
+            {/* Оверлей для затемнения */}
+            <Box
+                position="absolute"
+                top={0} left={0} right={0} bottom={0}
+                bg="rgba(0, 0, 0, 0.55)"
+                zIndex={1}
+            />
+
             <Flex
                 align="center"
                 justify="center"
-                // ИЗМЕНЕНИЕ: Высота установлена в 100vh для полного заполнения экрана
                 minHeight="100vh"
                 position="relative"
                 textAlign="center"
-                color="white"
-                bgImage="url('/img/hero-background.webp')"
-                bgSize="cover"
-                bgPosition="center"
-                bgAttachment="fixed"
-                _after={{
-                    content: '""',
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    bg: 'rgba(0, 0, 0, 0.55)',
-                }}
+                zIndex={2} // Контент должен быть над оверлеем
             >
-                <Container maxW="container.md" position="relative" zIndex={1}>
+                <Container maxW="container.md">
                     <VStack spacing={6}>
                         <Heading
                             as="h1"
@@ -47,6 +56,7 @@ const Hero = ({ onSearchClick }) => {
                             height="56px"
                             px={8}
                             fontSize="lg"
+                            colorScheme="brand"
                         >
                             Подобрать тур
                         </Button>

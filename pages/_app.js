@@ -9,7 +9,8 @@ import Layout from '../components/Layout'; // Ваш основной макет
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   return (
     <SessionProvider session={session}>
-      {/* Оборачиваем все приложение в GoogleReCaptchaProvider */}
+      {/* Оборачиваем ВСЕ приложение в GoogleReCaptchaProvider */}
+      {/* Это должно решить проблему с инициализацией ReCAPTCHA, если она работала так раньше */}
       <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}>
         <ChakraProvider theme={theme}>
           <Layout>

@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import {
     FormControl, FormLabel, Input, Textarea, Button, Box, Flex,
-    useToast, FormErrorMessage, Text, Select, VStack, HStack // Добавлен HStack
+    useToast, FormErrorMessage, Text, Select, VStack, HStack // Убедимся, что HStack импортирован
 } from '@chakra-ui/react';
-import { GoogleReCaptcha, useGoogleReCaptcha } from 'react-google-recaptcha-v3'; // Убедимся, что импорт useGoogleReCaptcha есть
+import { GoogleReCaptcha, useGoogleReCaptcha } from 'react-google-recaptcha-v3'; // Импорты ReCAPTCHA
 import { StarIcon } from '@chakra-ui/icons';
 
 const ReviewForm = ({ onClose, onReviewSubmitted }) => {

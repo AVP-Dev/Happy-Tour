@@ -2,7 +2,7 @@
 import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    HStack, Text, Select, useToast, Tooltip, IconButton, Box, VStack, Flex, // Добавлен HStack
+    HStack, Text, Select, useToast, Tooltip, IconButton, Box, VStack, Flex, // Убедимся, что HStack импортирован
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Button, useDisclosure
 } from '@chakra-ui/react';
 import { FaTrash } from 'react-icons/fa';

@@ -2,7 +2,7 @@
 import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    HStack, Text, Switch, useToast, Tooltip, IconButton, Box, VStack, Flex // Добавлен HStack
+    HStack, Text, Switch, useToast, Tooltip, IconButton, Box, VStack, Flex // Убедимся, что HStack импортирован
 } from '@chakra-ui/react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 

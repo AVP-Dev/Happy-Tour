@@ -2,7 +2,7 @@
 import AnimateOnScroll from './AnimateOnScroll';
 import ContactForm from './ContactForm';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
-// import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'; // Эту строку удаляем
+// import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'; // Эту строку удаляем, так как провайдер теперь глобальный
 import {
     Box, Container, Heading, SimpleGrid, VStack, HStack, Text, Link, Icon, Divider
 } from '@chakra-ui/react';
@@ -31,7 +31,7 @@ const ContactInfoItem = ({ icon, children, href }) => (
 
 const ContactSection = ({ onFormSubmit }) => {
     return (
-        // Удаляем обертку GoogleReCaptchaProvider
+        // Удаляем обертку GoogleReCaptchaProvider, так как она теперь в _app.js
         <AnimateOnScroll>
             <Box as="section" id="contact-section" py={{ base: 14, md: 20 }} bg="gray.50">
                 <Container maxW="container.xl">

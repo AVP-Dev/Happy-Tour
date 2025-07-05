@@ -10,7 +10,6 @@ const CookieBanner = dynamic(() => import('./CookieBanner'), { ssr: false });
 
 const Layout = ({ children }) => {
     return (
-        // Простой Flex без каких-либо стилей фона
         <Flex 
             direction="column" 
             minHeight="100vh"

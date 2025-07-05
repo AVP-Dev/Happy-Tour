@@ -41,7 +41,6 @@ const AdminReviewsPage = () => {
         }
     };
 
-    // ИЗМЕНЕНИЕ: Реализована логика обновления статуса
     const handleUpdateReviewStatus = async (reviewId, newStatus) => {
         try {
             const response = await fetch('/api/admin/reviews', {
@@ -55,7 +54,6 @@ const AdminReviewsPage = () => {
                 throw new Error(errorData.message || 'Не удалось обновить статус');
             }
             
-            // Обновляем состояние локально для мгновенного отклика UI
             setReviews(prevReviews =>
                 prevReviews.map(review =>
                     review.id === reviewId ? { ...review, status: newStatus } : review
@@ -68,7 +66,6 @@ const AdminReviewsPage = () => {
         }
     };
 
-    // ИЗМЕНЕНИЕ: Реализована логика удаления
     const handleDeleteReview = async (reviewId) => {
         try {
             const response = await fetch('/api/admin/reviews', {
@@ -82,7 +79,6 @@ const AdminReviewsPage = () => {
                 throw new Error(errorData.message || 'Не удалось удалить отзыв');
             }
             
-            // Удаляем отзыв из локального состояния
             setReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
             
             toast({ title: 'Отзыв удален.', status: 'success', duration: 3000, isClosable: true });
@@ -91,7 +87,7 @@ const AdminReviewsPage = () => {
         }
     };
 
-    if (status === 'loading' || isLoading) {
+    if (status === 'loading' || !session) {
         return (
             <AdminLayout>
                 <Flex justify="center" align="center" minH="50vh">
@@ -101,23 +97,19 @@ const AdminReviewsPage = () => {
         );
     }
     
-    if (status === 'authenticated' && ['admin', 'super_admin'].includes(session?.user?.role)) {
-        return (
-            <AdminLayout>
-                <Box>
-                    <Heading as="h1" size="xl" mb={6}>Управление отзывами</Heading>
-                    <ReviewTable
-                        reviews={reviews}
-                        onUpdateStatus={handleUpdateReviewStatus}
-                        onDelete={handleDeleteReview}
-                        isLoading={isLoading}
-                    />
-                </Box>
-            </AdminLayout>
-        );
-    }
-
-    return null;
+    return (
+        <AdminLayout>
+            <Box>
+                <Heading as="h1" size="xl" mb={6}>Управление отзывами</Heading>
+                <ReviewTable
+                    reviews={reviews}
+                    onUpdateStatus={handleUpdateReviewStatus}
+                    onDelete={handleDeleteReview}
+                    isLoading={isLoading}
+                />
+            </Box>
+        </AdminLayout>
+    );
 };
 
 export default AdminReviewsPage;

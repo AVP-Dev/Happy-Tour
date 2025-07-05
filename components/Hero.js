@@ -7,6 +7,7 @@ const Hero = ({ onSearchClick }) => {
             <Flex
                 align="center"
                 justify="center"
+                // ИЗМЕНЕНИЕ: Высота установлена в 100vh для полного заполнения экрана
                 minHeight="100vh"
                 position="relative"
                 textAlign="center"

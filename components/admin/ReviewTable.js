@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    Text, Select, Tooltip, IconButton, Box, Badge,
+    Text, Select, Tooltip, IconButton, Box,
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader,
     AlertDialogContent, AlertDialogOverlay, Button, useDisclosure
 } from '@chakra-ui/react';
@@ -38,16 +38,9 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
         published: 'green',
         rejected: 'red',
     };
-    
-    const statusText = {
-        pending: 'Ожидает',
-        published: 'Опубликован',
-        rejected: 'Отклонен',
-    };
 
     return (
-        <Box bg="white" rounded="lg" shadow="md">
-            {/* ИЗМЕНЕНИЕ: TableContainer делает таблицу адаптивной */}
+        <Box bg="white" rounded="lg" shadow="md" overflow="hidden">
             <TableContainer>
                 <Table variant="simple">
                     <Thead>
@@ -99,7 +92,6 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
                 </Table>
             </TableContainer>
 
-            {/* ИЗМЕНЕНИЕ: Модальное окно для подтверждения удаления */}
             <AlertDialog
                 isOpen={isOpen}
                 leastDestructiveRef={cancelRef}

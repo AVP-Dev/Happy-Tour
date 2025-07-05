@@ -20,18 +20,16 @@ const FAQ = ({ items = [] }) => {
                         borderWidth="1px" 
                         borderRadius="lg" 
                         boxShadow="sm"
-                        overflow="hidden" // Добавлено для корректного скругления фона
+                        overflow="hidden"
                         _last={{ mb: "0" }}
                     >
                         <h2>
                             <AccordionButton 
                                 p={5} 
                                 _hover={{ bg: 'gray.50' }}
-                                // ИЗМЕНЕНИЕ: Более выразительные цвета для открытого состояния
                                 _expanded={{ bg: 'brand.500', color: 'white' }}
                             >
                                 <Box as="span" flex="1" textAlign="left">
-                                    {/* ИЗМЕНЕНИЕ: Убран fontWeight, так как цвет уже дает акцент */}
                                     <Text fontSize="lg" fontWeight="semibold">{item.q}</Text>
                                 </Box>
                                 <AccordionIcon fontSize="2xl" />

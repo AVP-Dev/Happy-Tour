@@ -2,14 +2,14 @@
 import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
-    HStack, Text, Select, useToast, Tooltip, IconButton, Box,
+    HStack, Text, Select, useToast, Tooltip, IconButton, Box, VStack, Flex,
     AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Button, useDisclosure
 } from '@chakra-ui/react';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaEdit } from 'react-icons/fa'; // Добавил FaEdit на случай, если понадобится для будущих расширений
 
 const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
     const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { isOpen, onOpen, onClose } = useDisclosure(); // Для AlertDialog
     const cancelRef = React.useRef();
     const [reviewToDelete, setReviewToDelete] = React.useState(null);
 
@@ -28,12 +28,13 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
             status: 'success',
             duration: 3000,
             isClosable: true,
+            position: 'top-right',
         });
     };
 
     const confirmDelete = (reviewId) => {
         setReviewToDelete(reviewId);
-        onOpen();
+        onOpen(); // Открыть AlertDialog
     };
 
     const handleDelete = async () => {
@@ -44,9 +45,10 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
                 status: 'success',
                 duration: 3000,
                 isClosable: true,
+                position: 'top-right',
             });
             setReviewToDelete(null);
-            onClose();
+            onClose(); // Закрыть AlertDialog
         }
     };
 
@@ -58,7 +60,8 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
 
     return (
         <Box bg="white" rounded="lg" shadow="md" overflow="hidden">
-            <TableContainer>
+            {/* Таблица для больших экранов */}
+            <TableContainer display={{ base: 'none', md: 'block' }}>
                 <Table variant="simple" size="md">
                     <Thead bg="gray.50">
                         <Tr>
@@ -108,6 +111,43 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
                     </Tbody>
                 </Table>
             </TableContainer>
+
+            {/* Карточки для мобильных экранов */}
+            <VStack spacing={4} align="stretch" display={{ base: 'flex', md: 'none' }} p={4}>
+                {reviews.map((review) => (
+                    <Box key={review.id} p={4} borderWidth="1px" borderRadius="lg" shadow="sm" bg="white">
+                        <HStack justifyContent="space-between" mb={2}>
+                            <Text fontWeight="bold" fontSize="lg">{review.author}</Text>
+                            <Tooltip label="Удалить" hasArrow>
+                                <IconButton
+                                    aria-label="Удалить отзыв"
+                                    icon={<FaTrash />}
+                                    size="sm"
+                                    variant="ghost"
+                                    colorScheme="red"
+                                    onClick={() => confirmDelete(review.id)}
+                                />
+                            </Tooltip>
+                        </HStack>
+                        <Text mb={2} color="gray.600">{review.text}</Text>
+                        <Flex justifyContent="space-between" alignItems="center" mt={3}>
+                            <Text fontSize="sm" color="gray.500">Рейтинг: {review.rating} / 5</Text>
+                            <Select
+                                value={review.status}
+                                onChange={(e) => handleStatusChange(review.id, e.target.value)}
+                                size="sm"
+                                borderColor={`${statusColors[review.status]}.300`}
+                                focusBorderColor={`${statusColors[review.status]}.500`}
+                                w="120px" // Уменьшенная ширина для мобильных
+                            >
+                                <option value="pending">Ожидает</option>
+                                <option value="published">Опубликован</option>
+                                <option value="rejected">Отклонен</option>
+                            </Select>
+                        </Flex>
+                    </Box>
+                ))}
+            </VStack>
 
             {/* AlertDialog для подтверждения удаления */}
             <AlertDialog

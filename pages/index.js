@@ -119,8 +119,13 @@ export default function Home({ tours, reviews }) {
                 <TourvisorWidget />
             </SectionWithBackground>
 
-            {/* Горящие туры - без фонового изображения */}
-            <Box as="section" id="hot-tours" py={sectionPadding} bg="gray.50">
+            {/* Горящие туры - пример с легким градиентом */}
+            <Box
+                as="section"
+                id="hot-tours"
+                py={sectionPadding}
+                bg="linear-gradient(to bottom, #f7fafc, #edf2f7)" // Легкий градиент от светло-серого к более светлому
+            >
                 <Container maxW="container.xl">
                     <SectionHeading>Горящие туры</SectionHeading>
                     <UniversalCarousel
@@ -130,8 +135,17 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
             
-            {/* Популярные направления - без фонового изображения */}
-            <Box as="section" id="popular-destinations" py={sectionPadding}>
+            {/* Популярные направления - пример с SVG-паттерном */}
+            <Box
+                as="section"
+                id="popular-destinations"
+                py={sectionPadding}
+                // SVG-паттерн с точками. Кодируется в base64 для использования как background-image.
+                // Это очень легкий и производительный способ добавить текстуру.
+                bgImage={`url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M0 0h3v3H0V0zm3 3h3v3H3V3z'/%3E%3C/g%3E%3C/svg%3E")`}
+                bgRepeat="repeat"
+                bg="white" // Основной цвет фона, если паттерн прозрачный
+            >
                 <Container maxW="container.xl">
                     <SectionHeading>Популярные направления</SectionHeading>
                     <UniversalCarousel
@@ -141,7 +155,7 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            {/* Выгодные предложения - без фонового изображения */}
+            {/* Выгодные предложения - без фонового изображения, простой фон */}
             <Box as="section" id="special-offers" py={sectionPadding} bg="gray.50">
                 <Container maxW="container.xl">
                     <SectionHeading>Выгодные предложения</SectionHeading>
@@ -152,7 +166,7 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            {/* Отзывы наших клиентов - без фонового изображения */}
+            {/* Отзывы наших клиентов - без фонового изображения, простой фон */}
             <Box as="section" id="reviews" py={sectionPadding}>
                 <Container maxW="container.xl">
                     <SectionHeading>Отзывы наших клиентов</SectionHeading>
@@ -168,7 +182,7 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
 
-            {/* Частые вопросы - без фонового изображения */}
+            {/* Частые вопросы - без фонового изображения, простой фон */}
             <Box as="section" id="faq" py={sectionPadding} bg="gray.50">
                 <Container maxW="container.xl">
                     <SectionHeading>Частые вопросы</SectionHeading>

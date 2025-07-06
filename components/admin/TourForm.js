@@ -42,7 +42,7 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                toast({ title: "Файл слишком большой", description: "Максимальный размер файла 5MB.", status: "error" });
+                toast({ title: "Файл слишком большой", description: "Максимальный размер файла 5MB.", status: "error", position: "top-right" });
                 return;
             }
             setImage({ file: file, previewUrl: URL.createObjectURL(file) });
@@ -81,10 +81,13 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
             try {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: fileFormData });
                 const uploadData = await uploadRes.json();
-                if (!uploadRes.ok) throw new Error(uploadData.error || 'Ошибка загрузки файла');
+                if (!uploadRes.ok) {
+                    throw new Error(uploadData.error || 'Ошибка загрузки файла');
+                }
                 finalImageUrl = uploadData.url; 
+                toast({ title: "Изображение успешно загружено", status: "success", position: "top-right" });
             } catch (error) {
-                toast({ title: "Ошибка загрузки изображения", description: error.message, status: "error" });
+                toast({ title: "Ошибка загрузки изображения", description: error.message, status: "error", position: "top-right" });
                 return;
             }
         }

@@ -63,9 +63,9 @@ export default async function handler(req, res) {
         const sanitizedFilename = slugify(baseFilename);
 
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-        const newFilename = `${sanitizedFilename}-${uniqueSuffix}.webp`; // Всегда сохраняем в .webp
-
-        const publicFolderPath = path.join(process.cwd(), 'public', 'uploads');
+        // Изменено: теперь сохраняем все в подпапку 'tours' внутри 'uploads'
+        const newFilename = `${sanitizedFilename}-${uniqueSuffix}.webp`; 
+        const publicFolderPath = path.join(process.cwd(), 'public', 'uploads', 'tours'); // Путь к папке 'tours'
         const newFilePath = path.join(publicFolderPath, newFilename);
 
         console.log(`Путь для сохранения файла: ${newFilePath}`);
@@ -83,7 +83,8 @@ export default async function handler(req, res) {
             .toFile(newFilePath);
         console.log(`Файл успешно сохранен: ${newFilePath}`);
 
-        const fileUrl = `/uploads/${newFilename}`;
+        // Изменено: URL теперь указывает на новый API-маршрут для отдачи изображений
+        const fileUrl = `/api/images/${newFilename}`; 
         console.log(`Сгенерированный URL файла: ${fileUrl}`);
 
         res.status(200).json({ url: fileUrl });

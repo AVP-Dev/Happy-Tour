@@ -4,9 +4,9 @@ import ReviewTable from '../../components/admin/ReviewTable';
 import { 
   Heading, Box, Spinner, Center, Alert, AlertIcon, useToast, Text,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
-  FormControl, FormLabel, Textarea, Button, useDisclosure 
+  FormControl, FormLabel, Textarea, Button, useDisclosure, Select, HStack
 } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 // Обновленный fetcher для SWR, который корректно обрабатывает ошибки API
 const fetcher = async (url, options) => {
@@ -18,7 +18,7 @@ const fetcher = async (url, options) => {
   const res = await fetch(url, defaultOptions);
 
   // Если ответ сервера НЕ успешный (не 2xx) И не 204 No Content
-  if (!res.ok && res.status !== 204) { // Изменено: добавлена проверка на 204
+  if (!res.ok && res.status !== 204) {
     const errorPayload = await res.json().catch(() => {
       return { error: `Сервер ответил со статусом ${res.status}, но без деталей.` };
     });
@@ -28,7 +28,7 @@ const fetcher = async (url, options) => {
   }
 
   // Если статус 204, возвращаем null, так как нет тела ответа
-  if (res.status === 204) { // Изменено: если 204, возвращаем null
+  if (res.status === 204) {
     return null;
   }
 
@@ -37,14 +37,42 @@ const fetcher = async (url, options) => {
 };
 
 export default function ReviewsPage() {
-  const { data: reviews, error } = useSWR('/api/admin/reviews', fetcher);
+  const { data: reviews, error, isLoading: isSWRLoading, isValidating } = useSWR('/api/admin/reviews', fetcher);
   const toast = useToast();
 
+  // Состояние для модального окна редактирования
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
   const [currentReview, setCurrentReview] = useState(null); 
   const [editedText, setEditedText] = useState(''); 
 
+  // Состояние для фильтрации по статусу
+  const [filterStatus, setFilterStatus] = useState('all'); 
+
+  // Мемоизированный список отзывов для фильтрации
+  const filteredReviews = useMemo(() => {
+    console.log("useMemo: Пересчет filteredReviews");
+    console.log("Текущие отзывы (reviews):", reviews);
+    console.log("Текущий статус фильтра (filterStatus):", filterStatus);
+
+    if (!reviews) {
+      console.log("useMemo: Отзывы еще не загружены, возвращаем пустой массив.");
+      return [];
+    }
+    if (filterStatus === 'all') {
+      console.log("useMemo: Фильтр 'все статусы', возвращаем все отзывы.");
+      return reviews;
+    }
+    const result = reviews.filter(review => {
+      const match = review.status === filterStatus;
+      console.log(`Review ID: ${review.id}, Status: ${review.status}, Filter: ${filterStatus}, Match: ${match}`);
+      return match;
+    });
+    console.log("useMemo: Результат фильтрации:", result);
+    return result;
+  }, [reviews, filterStatus]);
+
   const handleUpdateReview = async (id, status) => {
+    // Оптимистичное обновление UI
     const optimisticData = reviews.map(r => (r.id === id ? { ...r, status } : r));
     mutate('/api/admin/reviews', optimisticData, false);
 
@@ -54,39 +82,45 @@ export default function ReviewsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       });
+      // После успешного обновления, перевалидируем данные, чтобы получить актуальный список
       mutate('/api/admin/reviews');
       toast({ title: "Статус обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" });
     } catch (err) {
-      mutate('/api/admin/reviews'); 
+      // В случае ошибки возвращаем старые данные и показываем тост
+      mutate('/api/admin/reviews'); // Откатываем оптимистичное обновление
       toast({ title: "Ошибка обновления статуса.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" });
     }
   };
 
   const handleDeleteReview = async (id) => {
+    // Оптимистичное обновление UI
     const optimisticData = reviews.filter(r => r.id !== id);
     mutate('/api/admin/reviews', optimisticData, false);
 
     try {
-      // Здесь fetcher вернет null, если статус 204, поэтому не будет попытки вызвать .json()
       await fetcher(`/api/admin/reviews`, { 
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
+      // После успешного удаления, перевалидируем данные
       mutate('/api/admin/reviews');
-      toast({ title: "Отзыв успешно удален.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено сообщение
+      toast({ title: "Отзыв успешно удален.", status: "success", duration: 3000, isClosable: true, position: "top" }); 
     } catch (err) {
+      // В случае ошибки возвращаем старые данные и показываем тост
       mutate('/api/admin/reviews'); 
       toast({ title: "Ошибка удаления.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" });
     }
   };
 
+  // Функция для открытия модального окна редактирования
   const handleEditReview = (review) => {
     setCurrentReview(review);
     setEditedText(review.text);
     onEditModalOpen();
   };
 
+  // Функция для сохранения отредактированного отзыва
   const handleSaveEditedReview = async () => {
     if (!editedText.trim()) { 
       toast({ title: "Текст отзыва не может быть пустым.", status: "warning", duration: 3000, isClosable: true, position: "top" });
@@ -98,6 +132,7 @@ export default function ReviewsPage() {
     }
 
     const reviewId = currentReview.id;
+    // Оптимистичное обновление UI для текста отзыва
     const optimisticData = reviews.map(r => (r.id === reviewId ? { ...r, text: editedText } : r));
     mutate('/api/admin/reviews', optimisticData, false);
 
@@ -107,25 +142,44 @@ export default function ReviewsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reviewId, text: editedText }), 
       });
+      // Если успешно, повторно получаем данные для подтверждения
       mutate('/api/admin/reviews');
       toast({ title: "Отзыв обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" });
       onEditModalClose(); 
     } catch (err) {
+      // В случае ошибки возвращаем старые данные и показываем тост
       mutate('/api/admin/reviews'); 
       toast({ title: "Ошибка обновления отзыва.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" });
     }
   };
 
-  const isLoading = !reviews && !error;
+  // Используем isSWRLoading для индикации загрузки данных через SWR
+  const isLoadingData = isSWRLoading && !reviews && !error;
 
   return (
     <AdminLayout>
-      <Box>
+      <Box p={{ base: 4, md: 6 }}>
         <Heading as="h1" mb={6}>Управление отзывами</Heading>
-        {isLoading && (
+
+        {/* Элементы фильтрации */}
+        <HStack mb={6} spacing={4} direction={{ base: 'column', md: 'row' }} w="full" alignItems="stretch">
+            <Text flexShrink={0} alignSelf="center">Фильтр по статусу:</Text>
+            <Select 
+                value={filterStatus} 
+                onChange={(e) => setFilterStatus(e.target.value)} 
+                maxW={{ base: 'full', md: '250px' }}
+            >
+                <option value="all">Все статусы</option>
+                <option value="pending">Ожидают</option>
+                <option value="published">Опубликованы</option>
+                <option value="rejected">Отклонены</option>
+            </Select>
+        </HStack>
+
+        {isLoadingData && (
           <Center p={10}><Spinner size="xl" /></Center>
         )}
-        {error && (
+        {error && !reviews && (
           <Alert status="error" borderRadius="md">
             <AlertIcon />
             <Box>
@@ -136,7 +190,7 @@ export default function ReviewsPage() {
         )}
         {reviews && (
           <ReviewTable
-            reviews={reviews}
+            reviews={filteredReviews}
             onUpdate={handleUpdateReview}
             onDelete={handleDeleteReview}
             onEdit={handleEditReview} 
@@ -144,6 +198,7 @@ export default function ReviewsPage() {
         )}
       </Box>
 
+      {/* Модальное окно для редактирования отзыва */}
       <Modal isOpen={isEditModalOpen} onClose={onEditModalClose}>
         <ModalOverlay />
         <ModalContent>

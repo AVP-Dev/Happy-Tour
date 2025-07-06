@@ -43,39 +43,41 @@ const UniversalCarousel = ({
     );
   }
 
-  const canLoop = items.length >= 3 * 2;
+  const canLoop = items.length >= 3 * 2; // Проверяем достаточное количество слайдов для бесконечной прокрутки Swiper
 
   const defaultSettings = {
     modules: [Navigation, Pagination, A11y, Autoplay],
-    loop: canLoop,
-    watchOverflow: true,
-    grabCursor: true,
-    slidesPerView: 1,
-    spaceBetween: 16,
+    loop: canLoop, // Включаем бесконечную прокрутку, если достаточно слайдов
+    watchOverflow: true, // Автоматически отключает навигацию, если слайдов недостаточно
+    grabCursor: true, // Показывает курсор "хватающая рука"
+    slidesPerView: 1, // Количество видимых слайдов по умолчанию
+    spaceBetween: 16, // Расстояние между слайдами
     autoplay: {
-      delay: 4000,
-      disableOnInteraction: true,
-      pauseOnMouseEnter: true,
+      delay: 4000, // Задержка между сменой слайдов (4 секунды)
+      // ИЗМЕНЕНИЕ: disableOnInteraction установлено в false, чтобы автовоспроизведение не останавливалось после взаимодействия
+      disableOnInteraction: false, 
+      pauseOnMouseEnter: true, // Пауза автовоспроизведения при наведении курсора мыши
     },
     navigation: {
-      prevEl: navigationPrevRef.current,
-      nextEl: navigationNextRef.current,
+      prevEl: navigationPrevRef.current, // Элемент для кнопки "назад"
+      nextEl: navigationNextRef.current, // Элемент для кнопки "вперед"
     },
     pagination: {
-      el: paginationRef.current,
-      clickable: true,
-      bulletClass: 'swiper-pagination-bullet-custom',
-      bulletActiveClass: 'swiper-pagination-bullet-active-custom',
+      el: paginationRef.current, // Элемент для пагинации (точек)
+      clickable: true, // Делает точки пагинации кликабельными
+      bulletClass: 'swiper-pagination-bullet-custom', // Пользовательский класс для точек пагинации
+      bulletActiveClass: 'swiper-pagination-bullet-active-custom', // Пользовательский класс для активной точки
     },
-    onInit: setSwiperInstance,
-    breakpoints: {
-      768: { slidesPerView: 2, spaceBetween: 24 },
-      1024: { slidesPerView: 3, spaceBetween: 30 },
+    onInit: setSwiperInstance, // Получаем экземпляр Swiper после инициализации
+    breakpoints: { // Адаптивные настройки для разных размеров экрана
+      768: { slidesPerView: 2, spaceBetween: 24 }, // 2 слайда на планшетах
+      1024: { slidesPerView: 3, spaceBetween: 30 }, // 3 слайда на десктопах
     },
-    ...settings,
+    ...settings, // Переопределяем настройки пользовательскими, если они переданы
   };
   
-  // ИСПРАВЛЕНО: Обновляем навигацию после того, как Swiper будет готов
+  // Обновляем навигацию после того, как Swiper будет готов
+  // Это важно, так как ref'ы могут быть не готовы при первой инициализации Swiper
   useEffect(() => {
     if (swiperInstance) {
       swiperInstance.params.navigation.prevEl = navigationPrevRef.current;
@@ -83,7 +85,7 @@ const UniversalCarousel = ({
       swiperInstance.navigation.init();
       swiperInstance.navigation.update();
     }
-  }, [swiperInstance]);
+  }, [swiperInstance]); // Зависимость от swiperInstance
 
   return (
     <Box position="relative" px={{ base: 0, md: 12 }}>
@@ -97,6 +99,7 @@ const UniversalCarousel = ({
         ))}
       </Swiper>
       
+      {/* Кнопка "назад" для навигации */}
       <IconButton
         ref={navigationPrevRef}
         aria-label="Previous slide"
@@ -108,8 +111,9 @@ const UniversalCarousel = ({
         transform="translateY(-50%)"
         zIndex="docked"
         boxShadow="md"
-        display={{ base: 'none', md: 'flex' }}
+        display={{ base: 'none', md: 'flex' }} // Скрываем на мобильных, показываем на больших экранах
       />
+      {/* Кнопка "вперед" для навигации */}
       <IconButton
         ref={navigationNextRef}
         aria-label="Next slide"
@@ -121,16 +125,18 @@ const UniversalCarousel = ({
         transform="translateY(-50%)"
         zIndex="docked"
         boxShadow="md"
-        display={{ base: 'none', md: 'flex' }}
+        display={{ base: 'none', md: 'flex' }} // Скрываем на мобильных, показываем на больших экранах
       />
       
+      {/* Элемент пагинации (точки) */}
       <HStack
         ref={paginationRef}
         justify="center"
         position="absolute"
-        bottom="-40px"
+        bottom="-40px" // Располагаем ниже карусели
         width="100%"
         left="0"
+        // Пользовательские стили для точек пагинации
         sx={{
             '.swiper-pagination-bullet-custom': {
                 width: '10px',
@@ -141,8 +147,8 @@ const UniversalCarousel = ({
                 transition: 'all 0.2s ease-in-out',
             },
             '.swiper-pagination-bullet-active-custom': {
-                bg: 'brand.500',
-                width: '25px',
+                bg: 'brand.500', // Цвет активной точки
+                width: '25px', // Ширина активной точки
             }
         }}
       />

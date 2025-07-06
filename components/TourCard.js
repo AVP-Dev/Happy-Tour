@@ -4,25 +4,6 @@ import NextImage from 'next/image';
 import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio } from '@chakra-ui/react';
 import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
-// --- НОВОЕ: Вспомогательная функция для создания прокси-URL ---
-const getImageProxyUrl = (url) => {
-    if (!url) {
-        return 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour';
-    }
-    // Если URL уже абсолютный (старые данные), используем его как есть
-    if (url.startsWith('http')) {
-        return url;
-    }
-    // Если это путь к нашим загрузкам, перенаправляем его на наш API
-    if (url.startsWith('/uploads/')) {
-        // Превращает /uploads/image.webp в /api/images/uploads/image.webp
-        return `/api/images${url}`;
-    }
-    // Возвращаем URL как есть для всех остальных случаев
-    return url;
-};
-
-
 const TourCard = ({ tour, onTourInquiry, index }) => {
   if (!tour) {
     return null;
@@ -43,8 +24,7 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
 
   const categoryDetails = getCategoryDetails(tour.category);
 
-  // --- ИЗМЕНЕНО: Используем новую функцию для получения URL ---
-  const imageUrl = getImageProxyUrl(tour.image_url);
+  const imageUrl = tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour';
 
   return (
     <Flex

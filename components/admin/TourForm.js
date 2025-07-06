@@ -7,20 +7,6 @@ import {
 } from '@chakra-ui/react';
 import { FaUpload } from 'react-icons/fa';
 
-// --- Вспомогательная функция для создания прокси-URL ---
-const getImageProxyUrl = (url) => {
-    if (!url) return null;
-    // URL для превью (blob) или абсолютные URL оставляем как есть
-    if (url.startsWith('http') || url.startsWith('blob:')) {
-        return url;
-    }
-    // Пути к загрузкам перенаправляем на наш API
-    if (url.startsWith('/uploads/')) {
-        return `/api/images${url}`;
-    }
-    return url;
-};
-
 const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
     const isEditing = !!initialData?.id;
     const toast = useToast();
@@ -86,8 +72,10 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         e.preventDefault();
         if (!validate()) return;
 
-        let finalImageUrl = image.previewUrl;
-
+        // Используем старый URL, если не выбрано новое изображение
+        let finalImageUrl = initialData?.image_url;
+        
+        // Если выбран новый файл, загружаем его
         if (image.file) {
             const fileFormData = new FormData();
             fileFormData.append('file', image.file);
@@ -111,10 +99,10 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         onSubmit(finalData);
     };
 
-    const previewUrl = getImageProxyUrl(image.previewUrl);
+    // URL для превью может быть blob: (новый файл) или http/https (старый)
+    const previewUrl = image.previewUrl;
 
     return (
-        // --- ИСПРАВЛЕНО: Опечатка в названии функции ---
         <VStack as="form" onSubmit={handleFormSubmit} spacing={6} align="stretch">
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                 <VStack spacing={6}>

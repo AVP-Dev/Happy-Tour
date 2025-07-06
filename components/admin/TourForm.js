@@ -72,10 +72,8 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         e.preventDefault();
         if (!validate()) return;
 
-        // Используем старый URL, если не выбрано новое изображение
-        let finalImageUrl = initialData?.image_url;
-        
-        // Если выбран новый файл, загружаем его
+        let finalImageUrl = image.previewUrl;
+
         if (image.file) {
             const fileFormData = new FormData();
             fileFormData.append('file', image.file);
@@ -99,7 +97,6 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         onSubmit(finalData);
     };
 
-    // URL для превью может быть blob: (новый файл) или http/https (старый)
     const previewUrl = image.previewUrl;
 
     return (

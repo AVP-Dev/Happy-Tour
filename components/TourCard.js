@@ -1,7 +1,7 @@
 // components/TourCard.js
 import React from 'react';
-import NextImage from 'next/image';
-import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio } from '@chakra-ui/react';
+// import NextImage from 'next/image'; // НЕ ИСПОЛЬЗУЕМ ДЛЯ ТЕСТА
+import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio, Image } from '@chakra-ui/react'; // Используем Image из Chakra, который рендерит <img>
 import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
 const TourCard = ({ tour, onTourInquiry, index }) => {
@@ -24,6 +24,7 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
 
   const categoryDetails = getCategoryDetails(tour.category);
 
+  // Используем URL напрямую. Это может быть относительный (/uploads/...) или абсолютный (https://...) путь.
   const imageUrl = tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour';
 
   return (
@@ -43,14 +44,15 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
     >
       <Box position="relative">
         <AspectRatio ratio={16 / 9}>
-            <NextImage
+            {/* --- РЕШАЮЩИЙ ТЕСТ: Используем обычный тег <img> через Chakra --- */}
+            <Image
               src={imageUrl}
               alt={tour.title || 'Тур'}
-              layout="fill"
               objectFit="cover"
-              priority={index < 2} 
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              width="100%"
+              height="100%"
               style={{ borderRadius: '0.75rem 0.75rem 0 0' }}
+              // Если это не сработает, значит сервер физически не отдает файл по этому URL.
             />
         </AspectRatio>
         <Tag

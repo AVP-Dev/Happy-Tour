@@ -40,13 +40,22 @@ async function handler(req, res) {
 
     case 'PUT':
       try {
-        const { id, status } = req.body;
-        if (!id || !status) {
-          return res.status(400).json({ error: 'Отсутствует ID или статус.' });
+        const { id, status, text } = req.body; // Теперь ожидаем также 'text'
+        if (!id || (!status && !text)) { // Добавлена проверка на наличие 'text'
+          return res.status(400).json({ error: 'Отсутствует ID или данные для обновления (статус или текст).' });
         }
+
+        const updateData = {};
+        if (status) {
+            updateData.status = status;
+        }
+        if (text) { // Если передан текст, обновляем его
+            updateData.text = text;
+        }
+
         const updatedReview = await prisma.review.update({
           where: { id },
-          data: { status },
+          data: updateData, // Используем динамический объект updateData
         });
         return res.status(200).json(updatedReview);
       } catch (error) {

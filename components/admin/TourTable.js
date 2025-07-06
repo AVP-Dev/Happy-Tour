@@ -3,7 +3,7 @@ import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
     HStack, Text, Image, Box, Tooltip, Icon,
-    Tag, IconButton, Switch
+    Tag, IconButton, Switch, Stack, Flex, Heading // Добавлены Stack, Flex, Heading для мобильной версии
 } from '@chakra-ui/react';
 import { FaEdit, FaTrash, FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
@@ -28,7 +28,8 @@ const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
 
     return (
         <Box bg="white" rounded="lg" shadow="md" overflow="hidden">
-            <TableContainer>
+            {/* Версия для десктопа: полная таблица */}
+            <TableContainer display={{ base: 'none', md: 'block' }}> {/* Скрываем на мобильных */}
                 <Table variant="simple" size="md">
                     <Thead bg="gray.50">
                         <Tr>
@@ -94,6 +95,64 @@ const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
                     </Tbody>
                 </Table>
             </TableContainer>
+
+            {/* Версия для мобильных: карточки */}
+            <Stack spacing={4} p={4} display={{ base: 'flex', md: 'none' }}> {/* Показываем на мобильных */}
+                {tours.map((tour) => (
+                    <Box key={tour.id} p={4} borderWidth="1px" borderRadius="lg" shadow="sm">
+                        <Flex align="center" mb={2}>
+                            <Image
+                                src={tour.image_url}
+                                boxSize="80px"
+                                objectFit="cover"
+                                borderRadius="md"
+                                alt={tour.title}
+                                fallbackSrc="https://placehold.co/80x80/eee/ccc?text=Нет"
+                                mr={4}
+                            />
+                            <Box>
+                                <Heading size="md" mb={1}>{tour.title}</Heading>
+                                <CategoryTag category={tour.category} />
+                                <Text fontWeight="semibold" mt={1}>{`${tour.price?.toFixed(0)} ${tour.currency}`}</Text>
+                            </Box>
+                        </Flex>
+                        
+                        <Flex justify="space-between" align="center" mt={4}>
+                            <Text>Опубликован:</Text>
+                            <Tooltip label={tour.published ? 'Снять с публикации' : 'Опубликовать'}>
+                                <Switch
+                                    colorScheme="brand"
+                                    isChecked={tour.published}
+                                    onChange={() => onTogglePublished(tour.id, !tour.published)}
+                                />
+                            </Tooltip>
+                        </Flex>
+
+                        <HStack spacing={2} justify="flex-end" mt={4}>
+                            <Tooltip label="Редактировать" hasArrow>
+                                <IconButton
+                                    aria-label="Редактировать тур"
+                                    icon={<FaEdit />}
+                                    size="sm"
+                                    variant="ghost"
+                                    colorScheme="blue"
+                                    onClick={() => onEdit(tour)}
+                                />
+                            </Tooltip>
+                            <Tooltip label="Удалить" hasArrow>
+                                <IconButton
+                                    aria-label="Удалить тур"
+                                    icon={<FaTrash />}
+                                    size="sm"
+                                    variant="ghost"
+                                    colorScheme="red"
+                                    onClick={() => onDelete(tour.id)}
+                                />
+                            </Tooltip>
+                        </HStack>
+                    </Box>
+                ))}
+            </Stack>
         </Box>
     );
 };

@@ -8,7 +8,8 @@ import {
 } from '@chakra-ui/react';
 import { FaTrash } from 'react-icons/fa';
 
-const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
+// Изменено: пропс onUpdateStatus переименован в onUpdate для соответствия родительскому компоненту ReviewsPage
+const ReviewTable = ({ reviews, onUpdate, onDelete, isLoading }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const cancelRef = useRef();
     const [reviewToDelete, setReviewToDelete] = useState(null);
@@ -64,7 +65,8 @@ const ReviewTable = ({ reviews, onUpdateStatus, onDelete, isLoading }) => {
                                     <Select
                                         size="sm"
                                         value={review.status}
-                                        onChange={(e) => onUpdateStatus(review.id, e.target.value)}
+                                        // Изменено: вызов onUpdate вместо onUpdateStatus
+                                        onChange={(e) => onUpdate(review.id, e.target.value)}
                                         borderColor={`${statusColors[review.status]}.300`}
                                         focusBorderColor={`${statusColors[review.status]}.500`}
                                         w="150px"

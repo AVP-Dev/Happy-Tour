@@ -12,9 +12,9 @@ async function handler(req, res) {
         // Логирование для отслеживания выполнения на сервере
         console.log("[API_INFO] /api/admin/reviews (GET): Попытка получить отзывы."); 
         const reviews = await prisma.review.findMany({
-          // orderBy: { // Закомментировано для отладки. Если после этого заработает,
-          //   createdAt: 'desc', // то проблема в поле createdAt или его индексации.
-          // },
+          orderBy: { // Возвращаем сортировку, так как проблема не в ней
+            createdAt: 'desc', 
+          },
         });
         // Логирование успешного получения данных
         console.log(`[API_INFO] /api/admin/reviews (GET): Успешно получено ${reviews.length} отзывов.`); 

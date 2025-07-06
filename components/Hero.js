@@ -7,7 +7,7 @@ const Hero = ({ onSearchClick }) => {
             <Flex
                 align="center"
                 justify="center"
-                // ИЗМЕНЕНИЕ: Высота установлена в 100vh для полного заполнения экрана
+                // Высота установлена в 100vh для полного заполнения экрана
                 minHeight="100vh"
                 position="relative"
                 textAlign="center"
@@ -15,7 +15,7 @@ const Hero = ({ onSearchClick }) => {
                 bgImage="url('/img/hero-background.webp')"
                 bgSize="cover"
                 bgPosition="center"
-                bgAttachment="fixed"
+                // ИЗМЕНЕНИЕ: Удалено bgAttachment="fixed" для лучшей совместимости с мобильными устройствами
                 _after={{
                     content: '""',
                     position: 'absolute',

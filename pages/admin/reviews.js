@@ -6,11 +6,18 @@ import {
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
   FormControl, FormLabel, Textarea, Button, useDisclosure 
 } from '@chakra-ui/react';
-import React, { useState } from 'react'; // Добавлен React для useState
+import React, { useState } from 'react';
 
 // Обновленный fetcher для SWR, который корректно обрабатывает ошибки API
 const fetcher = async (url, options) => {
-  const res = await fetch(url, options);
+  // Добавляем credentials: 'include' по умолчанию для всех запросов,
+  // чтобы гарантировать отправку куки с аутентификацией.
+  const defaultOptions = {
+    ...options,
+    credentials: 'include', // Важно для отправки куки сессии
+  };
+
+  const res = await fetch(url, defaultOptions);
 
   // Если ответ сервера НЕ успешный (не 2xx)
   if (!res.ok) {
@@ -48,6 +55,7 @@ export default function ReviewsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
+        // credentials: 'include' уже добавлен в fetcher по умолчанию
       });
       // Если успешно, повторно получаем данные для подтверждения
       mutate('/api/admin/reviews');
@@ -69,6 +77,7 @@ export default function ReviewsPage() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
+        // credentials: 'include' уже добавлен в fetcher по умолчанию
       });
       // Если успешно, повторно получаем данные для подтверждения
       mutate('/api/admin/reviews');
@@ -89,9 +98,13 @@ export default function ReviewsPage() {
 
   // Функция для сохранения отредактированного отзыва
   const handleSaveEditedReview = async () => {
-    if (!currentReview || !editedText.trim()) {
+    if (!editedText.trim()) { // Проверяем только editedText, currentReview уже должен быть установлен
       toast({ title: "Текст отзыва не может быть пустым.", status: "warning", duration: 3000, isClosable: true });
       return;
+    }
+    if (!currentReview) { // Дополнительная проверка, хотя currentReview должен быть установлен
+        toast({ title: "Не выбран отзыв для редактирования.", status: "error", duration: 3000, isClosable: true });
+        return;
     }
 
     const reviewId = currentReview.id;
@@ -104,6 +117,7 @@ export default function ReviewsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reviewId, text: editedText }), // Отправляем только ID и текст
+        // credentials: 'include' уже добавлен в fetcher по умолчанию
       });
       // Если успешно, повторно получаем данные для подтверждения
       mutate('/api/admin/reviews');

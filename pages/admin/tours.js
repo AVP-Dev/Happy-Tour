@@ -1,9 +1,11 @@
 // pages/admin/tours.js
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react'; // Добавлен useRef
 import {
     Box, Heading, Button, useDisclosure, Modal, ModalOverlay,
     ModalContent, ModalHeader, ModalBody, ModalCloseButton, useToast,
-    Spinner, Flex, InputGroup, Input, Select, HStack, Alert, AlertIcon, Text // Добавлены Alert, AlertIcon, Text
+    Spinner, Flex, InputGroup, Input, Select, HStack, Alert, AlertIcon, Text,
+    AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, // Добавлены для AlertDialog
+    AlertDialogContent, AlertDialogOverlay // Добавлены для AlertDialog
 } from '@chakra-ui/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -38,6 +40,12 @@ const AdminToursPage = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
 
+    // Для модального окна подтверждения удаления
+    const { isOpen: isDeleteConfirmOpen, onOpen: onDeleteConfirmOpen, onClose: onDeleteConfirmClose } = useDisclosure();
+    const cancelRef = useRef();
+    const [tourToDeleteId, setTourToDeleteId] = useState(null);
+
+
     // Переходим на useSWR для управления данными туров
     const { data: tours, error, isLoading: isSWRLoading, isValidating } = useSWR('/api/admin/tours', fetcher, {
         revalidateOnFocus: false, // Отключаем перевалидацию при фокусе окна
@@ -57,10 +65,9 @@ const AdminToursPage = () => {
         } else if (status === 'authenticated') {
             const allowedRoles = ['admin', 'super_admin'];
             if (!session?.user?.role || !allowedRoles.includes(session.user.role)) {
-                toast({ title: "Доступ запрещен", status: "error", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+                toast({ title: "Доступ запрещен", status: "error", duration: 3000, isClosable: true, position: "top" });
                 router.replace('/');
             }
-            // fetchTours() больше не нужен здесь, useSWR сделает это автоматически
         }
     }, [session, status, router, toast]);
 
@@ -86,39 +93,43 @@ const AdminToursPage = () => {
         setIsSubmitting(true);
         try {
             const method = editingTour ? 'PUT' : 'POST';
-            const response = await fetcher('/api/admin/tours', { // Используем fetcher
+            await fetcher('/api/admin/tours', { // Используем fetcher
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
             
-            // После успешного сохранения, обновляем кеш SWR
             mutate('/api/admin/tours'); 
             
-            toast({ title: `Тур успешно ${editingTour ? 'обновлен' : 'создан'}`, status: 'success', position: "top" }); // Изменено: позиция "top"
+            toast({ title: `Тур успешно ${editingTour ? 'обновлен' : 'создан'}`, status: 'success', position: "top" });
             onClose();
-            // fetchTours() заменен на mutate
         } catch (error) {
-            toast({ title: 'Ошибка сохранения', description: error.message, status: 'error', position: "top" }); // Изменено: позиция "top"
+            toast({ title: 'Ошибка сохранения', description: error.message, status: 'error', position: "top" });
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleDelete = async (tourId) => {
-        // Заменено window.confirm на кастомный Modal или Toast с подтверждением
-        // Для простоты примера, используем confirm, но в реальном приложении лучше использовать Modal
-        if (!confirm('Вы уверены, что хотите удалить этот тур? Это действие необратимо.')) return; 
+    // Функция для открытия модального окна подтверждения удаления
+    const handleDeleteClick = (tourId) => {
+        setTourToDeleteId(tourId);
+        onDeleteConfirmOpen();
+    };
+
+    // Функция для подтверждения удаления
+    const confirmDelete = async () => {
+        if (!tourToDeleteId) return; // Дополнительная проверка
+        onDeleteConfirmClose(); // Закрываем модальное окно подтверждения
         try {
-            const response = await fetcher(`/api/admin/tours?id=${tourId}`, { method: 'DELETE' }); // Используем fetcher
+            await fetcher(`/api/admin/tours?id=${tourToDeleteId}`, { method: 'DELETE' }); // Используем fetcher
             
-            // После успешного удаления, обновляем кеш SWR
             mutate('/api/admin/tours'); 
 
-            toast({ title: 'Тур удален', status: 'success', position: "top" }); // Изменено: позиция "top"
-            // fetchTours() заменен на mutate
+            toast({ title: 'Тур удален', status: 'success', position: 'top' });
         } catch (error) {
-            toast({ title: 'Ошибка удаления', description: error.message, status: 'error', position: "top" }); // Изменено: позиция "top"
+            toast({ title: 'Ошибка удаления', description: error.message, status: 'error', position: 'top' });
+        } finally {
+            setTourToDeleteId(null); // Сбрасываем ID тура для удаления
         }
     };
 
@@ -130,18 +141,13 @@ const AdminToursPage = () => {
         );
 
         try {
-            const response = await fetcher('/api/admin/tours', { // Используем fetcher
+            // Здесь response уже будет распарсенным JSON-объектом, если запрос успешен
+            // или выбросит ошибку, если запрос не ok (обработано в fetcher)
+            await fetcher('/api/admin/tours', { 
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: tourId, published: newStatus }),
             });
-
-            if (!response.ok) {
-                // В случае ошибки, откатываем оптимистичное обновление
-                mutate('/api/admin/tours'); 
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Ошибка при смене статуса');
-            }
             
             // Если успешно, перевалидируем кеш SWR для подтверждения
             mutate('/api/admin/tours');
@@ -152,14 +158,15 @@ const AdminToursPage = () => {
                 status: 'success',
                 duration: 3000,
                 isClosable: true,
-                position: 'top', // Централизованное уведомление
+                position: 'top', 
             });
         } catch (error) {
-            toast({ title: 'Ошибка', description: error.message, status: 'error', position: 'top' }); // Изменено: позиция "top"
+            // Здесь error уже будет объектом Error, выброшенным из fetcher,
+            // и его message будет содержать детали.
+            toast({ title: 'Ошибка', description: error.message, status: 'error', position: 'top' });
         }
     };
 
-    // Используем isSWRLoading для индикации загрузки данных через SWR
     const isLoadingData = isSWRLoading && !tours && !error;
 
     if (status === 'loading' || isLoadingData) {
@@ -170,7 +177,6 @@ const AdminToursPage = () => {
         );
     }
 
-    // Если есть ошибка загрузки данных
     if (error && !tours) {
         return (
             <AdminLayout>
@@ -213,14 +219,13 @@ const AdminToursPage = () => {
                     </Select>
                 </HStack>
                 
-                {/* Индикатор загрузки только если данные еще не загружены или идет перевалидация */}
                 {(isSWRLoading && !tours) || isValidating ? (
                      <Flex justify="center" align="center" h="20vh"><Spinner size="lg" /></Flex>
                 ) : (
                     <TourTable
                         tours={filteredTours}
                         onEdit={handleEditClick}
-                        onDelete={handleDelete}
+                        onDelete={handleDeleteClick} // Изменено на handleDeleteClick
                         onTogglePublished={handleTogglePublished}
                     />
                 )}
@@ -241,6 +246,32 @@ const AdminToursPage = () => {
                         </ModalBody>
                     </ModalContent>
                 </Modal>
+
+                {/* Модальное окно подтверждения удаления */}
+                <AlertDialog
+                    isOpen={isDeleteConfirmOpen}
+                    leastDestructiveRef={cancelRef}
+                    onClose={onDeleteConfirmClose}
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                Удалить тур
+                            </AlertDialogHeader>
+                            <AlertDialogBody>
+                                Вы уверены? Это действие нельзя будет отменить.
+                            </AlertDialogBody>
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={onDeleteConfirmClose}>
+                                    Отмена
+                                </Button>
+                                <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                                    Удалить
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
             </Box>
         </AdminLayout>
     );

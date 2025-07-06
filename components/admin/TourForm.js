@@ -7,6 +7,18 @@ import {
 } from '@chakra-ui/react';
 import { FaUpload } from 'react-icons/fa';
 
+// --- НОВОЕ: Вспомогательная функция для создания абсолютного URL ---
+const getAbsoluteImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http') || url.startsWith('blob:')) return url;
+    if (url.startsWith('/')) {
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+        return `${baseUrl}${url}`;
+    }
+    return url;
+};
+// --- КОНЕЦ НОВОГО ---
+
 const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
     const isEditing = !!initialData?.id;
     const toast = useToast();
@@ -89,14 +101,16 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
             }
         }
         
-        // ИСПРАВЛЕНО: Явно передаем ID тура при редактировании
         const finalData = { 
             ...formData, 
             image_url: finalImageUrl,
-            ...(isEditing && { id: initialData.id }) // Добавляем id, если это редактирование
+            ...(isEditing && { id: initialData.id })
         };
         onSubmit(finalData);
     };
+
+    // --- ИЗМЕНЕНО: Обрабатываем URL для превью ---
+    const finalPreviewUrl = getAbsoluteImageUrl(image.previewUrl);
 
     return (
         <VStack as="form" onSubmit={handleFormSubmit} spacing={6} align="stretch">
@@ -165,8 +179,8 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
                             onChange={handleFileChange}
                             hidden
                         />
-                        {image.previewUrl ? (
-                            <Image src={image.previewUrl} alt="Предпросмотр" borderRadius="md" maxH="200px" />
+                        {finalPreviewUrl ? (
+                            <Image src={finalPreviewUrl} alt="Предпросмотр" borderRadius="md" maxH="200px" />
                         ) : (
                             <VStack color="gray.500">
                                 <Icon as={FaUpload} boxSize={8} />

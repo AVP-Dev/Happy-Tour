@@ -1,47 +1,38 @@
 import prisma from '../../../lib/prisma';
 import { withAuth } from '../../../lib/auth';
 
-// Эта версия убирает прямой импорт { Prisma } из '@prisma/client',
-// который мог вызывать падение сервера при проблемах с генерацией клиента Prisma.
-// Обработка ошибок теперь полагается на проверку кодов ошибок, что более надежно.
-
 async function handler(req, res) {
   switch (req.method) {
     case 'GET':
       try {
-        // Логирование для отслеживания выполнения на сервере
         console.log("[API_INFO] /api/admin/reviews (GET): Попытка получить отзывы."); 
         const reviews = await prisma.review.findMany({
-          orderBy: { // Изменено с 'createdAt' на 'date' согласно ошибке Prisma
+          orderBy: { 
             date: 'desc', 
           },
         });
-        // Логирование успешного получения данных
         console.log(`[API_INFO] /api/admin/reviews (GET): Успешно получено ${reviews.length} отзывов.`); 
         return res.status(200).json(reviews);
       } catch (error) {
-        // Расширенное логирование на сервере для полной диагностики
         console.error("[API_ERROR] /api/admin/reviews (GET):", {
             message: error.message,
-            code: error.code, // Код ошибки Prisma
+            code: error.code, 
             stack: error.stack,
-            name: error.name, // Имя ошибки для дополнительной диагностики
+            name: error.name, 
         });
 
-        // Проверяем наличие кода ошибки, характерного для Prisma
         if (error.code) {
           const errorMessage = `Ошибка базы данных (код: ${error.code}). Проверьте лог сервера для деталей.`;
           return res.status(500).json({ error: errorMessage });
         }
         
-        // Общая ошибка - теперь с более подробным сообщением для клиента
         return res.status(500).json({ error: `Внутренняя ошибка сервера. Не удалось получить отзывы. Детали: ${error.message || 'Неизвестная ошибка.'}` });
       }
 
     case 'PUT':
       try {
-        const { id, status, text } = req.body; // Теперь ожидаем также 'text'
-        if (!id || (!status && !text)) { // Добавлена проверка на наличие 'text'
+        const { id, status, text } = req.body; 
+        if (!id || (!status && !text)) { 
           return res.status(400).json({ error: 'Отсутствует ID или данные для обновления (статус или текст).' });
         }
 
@@ -49,13 +40,13 @@ async function handler(req, res) {
         if (status) {
             updateData.status = status;
         }
-        if (text) { // Если передан текст, обновляем его
+        if (text) { 
             updateData.text = text;
         }
 
         const updatedReview = await prisma.review.update({
           where: { id },
-          data: updateData, // Используем динамический объект updateData
+          data: updateData, 
         });
         return res.status(200).json(updatedReview);
       } catch (error) {
@@ -88,4 +79,5 @@ async function handler(req, res) {
   }
 }
 
-export default withAuth(handler, ['ADMIN']);
+// Изменено: Разрешаем роли 'admin' и 'super_admin'
+export default withAuth(handler, ['admin', 'super_admin']); 

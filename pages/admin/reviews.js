@@ -10,29 +10,22 @@ import React, { useState } from 'react';
 
 // Обновленный fetcher для SWR, который корректно обрабатывает ошибки API
 const fetcher = async (url, options) => {
-  // Добавляем credentials: 'include' по умолчанию для всех запросов,
-  // чтобы гарантировать отправку куки с аутентификацией.
   const defaultOptions = {
     ...options,
-    credentials: 'include', // Важно для отправки куки сессии
+    credentials: 'include', 
   };
 
   const res = await fetch(url, defaultOptions);
 
-  // Если ответ сервера НЕ успешный (не 2xx)
   if (!res.ok) {
-    // Пытаемся получить тело ошибки в формате JSON
     const errorPayload = await res.json().catch(() => {
-      // Если тело не JSON или пустое, создаем свою ошибку
       return { error: `Сервер ответил со статусом ${res.status}, но без деталей.` };
     });
     
-    // Создаем объект ошибки с детальным сообщением от API
     const error = new Error(errorPayload.error);
     throw error;
   }
 
-  // Если все хорошо, возвращаем JSON
   return res.json();
 };
 
@@ -40,13 +33,11 @@ export default function ReviewsPage() {
   const { data: reviews, error } = useSWR('/api/admin/reviews', fetcher);
   const toast = useToast();
 
-  // Состояние для модального окна редактирования
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
-  const [currentReview, setCurrentReview] = useState(null); // Отзыв, который сейчас редактируется
-  const [editedText, setEditedText] = useState(''); // Текст отзыва в форме редактирования
+  const [currentReview, setCurrentReview] = useState(null); 
+  const [editedText, setEditedText] = useState(''); 
 
   const handleUpdateReview = async (id, status) => {
-    // Оптимистичное обновление UI
     const optimisticData = reviews.map(r => (r.id === id ? { ...r, status } : r));
     mutate('/api/admin/reviews', optimisticData, false);
 
@@ -55,60 +46,50 @@ export default function ReviewsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
-        // credentials: 'include' уже добавлен в fetcher по умолчанию
       });
-      // Если успешно, повторно получаем данные для подтверждения
       mutate('/api/admin/reviews');
-      toast({ title: "Статус обновлен.", status: "success", duration: 3000, isClosable: true });
+      toast({ title: "Статус обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
     } catch (err) {
-      // В случае ошибки возвращаем старые данные и показываем тост
-      mutate('/api/admin/reviews'); // Откатываем оптимистичное обновление
-      toast({ title: "Ошибка обновления статуса.", description: err.message, status: "error", duration: 5000, isClosable: true });
+      mutate('/api/admin/reviews'); 
+      toast({ title: "Ошибка обновления статуса.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" }); // Изменено: позиция "top"
     }
   };
 
   const handleDeleteReview = async (id) => {
-    // Оптимистичное обновление UI
     const optimisticData = reviews.filter(r => r.id !== id);
     mutate('/api/admin/reviews', optimisticData, false);
 
     try {
-      await fetcher(`/api/admin/reviews`, { // Используем fetcher для единообразной обработки ошибок
+      await fetcher(`/api/admin/reviews`, { 
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
-        // credentials: 'include' уже добавлен в fetcher по умолчанию
       });
-      // Если успешно, повторно получаем данные для подтверждения
       mutate('/api/admin/reviews');
-      toast({ title: "Отзыв удален.", status: "success", duration: 3000, isClosable: true });
+      toast({ title: "Отзыв удален.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
     } catch (err) {
-      // В случае ошибки возвращаем старые данные и показываем тост
-      mutate('/api/admin/reviews'); // Откатываем оптимистичное обновление
-      toast({ title: "Ошибка удаления.", description: err.message, status: "error", duration: 5000, isClosable: true });
+      mutate('/api/admin/reviews'); 
+      toast({ title: "Ошибка удаления.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" }); // Изменено: позиция "top"
     }
   };
 
-  // Функция для открытия модального окна редактирования
   const handleEditReview = (review) => {
     setCurrentReview(review);
     setEditedText(review.text);
     onEditModalOpen();
   };
 
-  // Функция для сохранения отредактированного отзыва
   const handleSaveEditedReview = async () => {
-    if (!editedText.trim()) { // Проверяем только editedText, currentReview уже должен быть установлен
-      toast({ title: "Текст отзыва не может быть пустым.", status: "warning", duration: 3000, isClosable: true });
+    if (!editedText.trim()) { 
+      toast({ title: "Текст отзыва не может быть пустым.", status: "warning", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
       return;
     }
-    if (!currentReview) { // Дополнительная проверка, хотя currentReview должен быть установлен
-        toast({ title: "Не выбран отзыв для редактирования.", status: "error", duration: 3000, isClosable: true });
+    if (!currentReview) { 
+        toast({ title: "Не выбран отзыв для редактирования.", status: "error", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
         return;
     }
 
     const reviewId = currentReview.id;
-    // Оптимистичное обновление UI для текста отзыва
     const optimisticData = reviews.map(r => (r.id === reviewId ? { ...r, text: editedText } : r));
     mutate('/api/admin/reviews', optimisticData, false);
 
@@ -116,17 +97,14 @@ export default function ReviewsPage() {
       await fetcher(`/api/admin/reviews`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: reviewId, text: editedText }), // Отправляем только ID и текст
-        // credentials: 'include' уже добавлен в fetcher по умолчанию
+        body: JSON.stringify({ id: reviewId, text: editedText }), 
       });
-      // Если успешно, повторно получаем данные для подтверждения
       mutate('/api/admin/reviews');
-      toast({ title: "Отзыв обновлен.", status: "success", duration: 3000, isClosable: true });
-      onEditModalClose(); // Закрываем модальное окно после успешного сохранения
+      toast({ title: "Отзыв обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      onEditModalClose(); 
     } catch (err) {
-      // В случае ошибки возвращаем старые данные и показываем тост
-      mutate('/api/admin/reviews'); // Откатываем оптимистичное обновление
-      toast({ title: "Ошибка обновления отзыва.", description: err.message, status: "error", duration: 5000, isClosable: true });
+      mutate('/api/admin/reviews'); 
+      toast({ title: "Ошибка обновления отзыва.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" }); // Изменено: позиция "top"
     }
   };
 
@@ -153,12 +131,11 @@ export default function ReviewsPage() {
             reviews={reviews}
             onUpdate={handleUpdateReview}
             onDelete={handleDeleteReview}
-            onEdit={handleEditReview} // Передаем новую функцию обработки редактирования
+            onEdit={handleEditReview} 
           />
         )}
       </Box>
 
-      {/* Модальное окно для редактирования отзыва */}
       <Modal isOpen={isEditModalOpen} onClose={onEditModalClose}>
         <ModalOverlay />
         <ModalContent>
@@ -171,7 +148,7 @@ export default function ReviewsPage() {
                 value={editedText} 
                 onChange={(e) => setEditedText(e.target.value)} 
                 placeholder="Введите текст отзыва"
-                minH="150px" // Увеличиваем высоту текстового поля
+                minH="150px" 
               />
             </FormControl>
           </ModalBody>

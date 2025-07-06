@@ -3,7 +3,7 @@ import prisma from '../../../lib/prisma';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]"; // ИСПРАВЛЕНО
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
@@ -32,9 +32,11 @@ export default async function handler(req, res) {
             break;
 
         case 'POST':
+            console.log('[tours.js] Received POST request to create a tour. Body:', JSON.stringify(req.body, null, 2));
             try {
                 const { title, description, price, currency, category, image_url, published } = req.body;
                 if (!title || !price || !category || !image_url) {
+                    console.error('[tours.js] Validation failed. Missing required fields.');
                     return res.status(400).json({ message: 'Не все обязательные поля заполнены.' });
                 }
                 const newTour = await prisma.tour.create({
@@ -50,18 +52,21 @@ export default async function handler(req, res) {
                         updatedById: userId,
                     },
                 });
+                console.log('[tours.js] Tour created successfully:', newTour.id);
                 res.status(201).json(newTour);
             } catch (error) {
-                console.error("API POST /admin/tours Error:", error);
+                console.error("[tours.js] API POST /admin/tours Error:", error);
                 res.status(500).json({ message: 'Ошибка при создании тура', error: error.message });
             }
             break;
 
         case 'PUT':
+            console.log('[tours.js] Received PUT request to update a tour. Body:', JSON.stringify(req.body, null, 2));
             try {
                 const { id, title, description, price, currency, category, image_url, published } = req.body;
 
                 if (!id) {
+                    console.error('[tours.js] Validation failed. Missing ID for update.');
                     return res.status(400).json({ message: 'ID тура не указан для обновления.' });
                 }
 
@@ -78,10 +83,10 @@ export default async function handler(req, res) {
                         updatedById: userId,
                     },
                 });
-                
+                console.log('[tours.js] Tour updated successfully:', updatedTour.id);
                 res.status(200).json(updatedTour);
             } catch (error) {
-                console.error("API PUT /admin/tours Error:", error);
+                console.error("[tours.js] API PUT /admin/tours Error:", error);
                 if (error.code === 'P2025') {
                     return res.status(404).json({ message: 'Тур с таким ID не найден.' });
                 }
@@ -90,6 +95,7 @@ export default async function handler(req, res) {
             break;
             
         case 'PATCH':
+            // ... (остальной код без изменений)
             try {
                 const { id, published } = req.body;
                 if (!id || typeof published !== 'boolean') {
@@ -113,6 +119,7 @@ export default async function handler(req, res) {
             break;
 
         case 'DELETE':
+            // ... (остальной код без изменений)
             try {
                 const { id } = req.query;
                 if (!id) return res.status(400).json({ message: 'ID тура не указан' });

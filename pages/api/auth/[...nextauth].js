@@ -8,8 +8,7 @@ export const authOptions = {
     session: {
         strategy: 'jwt',
     },
-    // Возвращено: url: process.env.NEXTAUTH_URL,
-    url: process.env.NEXTAUTH_URL, // Возвращаем это
+    // Убрано: url: process.env.NEXTAUTH_URL,
     providers: [
         CredentialsProvider({
             name: 'Credentials',

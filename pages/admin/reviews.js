@@ -1,115 +1,117 @@
-// pages/admin/reviews.js
-import React, { useState, useEffect } from 'react';
-import { Box, Heading, useToast, Spinner, Flex } from '@chakra-ui/react';
+import useSWR, { mutate } from 'swr';
 import AdminLayout from '../../components/admin/AdminLayout';
 import ReviewTable from '../../components/admin/ReviewTable';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import { Heading, Box, Spinner, Center, Alert, AlertIcon, useToast } from '@chakra-ui/react';
 
-const AdminReviewsPage = () => {
-    const { data: session, status } = useSession();
-    const router = useRouter();
-    const toast = useToast();
+// SWR fetcher function
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
-    const [reviews, setReviews] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+export default function ReviewsPage() {
+  // Using SWR for data fetching, caching, and revalidation.
+  const { data: reviews, error } = useSWR('/api/admin/reviews', fetcher);
+  const toast = useToast();
 
-    useEffect(() => {
-        if (status === 'loading') return;
-        if (status === 'unauthenticated') {
-            router.replace('/admin/login');
-            return;
-        }
-        if (session && !['admin', 'super_admin'].includes(session.user.role)) {
-            router.replace('/');
-        } else {
-            fetchReviews();
-        }
-    }, [session, status, router]);
+  // Function to handle review status updates.
+  const handleUpdateReview = async (id, status) => {
+    // Optimistically update the local data to give immediate feedback.
+    const optimisticData = reviews.map(r => (r.id === id ? { ...r, status } : r));
+    mutate('/api/admin/reviews', optimisticData, false);
 
-    const fetchReviews = async () => {
-        setIsLoading(true);
-        try {
-            const response = await fetch('/api/admin/reviews');
-            if (!response.ok) throw new Error('Не удалось получить отзывы');
-            const data = await response.json();
-            setReviews(data);
-        } catch (error) {
-            toast({ title: 'Ошибка.', description: error.message, status: 'error', duration: 5000, isClosable: true });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    try {
+      const response = await fetch(`/api/admin/reviews`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
 
-    const handleUpdateReviewStatus = async (reviewId, newStatus) => {
-        try {
-            const response = await fetch('/api/admin/reviews', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: reviewId, status: newStatus }),
-            });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Не удалось обновить статус' }));
+        throw new Error(errorData.error);
+      }
+      
+      // Trigger a re-fetch from the server to ensure data consistency.
+      mutate('/api/admin/reviews');
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Не удалось обновить статус');
-            }
-            
-            setReviews(prevReviews =>
-                prevReviews.map(review =>
-                    review.id === reviewId ? { ...review, status: newStatus } : review
-                )
-            );
-
-            toast({ title: 'Статус обновлен!', status: 'success', duration: 3000, isClosable: true });
-        } catch (error) {
-            toast({ title: 'Ошибка.', description: error.message, status: 'error', duration: 5000, isClosable: true });
-        }
-    };
-
-    const handleDeleteReview = async (reviewId) => {
-        try {
-            const response = await fetch('/api/admin/reviews', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: reviewId }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Не удалось удалить отзыв');
-            }
-            
-            setReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
-            
-            toast({ title: 'Отзыв удален.', status: 'success', duration: 3000, isClosable: true });
-        } catch (error) {
-            toast({ title: 'Ошибка.', description: error.message, status: 'error', duration: 5000, isClosable: true });
-        }
-    };
-
-    if (status === 'loading' || !session) {
-        return (
-            <AdminLayout>
-                <Flex justify="center" align="center" minH="50vh">
-                    <Spinner size="xl" color="brand.500" />
-                </Flex>
-            </AdminLayout>
-        );
+      toast({
+        title: "Статус обновлен.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      // If the API call fails, revert the optimistic update and show an error.
+      mutate('/api/admin/reviews'); // Re-fetch to get the original state
+      toast({
+        title: "Ошибка обновления.",
+        description: err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
-    
-    return (
-        <AdminLayout>
-            <Box>
-                <Heading as="h1" size="xl" mb={6}>Управление отзывами</Heading>
-                <ReviewTable
-                    reviews={reviews}
-                    onUpdateStatus={handleUpdateReviewStatus}
-                    onDelete={handleDeleteReview}
-                    isLoading={isLoading}
-                />
-            </Box>
-        </AdminLayout>
-    );
-};
+  };
 
-export default AdminReviewsPage;
+  // Function to handle review deletion.
+  const handleDeleteReview = async (id) => {
+    // Optimistically filter out the deleted review.
+    const optimisticData = reviews.filter(r => r.id !== id);
+    mutate('/api/admin/reviews', optimisticData, false);
+
+    try {
+      const response = await fetch(`/api/admin/reviews`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok && response.status !== 204) {
+        const errorData = await response.json().catch(() => ({ error: 'Не удалось удалить отзыв' }));
+        throw new Error(errorData.error);
+      }
+      
+      // Trigger a re-fetch.
+      mutate('/api/admin/reviews');
+
+      toast({
+        title: "Отзыв удален.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      // If deletion fails, revert the optimistic update.
+      mutate('/api/admin/reviews');
+      toast({
+        title: "Ошибка удаления.",
+        description: err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const isLoading = !reviews && !error;
+
+  return (
+    <AdminLayout>
+      <Box>
+        <Heading as="h1" mb={6}>Управление отзывами</Heading>
+        {isLoading ? (
+          <Center p={10}><Spinner size="xl" /></Center>
+        ) : error ? (
+          <Alert status="error" borderRadius="md">
+            <AlertIcon />
+            Не удалось загрузить отзывы.
+          </Alert>
+        ) : (
+          <ReviewTable
+            reviews={reviews}
+            onUpdate={handleUpdateReview}
+            onDelete={handleDeleteReview}
+          />
+        )}
+      </Box>
+    </AdminLayout>
+  );
+}

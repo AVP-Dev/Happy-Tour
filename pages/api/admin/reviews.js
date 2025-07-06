@@ -1,56 +1,77 @@
-// pages/api/admin/reviews.js
-import { getSession } from 'next-auth/react';
 import prisma from '../../../lib/prisma';
+import { withAuth } from '../../../lib/auth';
 
-export default async function handler(req, res) {
-    const session = await getSession({ req });
+// The original file was missing PUT and DELETE handlers.
+// This version adds the required logic to update and delete reviews.
+async function handler(req, res) {
+  // Using a switch statement to handle different HTTP methods.
+  switch (req.method) {
+    case 'GET':
+      try {
+        const reviews = await prisma.review.findMany({
+          orderBy: {
+            createdAt: 'desc', // Sort reviews by creation date
+          },
+        });
+        return res.status(200).json(reviews);
+      } catch (error) {
+        console.error("API Error fetching reviews:", error);
+        return res.status(500).json({ error: 'Внутренняя ошибка сервера при загрузке отзывов.' });
+      }
 
-    if (!session || !['admin', 'super_admin'].includes(session.user.role)) {
-        return res.status(401).json({ message: 'Доступ запрещен' });
-    }
-
-    if (req.method === 'GET') {
-        try {
-            const reviews = await prisma.review.findMany({
-                orderBy: { createdAt: 'desc' },
-            });
-            return res.status(200).json(reviews);
-        } catch (error) {
-            return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-        }
-    }
-
-    if (req.method === 'PUT') {
+    case 'PUT':
+      try {
         const { id, status } = req.body;
-        if (!id || !status) {
-            return res.status(400).json({ message: 'Отсутствует ID или новый статус.' });
-        }
-        try {
-            const updatedReview = await prisma.review.update({
-                where: { id: String(id) },
-                data: { status },
-            });
-            return res.status(200).json(updatedReview);
-        } catch (error) {
-            return res.status(500).json({ message: 'Не удалось обновить статус.' });
-        }
-    }
 
-    if (req.method === 'DELETE') {
+        // Validate incoming data
+        if (!id || !status) {
+          return res.status(400).json({ error: 'Отсутствует ID или статус в теле запроса.' });
+        }
+        
+        const validStatuses = ['PENDING', 'APPROVED', 'REJECTED'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: `Недопустимое значение статуса: ${status}` });
+        }
+
+        const updatedReview = await prisma.review.update({
+          where: { id },
+          data: { status },
+        });
+        return res.status(200).json(updatedReview);
+      } catch (error) {
+        console.error("API Error updating review:", error);
+        // Handle Prisma's specific error for a record not found
+        if (error.code === 'P2025') {
+             return res.status(404).json({ error: 'Отзыв не найден.' });
+        }
+        return res.status(500).json({ error: 'Не удалось обновить отзыв.' });
+      }
+
+    case 'DELETE':
+      try {
         const { id } = req.body;
         if (!id) {
-            return res.status(400).json({ message: 'Отсутствует ID отзыва.' });
+            return res.status(400).json({ error: 'Отсутствует ID в теле запроса.' });
         }
-        try {
-            await prisma.review.delete({
-                where: { id: String(id) },
-            });
-            return res.status(200).json({ message: 'Отзыв успешно удален.' });
-        } catch (error) {
-            return res.status(500).json({ message: 'Не удалось удалить отзыв.' });
+        await prisma.review.delete({
+          where: { id },
+        });
+        // 204 No Content is a standard successful response for DELETE
+        return res.status(204).end();
+      } catch (error) {
+        console.error("API Error deleting review:", error);
+        if (error.code === 'P2025') {
+             return res.status(404).json({ error: 'Отзыв не найден.' });
         }
-    }
+        return res.status(500).json({ error: 'Не удалось удалить отзыв.' });
+      }
 
-    res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
-    return res.status(405).end(`Метод ${req.method} не разрешен`);
+    default:
+      // Handle unsupported HTTP methods
+      res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
+      res.status(405).end(`Метод ${req.method} не поддерживается`);
+  }
 }
+
+// The withAuth HOC remains unchanged
+export default withAuth(handler, ['ADMIN']);

@@ -1,13 +1,14 @@
 // pages/api/auth/[...nextauth].js
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { verifyPassword } from '../../../lib/auth'; // ИСПРАВЛЕНО
-import prisma from '../../../lib/prisma'; // ИСПРАВЛЕНО
+import { verifyPassword } from '../../../lib/auth';
+import prisma from '../../../lib/prisma';
 
 export const authOptions = {
     session: {
         strategy: 'jwt',
     },
+    url: process.env.NEXTAUTH_URL, 
     providers: [
         CredentialsProvider({
             name: 'Credentials',

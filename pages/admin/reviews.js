@@ -17,7 +17,8 @@ const fetcher = async (url, options) => {
 
   const res = await fetch(url, defaultOptions);
 
-  if (!res.ok) {
+  // Если ответ сервера НЕ успешный (не 2xx) И не 204 No Content
+  if (!res.ok && res.status !== 204) { // Изменено: добавлена проверка на 204
     const errorPayload = await res.json().catch(() => {
       return { error: `Сервер ответил со статусом ${res.status}, но без деталей.` };
     });
@@ -26,6 +27,12 @@ const fetcher = async (url, options) => {
     throw error;
   }
 
+  // Если статус 204, возвращаем null, так как нет тела ответа
+  if (res.status === 204) { // Изменено: если 204, возвращаем null
+    return null;
+  }
+
+  // Если все хорошо, возвращаем JSON
   return res.json();
 };
 
@@ -48,10 +55,10 @@ export default function ReviewsPage() {
         body: JSON.stringify({ id, status }),
       });
       mutate('/api/admin/reviews');
-      toast({ title: "Статус обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      toast({ title: "Статус обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" });
     } catch (err) {
       mutate('/api/admin/reviews'); 
-      toast({ title: "Ошибка обновления статуса.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      toast({ title: "Ошибка обновления статуса.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" });
     }
   };
 
@@ -60,16 +67,17 @@ export default function ReviewsPage() {
     mutate('/api/admin/reviews', optimisticData, false);
 
     try {
+      // Здесь fetcher вернет null, если статус 204, поэтому не будет попытки вызвать .json()
       await fetcher(`/api/admin/reviews`, { 
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
       mutate('/api/admin/reviews');
-      toast({ title: "Отзыв удален.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      toast({ title: "Отзыв успешно удален.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено сообщение
     } catch (err) {
       mutate('/api/admin/reviews'); 
-      toast({ title: "Ошибка удаления.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      toast({ title: "Ошибка удаления.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" });
     }
   };
 
@@ -81,11 +89,11 @@ export default function ReviewsPage() {
 
   const handleSaveEditedReview = async () => {
     if (!editedText.trim()) { 
-      toast({ title: "Текст отзыва не может быть пустым.", status: "warning", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      toast({ title: "Текст отзыва не может быть пустым.", status: "warning", duration: 3000, isClosable: true, position: "top" });
       return;
     }
     if (!currentReview) { 
-        toast({ title: "Не выбран отзыв для редактирования.", status: "error", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+        toast({ title: "Не выбран отзыв для редактирования.", status: "error", duration: 3000, isClosable: true, position: "top" });
         return;
     }
 
@@ -100,11 +108,11 @@ export default function ReviewsPage() {
         body: JSON.stringify({ id: reviewId, text: editedText }), 
       });
       mutate('/api/admin/reviews');
-      toast({ title: "Отзыв обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      toast({ title: "Отзыв обновлен.", status: "success", duration: 3000, isClosable: true, position: "top" });
       onEditModalClose(); 
     } catch (err) {
       mutate('/api/admin/reviews'); 
-      toast({ title: "Ошибка обновления отзыва.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" }); // Изменено: позиция "top"
+      toast({ title: "Ошибка обновления отзыва.", description: err.message, status: "error", duration: 5000, isClosable: true, position: "top" });
     }
   };
 

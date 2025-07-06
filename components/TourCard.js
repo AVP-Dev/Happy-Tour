@@ -1,84 +1,104 @@
 // components/TourCard.js
 import React from 'react';
-import { Box, Image, Text, VStack, Heading, Button, Flex, Badge, useColorModeValue, HStack } from '@chakra-ui/react';
-import { FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
+import NextImage from 'next/image';
+import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio } from '@chakra-ui/react';
+import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
-const TourCard = ({ tour, onEdit, onDelete, isAdmin = false }) => {
-    const cardBg = useColorModeValue('white', 'gray.700');
-    const textColor = useColorModeValue('gray.800', 'whiteAlpha.900');
-    const secondaryTextColor = useColorModeValue('gray.600', 'gray.400');
+const TourCard = ({ tour, onTourInquiry, index }) => {
+  if (!tour) {
+    return null;
+  }
 
-    // Проверяем, что tour и tour.image_url существуют
-    // Если image_url начинается с '/', используем его как есть.
-    // Если нет, предполагаем, что это полный URL или что-то некорректное и используем заглушку.
-    // Добавляем заглушку на случай отсутствия URL или некорректного формата
-    const imageUrl = tour?.image_url && tour.image_url.startsWith('/') 
-                     ? tour.image_url 
-                     : '/placeholder-image.jpg'; 
+  const getCategoryDetails = (category) => {
+    switch (category) {
+      case 'hot':
+        return { icon: FaHotjar, color: 'red', label: 'Горящий' };
+      case 'popular':
+        return { icon: FaStar, color: 'orange', label: 'Популярный' };
+      case 'special':
+        return { icon: FaGift, color: 'purple', label: 'Выгодный' };
+      default:
+        return { icon: FaStar, color: 'gray', label: 'Тур' };
+    }
+  };
 
-    return (
-        <Box
-            maxW="sm"
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            boxShadow="md"
-            bg={cardBg}
-            transition="all 0.2s"
-            _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
-        >
-            <Image 
-                src={imageUrl} 
-                alt={tour?.title || 'Изображение тура'} 
-                objectFit="cover" 
-                width="100%" 
-                height="200px" 
-                // Обработчик ошибок для случая, если изображение не загружается
-                onError={(e) => { 
-                    e.target.src = '/placeholder-image.jpg'; // Показываем заглушку
-                    e.target.alt = 'Изображение не загружено';
-                }}
+  const categoryDetails = getCategoryDetails(tour.category);
+
+  return (
+    <Flex
+        direction="column"
+        bg="white"
+        borderRadius="xl"
+        overflow="hidden"
+        boxShadow="lg"
+        transition="all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)"
+        _hover={{
+            transform: 'translateY(-5px)',
+            boxShadow: 'xl',
+        }}
+        height="100%"
+        role="group"
+    >
+      <Box position="relative">
+        <AspectRatio ratio={16 / 9}>
+            {/* Используем tour.image_url, если он есть, иначе заглушку */}
+            <NextImage
+              src={tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour'}
+              alt={tour.title || 'Тур'}
+              layout="fill"
+              objectFit="cover"
+              priority={index < 2} 
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              style={{ borderRadius: '0.75rem 0.75rem 0 0' }}
             />
+        </AspectRatio>
+        <Tag
+          size="lg"
+          variant="solid"
+          colorScheme={categoryDetails.color}
+          position="absolute"
+          top={4}
+          left={4}
+          zIndex={1}
+        >
+          <HStack spacing={2}>
+            <Box as={categoryDetails.icon} />
+            <Text>{categoryDetails.label}</Text>
+          </HStack>
+        </Tag>
+      </Box>
 
-            <Box p="6">
-                <Box display="flex" alignItems="baseline">
-                    <Badge borderRadius="full" px="2" colorScheme="teal">
-                        {tour?.category || 'Категория'}
-                    </Badge>
-                    <Text
-                        color={secondaryTextColor}
-                        fontWeight="semibold"
-                        letterSpacing="wide"
-                        fontSize="xs"
-                        textTransform="uppercase"
-                        ml="2"
-                    >
-                        {tour?.duration || 'Длительность'}
-                    </Text>
-                </Box>
-
-                <Heading mt="1" fontWeight="semibold" as="h4" lineHeight="tight" isTruncated color={textColor}>
-                    {tour?.title || 'Название тура'}
-                </Heading>
-
-                <Text mt="2" color={secondaryTextColor} fontSize="sm" noOfLines={3}>
-                    {tour?.description || 'Описание тура...'}
-                </Text>
-
-                <Flex justifyContent="space-between" alignItems="center" mt="3">
-                    <Text fontSize="xl" fontWeight="bold" color={textColor}>
-                        {tour?.price ? `${tour.price} ${tour.currency}` : 'Цена не указана'}
-                    </Text>
-                    {isAdmin && (
-                        <HStack spacing={2}>
-                            <Button size="sm" onClick={() => onEdit(tour)}>Редактировать</Button>
-                            <Button size="sm" colorScheme="red" onClick={() => onDelete(tour.id)}>Удалить</Button>
-                        </HStack>
-                    )}
-                </Flex>
-            </Box>
-        </Box>
-    );
+      <VStack flex="1" p={5} align="stretch" spacing={3}>
+        {/* Заголовок тура: ограничение в 2 строки */}
+        <Heading as="h3" size="md" noOfLines={2} title={tour.title}>
+          {tour.title}
+        </Heading>
+        
+        {/* Описание тура: убрано ограничение по строкам, чтобы текст помещался полностью */}
+        <Text fontSize="sm" color="gray.600" flexGrow={1}>
+          {tour.description}
+        </Text>
+        
+        <Flex justify="space-between" align="flex-end" pt={3} borderTop="1px solid" borderColor="gray.200">
+          <Box>
+            <Text fontSize="sm" color="gray.500" lineHeight="1.2">от</Text>
+            <Text fontSize="2xl" fontWeight="bold" color="brand.700" as="span">
+              {tour.price}
+            </Text>
+            <Text fontWeight="semibold" color="gray.600" as="span" ml={1}>
+              {tour.currency}
+            </Text>
+          </Box>
+          <Button 
+            colorScheme="brand" 
+            onClick={() => onTourInquiry(tour)}
+          >
+            Подробнее
+          </Button>
+        </Flex>
+      </VStack>
+    </Flex>
+  );
 };
 
 export default TourCard;

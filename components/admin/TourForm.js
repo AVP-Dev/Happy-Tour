@@ -7,6 +7,20 @@ import {
 } from '@chakra-ui/react';
 import { FaUpload } from 'react-icons/fa';
 
+// --- НОВОЕ: Вспомогательная функция для создания прокси-URL ---
+const getImageProxyUrl = (url) => {
+    if (!url) return null;
+    // URL для превью (blob) или абсолютные URL оставляем как есть
+    if (url.startsWith('http') || url.startsWith('blob:')) {
+        return url;
+    }
+    // Пути к загрузкам перенаправляем на наш API
+    if (url.startsWith('/uploads/')) {
+        return `/api/images${url}`;
+    }
+    return url;
+};
+
 const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
     const isEditing = !!initialData?.id;
     const toast = useToast();
@@ -45,7 +59,6 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
                 toast({ title: "Файл слишком большой", description: "Максимальный размер файла 5MB.", status: "error" });
                 return;
             }
-            // URL.createObjectURL создает временный локальный URL для превью
             setImage({ file: file, previewUrl: URL.createObjectURL(file) });
             if (errors.image) setErrors(prev => ({ ...prev, image: null }));
         }
@@ -98,10 +111,11 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         onSubmit(finalData);
     };
 
-    const previewUrl = image.previewUrl;
+    // --- ИЗМЕНЕНО: Используем новую функцию для получения URL превью ---
+    const previewUrl = getImageProxyUrl(image.previewUrl);
 
     return (
-        <VStack as="form" onSubmit={handleFormSubmit} spacing={6} align="stretch">
+        <VStack as="form" onSubmit={handleFormSplit} spacing={6} align="stretch">
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                 <VStack spacing={6}>
                     <FormControl isInvalid={!!errors.title} isRequired>

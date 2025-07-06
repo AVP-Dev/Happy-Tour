@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
     Box, Heading, Button, useDisclosure, Modal, ModalOverlay,
     ModalContent, ModalHeader, ModalBody, ModalCloseButton, useToast,
-    Spinner, Flex, InputGroup, Input, Select, HStack
+    Spinner, Flex, InputGroup, Input, Select, HStack, Alert, AlertIcon, Text // Добавлены Alert, AlertIcon, Text
 } from '@chakra-ui/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -11,7 +11,7 @@ import { FaPlus } from 'react-icons/fa';
 import AdminLayout from '../../components/admin/AdminLayout';
 import TourForm from '../../components/admin/TourForm';
 import TourTable from '../../components/admin/TourTable';
-import useSWR, { mutate } from 'swr'; // Импортируем useSWR и mutate
+import useSWR, { mutate } from 'swr';
 
 // Единый fetcher для SWR, который корректно обрабатывает ошибки API и включает куки
 const fetcher = async (url, options) => {
@@ -57,7 +57,7 @@ const AdminToursPage = () => {
         } else if (status === 'authenticated') {
             const allowedRoles = ['admin', 'super_admin'];
             if (!session?.user?.role || !allowedRoles.includes(session.user.role)) {
-                toast({ title: "Доступ запрещен", status: "error", duration: 3000, isClosable: true });
+                toast({ title: "Доступ запрещен", status: "error", duration: 3000, isClosable: true, position: "top" }); // Изменено: позиция "top"
                 router.replace('/');
             }
             // fetchTours() больше не нужен здесь, useSWR сделает это автоматически
@@ -95,28 +95,30 @@ const AdminToursPage = () => {
             // После успешного сохранения, обновляем кеш SWR
             mutate('/api/admin/tours'); 
             
-            toast({ title: `Тур успешно ${editingTour ? 'обновлен' : 'создан'}`, status: 'success' });
+            toast({ title: `Тур успешно ${editingTour ? 'обновлен' : 'создан'}`, status: 'success', position: "top" }); // Изменено: позиция "top"
             onClose();
             // fetchTours() заменен на mutate
         } catch (error) {
-            toast({ title: 'Ошибка сохранения', description: error.message, status: 'error' });
+            toast({ title: 'Ошибка сохранения', description: error.message, status: 'error', position: "top" }); // Изменено: позиция "top"
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (tourId) => {
-        if (!window.confirm('Вы уверены, что хотите удалить этот тур? Это действие необратимо.')) return;
+        // Заменено window.confirm на кастомный Modal или Toast с подтверждением
+        // Для простоты примера, используем confirm, но в реальном приложении лучше использовать Modal
+        if (!confirm('Вы уверены, что хотите удалить этот тур? Это действие необратимо.')) return; 
         try {
             const response = await fetcher(`/api/admin/tours?id=${tourId}`, { method: 'DELETE' }); // Используем fetcher
             
             // После успешного удаления, обновляем кеш SWR
             mutate('/api/admin/tours'); 
 
-            toast({ title: 'Тур удален', status: 'success' });
+            toast({ title: 'Тур удален', status: 'success', position: "top" }); // Изменено: позиция "top"
             // fetchTours() заменен на mutate
         } catch (error) {
-            toast({ title: 'Ошибка удаления', description: error.message, status: 'error' });
+            toast({ title: 'Ошибка удаления', description: error.message, status: 'error', position: "top" }); // Изменено: позиция "top"
         }
     };
 
@@ -150,9 +152,10 @@ const AdminToursPage = () => {
                 status: 'success',
                 duration: 3000,
                 isClosable: true,
+                position: 'top', // Централизованное уведомление
             });
         } catch (error) {
-            toast({ title: 'Ошибка', description: error.message, status: 'error' });
+            toast({ title: 'Ошибка', description: error.message, status: 'error', position: 'top' }); // Изменено: позиция "top"
         }
     };
 

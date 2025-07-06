@@ -3,11 +3,12 @@ import React from 'react';
 import {
     Table, Thead, Tbody, Tr, Th, Td, TableContainer,
     HStack, Text, Image, Box, Tooltip, Icon,
-    Tag, IconButton, Switch, Stack, Flex, Heading // Добавлены Stack, Flex, Heading для мобильной версии
+    Tag, IconButton, Switch, Stack, Flex, Heading, useToast // Добавлен useToast
 } from '@chakra-ui/react';
 import { FaEdit, FaTrash, FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
-const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
+const TourTable = ({ tours, onEdit, onDelete, onTogglePublished: parentOnTogglePublished }) => {
+    const toast = useToast(); // Инициализация useToast
 
     const CategoryTag = ({ category }) => {
         const details = {
@@ -24,6 +25,47 @@ const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
                 </HStack>
             </Tag>
         );
+    };
+
+    // Обновленная функция onTogglePublished
+    const onTogglePublished = async (id, newPublishedStatus) => {
+        try {
+            const res = await fetch('/api/admin/tours', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id, published: newPublishedStatus }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Ошибка при смене статуса публикации');
+            }
+
+            // Уведомление об успехе
+            toast({
+                title: `Тур успешно ${newPublishedStatus ? 'опубликован' : 'снят с публикации'}`,
+                status: 'success',
+                position: 'top', // Централизованное уведомление
+                duration: 3000,
+                isClosable: true,
+            });
+
+            // Вызываем родительскую функцию для обновления состояния в списке туров
+            parentOnTogglePublished(id, newPublishedStatus);
+
+        } catch (error) {
+            console.error("Ошибка при смене статуса публикации:", error);
+            toast({
+                title: 'Ошибка',
+                description: error.message,
+                status: 'error',
+                position: 'top', // Централизованное уведомление
+                duration: 5000,
+                isClosable: true,
+            });
+        }
     };
 
     return (

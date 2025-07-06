@@ -7,18 +7,6 @@ import {
 } from '@chakra-ui/react';
 import { FaUpload } from 'react-icons/fa';
 
-// --- НОВОЕ: Вспомогательная функция для создания абсолютного URL ---
-const getAbsoluteImageUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http') || url.startsWith('blob:')) return url;
-    if (url.startsWith('/')) {
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-        return `${baseUrl}${url}`;
-    }
-    return url;
-};
-// --- КОНЕЦ НОВОГО ---
-
 const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
     const isEditing = !!initialData?.id;
     const toast = useToast();
@@ -57,6 +45,7 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
                 toast({ title: "Файл слишком большой", description: "Максимальный размер файла 5MB.", status: "error" });
                 return;
             }
+            // URL.createObjectURL создает временный локальный URL для превью
             setImage({ file: file, previewUrl: URL.createObjectURL(file) });
             if (errors.image) setErrors(prev => ({ ...prev, image: null }));
         }
@@ -84,7 +73,8 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         e.preventDefault();
         if (!validate()) return;
 
-        let finalImageUrl = image.previewUrl;
+        // Если есть новый файл, загружаем его. Если нет, используем старый URL.
+        let finalImageUrl = initialData?.image_url;
 
         if (image.file) {
             const fileFormData = new FormData();
@@ -94,7 +84,8 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: fileFormData });
                 const uploadData = await uploadRes.json();
                 if (!uploadRes.ok) throw new Error(uploadData.error || 'Ошибка загрузки файла');
-                finalImageUrl = uploadData.url;
+                // API вернет относительный путь, который потом станет абсолютным в API туров
+                finalImageUrl = uploadData.url; 
             } catch (error) {
                 toast({ title: "Ошибка загрузки изображения", description: error.message, status: "error" });
                 return;
@@ -109,8 +100,8 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         onSubmit(finalData);
     };
 
-    // --- ИЗМЕНЕНО: Обрабатываем URL для превью ---
-    const finalPreviewUrl = getAbsoluteImageUrl(image.previewUrl);
+    // URL для превью может быть blob: (новый файл) или https: (старый)
+    const previewUrl = image.previewUrl;
 
     return (
         <VStack as="form" onSubmit={handleFormSubmit} spacing={6} align="stretch">
@@ -179,8 +170,8 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
                             onChange={handleFileChange}
                             hidden
                         />
-                        {finalPreviewUrl ? (
-                            <Image src={finalPreviewUrl} alt="Предпросмотр" borderRadius="md" maxH="200px" />
+                        {previewUrl ? (
+                            <Image src={previewUrl} alt="Предпросмотр" borderRadius="md" maxH="200px" />
                         ) : (
                             <VStack color="gray.500">
                                 <Icon as={FaUpload} boxSize={8} />

@@ -5,6 +5,16 @@ import path from 'path';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 
+// --- НОВОЕ: Вспомогательная функция для создания полного URL ---
+const getAbsoluteImageUrl = (relativeUrl) => {
+    if (!relativeUrl || relativeUrl.startsWith('http')) {
+        return relativeUrl;
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    // Убедимся, что нет двойных слэшей
+    return `${baseUrl}${relativeUrl.startsWith('/') ? '' : '/'}${relativeUrl}`;
+};
+
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
 
@@ -32,13 +42,15 @@ export default async function handler(req, res) {
             break;
 
         case 'POST':
-            console.log('[tours.js] Received POST request to create a tour. Body:', JSON.stringify(req.body, null, 2));
             try {
                 const { title, description, price, currency, category, image_url, published } = req.body;
                 if (!title || !price || !category || !image_url) {
-                    console.error('[tours.js] Validation failed. Missing required fields.');
                     return res.status(400).json({ message: 'Не все обязательные поля заполнены.' });
                 }
+                
+                // --- ИЗМЕНЕНО: Сохраняем абсолютный URL в базу ---
+                const absoluteImageUrl = getAbsoluteImageUrl(image_url);
+
                 const newTour = await prisma.tour.create({
                     data: {
                         title,
@@ -46,29 +58,29 @@ export default async function handler(req, res) {
                         price: parseFloat(price),
                         currency,
                         category,
-                        image_url,
+                        image_url: absoluteImageUrl, // Используем абсолютный URL
                         published: published,
                         createdById: userId,
                         updatedById: userId,
                     },
                 });
-                console.log('[tours.js] Tour created successfully:', newTour.id);
                 res.status(201).json(newTour);
             } catch (error) {
-                console.error("[tours.js] API POST /admin/tours Error:", error);
+                console.error("API POST /admin/tours Error:", error);
                 res.status(500).json({ message: 'Ошибка при создании тура', error: error.message });
             }
             break;
 
         case 'PUT':
-            console.log('[tours.js] Received PUT request to update a tour. Body:', JSON.stringify(req.body, null, 2));
             try {
                 const { id, title, description, price, currency, category, image_url, published } = req.body;
 
                 if (!id) {
-                    console.error('[tours.js] Validation failed. Missing ID for update.');
                     return res.status(400).json({ message: 'ID тура не указан для обновления.' });
                 }
+
+                // --- ИЗМЕНЕНО: Сохраняем абсолютный URL в базу ---
+                const absoluteImageUrl = getAbsoluteImageUrl(image_url);
 
                 const updatedTour = await prisma.tour.update({
                     where: { id: id },
@@ -78,15 +90,15 @@ export default async function handler(req, res) {
                         price: parseFloat(price),
                         currency,
                         category,
-                        image_url,
+                        image_url: absoluteImageUrl, // Используем абсолютный URL
                         published: published,
                         updatedById: userId,
                     },
                 });
-                console.log('[tours.js] Tour updated successfully:', updatedTour.id);
+                
                 res.status(200).json(updatedTour);
             } catch (error) {
-                console.error("[tours.js] API PUT /admin/tours Error:", error);
+                console.error("API PUT /admin/tours Error:", error);
                 if (error.code === 'P2025') {
                     return res.status(404).json({ message: 'Тур с таким ID не найден.' });
                 }
@@ -95,7 +107,6 @@ export default async function handler(req, res) {
             break;
             
         case 'PATCH':
-            // ... (остальной код без изменений)
             try {
                 const { id, published } = req.body;
                 if (!id || typeof published !== 'boolean') {
@@ -119,7 +130,6 @@ export default async function handler(req, res) {
             break;
 
         case 'DELETE':
-            // ... (остальной код без изменений)
             try {
                 const { id } = req.query;
                 if (!id) return res.status(400).json({ message: 'ID тура не указан' });
@@ -127,7 +137,8 @@ export default async function handler(req, res) {
                 const tourToDelete = await prisma.tour.findUnique({ where: { id } });
                 if (!tourToDelete) return res.status(404).json({ message: 'Тур для удаления не найден' });
                 
-                if (tourToDelete.image_url) {
+                // Удаление файла с диска, если URL относительный
+                if (tourToDelete.image_url && tourToDelete.image_url.startsWith('/')) {
                     const imagePath = path.join(process.cwd(), 'public', tourToDelete.image_url);
                      try {
                         await fs.unlink(imagePath);

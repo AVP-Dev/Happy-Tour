@@ -24,26 +24,8 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
 
   const categoryDetails = getCategoryDetails(tour.category);
 
-  // --- ИЗМЕНЕНО: Логика для создания абсолютного URL ---
-  const getAbsoluteImageUrl = (url) => {
-    if (!url) {
-      return 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour';
-    }
-    // Если URL уже абсолютный, возвращаем как есть
-    if (url.startsWith('http')) {
-      return url;
-    }
-    // Если URL относительный (начинается с /), создаем абсолютный
-    if (url.startsWith('/')) {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-      return `${baseUrl}${url}`;
-    }
-    // Для всех остальных случаев (на всякий случай)
-    return url;
-  };
-
-  const finalImageUrl = getAbsoluteImageUrl(tour.image_url);
-  // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+  // --- ИЗМЕНЕНО: Используем URL напрямую, так как он теперь всегда абсолютный ---
+  const imageUrl = tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour';
 
   return (
     <Flex
@@ -63,7 +45,7 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
       <Box position="relative">
         <AspectRatio ratio={16 / 9}>
             <NextImage
-              src={finalImageUrl} // Используем обработанный URL
+              src={imageUrl} // Просто используем URL из пропсов
               alt={tour.title || 'Тур'}
               layout="fill"
               objectFit="cover"

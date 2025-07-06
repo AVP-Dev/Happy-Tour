@@ -5,6 +5,24 @@ import path from 'path';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 
+// Вспомогательная функция для удаления файла
+async function deleteImageFile(imageUrl) {
+    // Проверяем, что URL начинается с /api/images/
+    if (imageUrl && imageUrl.startsWith('/api/images/')) {
+        const imageName = imageUrl.split('/').pop(); // Получаем имя файла из URL
+        // Формируем полный путь к файлу на сервере
+        const imagePath = path.join(process.cwd(), 'public', 'uploads', 'tours', imageName);
+        try {
+            await fs.access(imagePath); // Проверяем, существует ли файл
+            await fs.unlink(imagePath); // Удаляем файл
+            console.log(`Файл изображения успешно удален: ${imagePath}`);
+        } catch (fsError) {
+            // Если файл не найден (ENOENT) или другая ошибка, логируем предупреждение
+            console.warn(`Не удалось удалить файл изображения: ${imagePath}. Ошибка: ${fsError.message}`);
+        }
+    }
+}
+
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
 
@@ -33,7 +51,6 @@ export default async function handler(req, res) {
 
         case 'POST':
             try {
-                // --- ИЗМЕНЕНО: Просто получаем данные как есть ---
                 const { title, description, price, currency, category, image_url, published } = req.body;
                 if (!title || !price || !category || !image_url) {
                     return res.status(400).json({ message: 'Не все обязательные поля заполнены.' });
@@ -46,7 +63,7 @@ export default async function handler(req, res) {
                         price: parseFloat(price),
                         currency,
                         category,
-                        image_url, // Сохраняем относительный путь, который пришел от /api/upload
+                        image_url, 
                         published: published,
                         createdById: userId,
                         updatedById: userId,
@@ -61,12 +78,14 @@ export default async function handler(req, res) {
 
         case 'PUT':
             try {
-                // --- ИЗМЕНЕНО: Просто получаем данные как есть ---
                 const { id, title, description, price, currency, category, image_url, published } = req.body;
 
                 if (!id) {
                     return res.status(400).json({ message: 'ID тура не указан для обновления.' });
                 }
+
+                // Находим текущий тур, чтобы получить старый URL изображения
+                const existingTour = await prisma.tour.findUnique({ where: { id: id } });
 
                 const updatedTour = await prisma.tour.update({
                     where: { id: id },
@@ -76,12 +95,17 @@ export default async function handler(req, res) {
                         price: parseFloat(price),
                         currency,
                         category,
-                        image_url, // Сохраняем относительный или абсолютный путь как есть
+                        image_url, 
                         published: published,
                         updatedById: userId,
                     },
                 });
                 
+                // Если URL изображения изменился, удаляем старый файл
+                if (existingTour && existingTour.image_url && existingTour.image_url !== image_url) {
+                    await deleteImageFile(existingTour.image_url);
+                }
+
                 res.status(200).json(updatedTour);
             } catch (error) {
                 console.error("API PUT /admin/tours Error:", error);
@@ -123,13 +147,9 @@ export default async function handler(req, res) {
                 const tourToDelete = await prisma.tour.findUnique({ where: { id } });
                 if (!tourToDelete) return res.status(404).json({ message: 'Тур для удаления не найден' });
                 
-                if (tourToDelete.image_url && tourToDelete.image_url.startsWith('/')) {
-                    const imagePath = path.join(process.cwd(), 'public', tourToDelete.image_url);
-                     try {
-                        await fs.unlink(imagePath);
-                    } catch (fsError) {
-                        console.warn(`Не удалось удалить файл изображения: ${imagePath}`, fsError.message);
-                    }
+                // Удаляем связанное изображение перед удалением тура из БД
+                if (tourToDelete.image_url) {
+                    await deleteImageFile(tourToDelete.image_url);
                 }
 
                 await prisma.tour.delete({ where: { id } });

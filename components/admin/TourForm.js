@@ -42,7 +42,7 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                toast({ title: "Файл слишком большой", description: "Максимальный размер файла 5MB.", status: "error", position: "top-right" });
+                toast({ title: "Файл слишком большой", description: "Максимальный размер файла 5MB.", status: "error", position: "top" }); // Изменено: позиция "top"
                 return;
             }
             setImage({ file: file, previewUrl: URL.createObjectURL(file) });
@@ -85,9 +85,9 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
                     throw new Error(uploadData.error || 'Ошибка загрузки файла');
                 }
                 finalImageUrl = uploadData.url; 
-                toast({ title: "Изображение успешно загружено", status: "success", position: "top-right" });
+                toast({ title: "Изображение успешно загружено", status: "success", position: "top" }); // Изменено: позиция "top"
             } catch (error) {
-                toast({ title: "Ошибка загрузки изображения", description: error.message, status: "error", position: "top-right" });
+                toast({ title: "Ошибка загрузки изображения", description: error.message, status: "error", position: "top" }); // Изменено: позиция "top"
                 return;
             }
         }

@@ -11,6 +11,26 @@ import { FaPlus } from 'react-icons/fa';
 import AdminLayout from '../../components/admin/AdminLayout';
 import TourForm from '../../components/admin/TourForm';
 import TourTable from '../../components/admin/TourTable';
+import useSWR, { mutate } from 'swr'; // Импортируем useSWR и mutate
+
+// Единый fetcher для SWR, который корректно обрабатывает ошибки API и включает куки
+const fetcher = async (url, options) => {
+    const defaultOptions = {
+        ...options,
+        credentials: 'include', // Важно для отправки куки сессии
+    };
+
+    const res = await fetch(url, defaultOptions);
+
+    if (!res.ok) {
+        const errorPayload = await res.json().catch(() => {
+            return { error: `Сервер ответил со статусом ${res.status}, но без деталей.` };
+        });
+        const error = new Error(errorPayload.error);
+        throw error;
+    }
+    return res.json();
+};
 
 const AdminToursPage = () => {
     const { data: session, status } = useSession();
@@ -18,8 +38,13 @@ const AdminToursPage = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
 
-    const [tours, setTours] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    // Переходим на useSWR для управления данными туров
+    const { data: tours, error, isLoading: isSWRLoading, isValidating } = useSWR('/api/admin/tours', fetcher, {
+        revalidateOnFocus: false, // Отключаем перевалидацию при фокусе окна
+        revalidateOnReconnect: false, // Отключаем перевалидацию при восстановлении соединения
+        // dedupingInterval: 2000, // Опционально: интервал дедупликации запросов (по умолчанию 2000мс)
+    });
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingTour, setEditingTour] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -34,27 +59,14 @@ const AdminToursPage = () => {
             if (!session?.user?.role || !allowedRoles.includes(session.user.role)) {
                 toast({ title: "Доступ запрещен", status: "error", duration: 3000, isClosable: true });
                 router.replace('/');
-            } else {
-                fetchTours();
             }
+            // fetchTours() больше не нужен здесь, useSWR сделает это автоматически
         }
     }, [session, status, router, toast]);
 
-    const fetchTours = async () => {
-        setIsLoading(true);
-        try {
-            const response = await fetch('/api/admin/tours');
-            if (!response.ok) throw new Error('Не удалось загрузить туры');
-            const data = await response.json();
-            setTours(data);
-        } catch (error) {
-            toast({ title: 'Ошибка загрузки', description: error.message, status: 'error', duration: 5000, isClosable: true });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
+    // Фильтрация туров - остается без изменений, работает с данными из SWR
     const filteredTours = useMemo(() => {
+        if (!tours) return []; // Убедимся, что tours не null/undefined
         return tours
             .filter(tour => filterCategory === 'all' || tour.category === filterCategory)
             .filter(tour => tour.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -74,18 +86,18 @@ const AdminToursPage = () => {
         setIsSubmitting(true);
         try {
             const method = editingTour ? 'PUT' : 'POST';
-            const response = await fetch('/api/admin/tours', {
+            const response = await fetcher('/api/admin/tours', { // Используем fetcher
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Ошибка при сохранении тура');
-            }
+            
+            // После успешного сохранения, обновляем кеш SWR
+            mutate('/api/admin/tours'); 
+            
             toast({ title: `Тур успешно ${editingTour ? 'обновлен' : 'создан'}`, status: 'success' });
             onClose();
-            fetchTours();
+            // fetchTours() заменен на mutate
         } catch (error) {
             toast({ title: 'Ошибка сохранения', description: error.message, status: 'error' });
         } finally {
@@ -96,38 +108,42 @@ const AdminToursPage = () => {
     const handleDelete = async (tourId) => {
         if (!window.confirm('Вы уверены, что хотите удалить этот тур? Это действие необратимо.')) return;
         try {
-            const response = await fetch(`/api/admin/tours?id=${tourId}`, { method: 'DELETE' });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Ошибка при удалении');
-            }
+            const response = await fetcher(`/api/admin/tours?id=${tourId}`, { method: 'DELETE' }); // Используем fetcher
+            
+            // После успешного удаления, обновляем кеш SWR
+            mutate('/api/admin/tours'); 
+
             toast({ title: 'Тур удален', status: 'success' });
-            fetchTours();
+            // fetchTours() заменен на mutate
         } catch (error) {
             toast({ title: 'Ошибка удаления', description: error.message, status: 'error' });
         }
     };
 
     const handleTogglePublished = async (tourId, newStatus) => {
-        setTours(currentTours =>
-            currentTours.map(t => (t.id === tourId ? { ...t, published: newStatus } : t))
+        // Оптимистичное обновление UI
+        mutate('/api/admin/tours', 
+            tours.map(t => (t.id === tourId ? { ...t, published: newStatus } : t)), 
+            false // Не перевалидировать сразу
         );
 
         try {
-            const response = await fetch('/api/admin/tours', {
+            const response = await fetcher('/api/admin/tours', { // Используем fetcher
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: tourId, published: newStatus }),
             });
 
             if (!response.ok) {
-                setTours(currentTours =>
-                    currentTours.map(t => (t.id === tourId ? { ...t, published: !newStatus } : t))
-                );
+                // В случае ошибки, откатываем оптимистичное обновление
+                mutate('/api/admin/tours'); 
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Ошибка при смене статуса');
             }
             
+            // Если успешно, перевалидируем кеш SWR для подтверждения
+            mutate('/api/admin/tours');
+
             toast({
                 title: `Статус тура обновлен`,
                 description: `Тур теперь ${newStatus ? 'опубликован' : 'скрыт'}.`,
@@ -140,10 +156,28 @@ const AdminToursPage = () => {
         }
     };
 
-    if (status === 'loading' || (isLoading && tours.length === 0)) {
+    // Используем isSWRLoading для индикации загрузки данных через SWR
+    const isLoadingData = isSWRLoading && !tours && !error;
+
+    if (status === 'loading' || isLoadingData) {
         return (
             <AdminLayout>
                 <Flex justify="center" align="center" h="50vh"><Spinner size="xl" /></Flex>
+            </AdminLayout>
+        );
+    }
+
+    // Если есть ошибка загрузки данных
+    if (error && !tours) {
+        return (
+            <AdminLayout>
+                <Alert status="error" borderRadius="md" m={4}>
+                    <AlertIcon />
+                    <Box>
+                        <Text fontWeight="bold">Не удалось загрузить туры.</Text>
+                        <Text>Причина: {error.message}</Text>
+                    </Box>
+                </Alert>
             </AdminLayout>
         );
     }
@@ -172,12 +206,12 @@ const AdminToursPage = () => {
                         <option value="all">Все категории</option>
                         <option value="hot">Горящие</option>
                         <option value="popular">Популярные</option>
-                        {/* --- ИЗМЕНЕНИЕ: Название категории изменено --- */}
                         <option value="special">Выгодные</option>
                     </Select>
                 </HStack>
                 
-                {isLoading ? (
+                {/* Индикатор загрузки только если данные еще не загружены или идет перевалидация */}
+                {(isSWRLoading && !tours) || isValidating ? (
                      <Flex justify="center" align="center" h="20vh"><Spinner size="lg" /></Flex>
                 ) : (
                     <TourTable

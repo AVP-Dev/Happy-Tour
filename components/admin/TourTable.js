@@ -1,62 +1,101 @@
+// components/admin/TourTable.js
+import React from 'react';
 import {
-  Table, Thead, Tbody, Tr, Th, Td, IconButton, Switch, Box, Text
+    Table, Thead, Tbody, Tr, Th, Td, TableContainer,
+    HStack, Text, Image, Box, Tooltip, Icon,
+    Tag, IconButton, Switch
 } from '@chakra-ui/react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
-/**
- * Компонент для отображения таблицы туров в админ-панели.
- * Добавлена обертка <Box overflowX="auto"> для обеспечения адаптивности на мобильных устройствах.
- * Эта обертка создает горизонтальный скролл для таблицы, если она не помещается в экран,
- * предотвращая скролл всей страницы.
- */
-export default function TourTable({ tours, onEdit, onDelete, onToggle }) {
-  if (!tours || tours.length === 0) {
-    return <Text p={4}>Туры не найдены.</Text>;
-  }
+const TourTable = ({ tours, onEdit, onDelete, onTogglePublished }) => {
 
-  return (
-    <Box overflowX="auto" bg="white" borderRadius="md" shadow="md">
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>Название</Th>
-            <Th isNumeric>Цена</Th>
-            <Th>Активен</Th>
-            <Th>Действия</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {tours.map((tour) => (
-            <Tr key={tour.id}>
-              <Td whiteSpace="nowrap">{tour.name}</Td>
-              <Td isNumeric>{tour.price}</Td>
-              <Td>
-                <Switch 
-                  isChecked={tour.isActive} 
-                  onChange={() => onToggle(tour.id, !tour.isActive)} 
-                  colorScheme="green"
-                />
-              </Td>
-              <Td>
-                <IconButton 
-                  icon={<FaEdit />} 
-                  onClick={() => onEdit(tour)} 
-                  aria-label="Редактировать тур"
-                  variant="ghost"
-                  mr={2} 
-                />
-                <IconButton 
-                  icon={<FaTrash />} 
-                  onClick={() => onDelete(tour.id)} 
-                  aria-label="Удалить тур"
-                  variant="ghost"
-                  colorScheme="red"
-                />
-              </Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    </Box>
-  );
-}
+    const CategoryTag = ({ category }) => {
+        const details = {
+            hot: { icon: FaHotjar, color: 'red', label: 'Горящий' },
+            popular: { icon: FaStar, color: 'orange', label: 'Популярный' },
+            special: { icon: FaGift, color: 'purple', label: 'Выгодный' },
+        }[category] || { icon: FaStar, color: 'gray', label: category };
+
+        return (
+            <Tag size="sm" variant="subtle" colorScheme={details.color}>
+                <HStack spacing={1}>
+                    <Icon as={details.icon} />
+                    <Text>{details.label}</Text>
+                </HStack>
+            </Tag>
+        );
+    };
+
+    return (
+        <Box bg="white" rounded="lg" shadow="md" overflow="hidden">
+            <TableContainer>
+                <Table variant="simple" size="md">
+                    <Thead bg="gray.50">
+                        <Tr>
+                            <Th>Фото</Th>
+                            <Th>Название</Th>
+                            <Th>Категория</Th>
+                            <Th isNumeric>Цена</Th>
+                            <Th>Опубликован</Th>
+                            <Th isNumeric>Действия</Th>
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+                        {tours.map((tour) => (
+                            <Tr key={tour.id} _hover={{ bg: 'gray.50' }}>
+                                <Td>
+                                    <Image
+                                        src={tour.image_url}
+                                        boxSize="60px"
+                                        objectFit="cover"
+                                        borderRadius="md"
+                                        alt={tour.title}
+                                        fallbackSrc="https://placehold.co/60x60/eee/ccc?text=Нет"
+                                    />
+                                </Td>
+                                <Td fontWeight="medium" maxW="300px" whiteSpace="normal">{tour.title}</Td>
+                                <Td><CategoryTag category={tour.category} /></Td>
+                                <Td isNumeric fontWeight="semibold">{`${tour.price?.toFixed(0)} ${tour.currency}`}</Td>
+                                <Td>
+                                    <Tooltip label={tour.published ? 'Снять с публикации' : 'Опубликовать'}>
+                                        <Switch
+                                            colorScheme="brand"
+                                            isChecked={tour.published}
+                                            onChange={() => onTogglePublished(tour.id, !tour.published)}
+                                        />
+                                    </Tooltip>
+                                </Td>
+                                <Td isNumeric>
+                                    <HStack spacing={2} justify="flex-end">
+                                        <Tooltip label="Редактировать" hasArrow>
+                                            <IconButton
+                                                aria-label="Редактировать тур"
+                                                icon={<FaEdit />}
+                                                size="sm"
+                                                variant="ghost"
+                                                colorScheme="blue"
+                                                onClick={() => onEdit(tour)}
+                                            />
+                                        </Tooltip>
+                                        <Tooltip label="Удалить" hasArrow>
+                                            <IconButton
+                                                aria-label="Удалить тур"
+                                                icon={<FaTrash />}
+                                                size="sm"
+                                                variant="ghost"
+                                                colorScheme="red"
+                                                onClick={() => onDelete(tour.id)}
+                                            />
+                                        </Tooltip>
+                                    </HStack>
+                                </Td>
+                            </Tr>
+                        ))}
+                    </Tbody>
+                </Table>
+            </TableContainer>
+        </Box>
+    );
+};
+
+export default TourTable;

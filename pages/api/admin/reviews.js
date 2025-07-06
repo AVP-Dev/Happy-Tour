@@ -1,6 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { withAuth } from '../../../lib/auth';
-import { Prisma } from '@prisma/client'; // Импортируем типы ошибок Prisma
+
+// Эта версия убирает прямой импорт { Prisma } из '@prisma/client',
+// который мог вызывать падение сервера при проблемах с генерацией клиента Prisma.
+// Обработка ошибок теперь полагается на проверку кодов ошибок, что более надежно.
 
 async function handler(req, res) {
   switch (req.method) {
@@ -14,25 +17,23 @@ async function handler(req, res) {
         return res.status(200).json(reviews);
       } catch (error) {
         // Расширенное логирование на сервере для полной диагностики
-        console.error("[API_ERROR] /api/admin/reviews:", error);
+        console.error("[API_ERROR] /api/admin/reviews (GET):", {
+            message: error.message,
+            code: error.code, // Код ошибки Prisma
+            stack: error.stack,
+        });
 
-        // Проверяем, является ли ошибка известной ошибкой Prisma
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          const errorMessage = `Ошибка базы данных (код: ${error.code}). Проверьте лог сервера.`;
-          return res.status(500).json({ error: errorMessage });
-        }
-        // Проверяем на ошибки валидации (часто - несоответствие схемы)
-        if (error instanceof Prisma.PrismaClientValidationError) {
-          const errorMessage = `Ошибка валидации данных Prisma. Возможно, схема БД и schema.prisma не синхронизированы.`;
+        // Проверяем наличие кода ошибки, характерного для Prisma
+        if (error.code) {
+          const errorMessage = `Ошибка базы данных (код: ${error.code}). Проверьте лог сервера для деталей.`;
           return res.status(500).json({ error: errorMessage });
         }
         
-        // Общая ошибка, если тип не определен
+        // Общая ошибка
         return res.status(500).json({ error: 'Внутренняя ошибка сервера. Не удалось получить отзывы.' });
       }
 
     case 'PUT':
-      // Код для PUT остается без изменений
       try {
         const { id, status } = req.body;
         if (!id || !status) {
@@ -45,11 +46,13 @@ async function handler(req, res) {
         return res.status(200).json(updatedReview);
       } catch (error) {
         console.error("[API_ERROR] /api/admin/reviews (PUT):", error);
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Отзыв для обновления не найден.' });
+        }
         return res.status(500).json({ error: 'Не удалось обновить отзыв.' });
       }
 
     case 'DELETE':
-      // Код для DELETE остается без изменений
       try {
         const { id } = req.body;
         if (!id) {
@@ -59,6 +62,9 @@ async function handler(req, res) {
         return res.status(204).end();
       } catch (error) {
         console.error("[API_ERROR] /api/admin/reviews (DELETE):", error);
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Отзыв для удаления не найден.' });
+        }
         return res.status(500).json({ error: 'Не удалось удалить отзыв.' });
       }
 

@@ -9,11 +9,15 @@ async function handler(req, res) {
   switch (req.method) {
     case 'GET':
       try {
+        // Логирование для отслеживания выполнения на сервере
+        console.log("[API_INFO] /api/admin/reviews (GET): Попытка получить отзывы."); 
         const reviews = await prisma.review.findMany({
-          orderBy: {
-            createdAt: 'desc',
-          },
+          // orderBy: { // Закомментировано для отладки. Если после этого заработает,
+          //   createdAt: 'desc', // то проблема в поле createdAt или его индексации.
+          // },
         });
+        // Логирование успешного получения данных
+        console.log(`[API_INFO] /api/admin/reviews (GET): Успешно получено ${reviews.length} отзывов.`); 
         return res.status(200).json(reviews);
       } catch (error) {
         // Расширенное логирование на сервере для полной диагностики
@@ -21,6 +25,7 @@ async function handler(req, res) {
             message: error.message,
             code: error.code, // Код ошибки Prisma
             stack: error.stack,
+            name: error.name, // Имя ошибки для дополнительной диагностики
         });
 
         // Проверяем наличие кода ошибки, характерного для Prisma
@@ -29,8 +34,8 @@ async function handler(req, res) {
           return res.status(500).json({ error: errorMessage });
         }
         
-        // Общая ошибка
-        return res.status(500).json({ error: 'Внутренняя ошибка сервера. Не удалось получить отзывы.' });
+        // Общая ошибка - теперь с более подробным сообщением для клиента
+        return res.status(500).json({ error: `Внутренняя ошибка сервера. Не удалось получить отзывы. Детали: ${error.message || 'Неизвестная ошибка.'}` });
       }
 
     case 'PUT':

@@ -7,7 +7,7 @@ import {
 } from '@chakra-ui/react';
 import { FaUpload } from 'react-icons/fa';
 
-// --- НОВОЕ: Вспомогательная функция для создания прокси-URL ---
+// --- Вспомогательная функция для создания прокси-URL ---
 const getImageProxyUrl = (url) => {
     if (!url) return null;
     // URL для превью (blob) или абсолютные URL оставляем как есть
@@ -111,11 +111,11 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         onSubmit(finalData);
     };
 
-    // --- ИЗМЕНЕНО: Используем новую функцию для получения URL превью ---
     const previewUrl = getImageProxyUrl(image.previewUrl);
 
     return (
-        <VStack as="form" onSubmit={handleFormSplit} spacing={6} align="stretch">
+        // --- ИСПРАВЛЕНО: Опечатка в названии функции ---
+        <VStack as="form" onSubmit={handleFormSubmit} spacing={6} align="stretch">
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                 <VStack spacing={6}>
                     <FormControl isInvalid={!!errors.title} isRequired>

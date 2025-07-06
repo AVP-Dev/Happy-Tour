@@ -1,6 +1,6 @@
 // components/TourCard.js
 import React from 'react';
-import NextImage from 'next/image'; // Возвращаем NextImage
+import NextImage from 'next/image';
 import { Box, Heading, Text, Button, VStack, HStack, Tag, Flex, AspectRatio } from '@chakra-ui/react';
 import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 
@@ -43,7 +43,6 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
     >
       <Box position="relative">
         <AspectRatio ratio={16 / 9}>
-            {/* Возвращаем NextImage. С отключенной оптимизацией он должен работать как надо. */}
             <NextImage
               src={imageUrl}
               alt={tour.title || 'Тур'}

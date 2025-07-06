@@ -10,12 +10,27 @@ export const config = {
     },
 };
 
+// --- НОВОЕ: Функция для транслитерации и очистки имени файла ---
+const slugify = (text) => {
+    const a = 'àáâäæãåāăąçćčđďèéêëēėęěğǵḧîïíīįìłḿñńǹňôöòóœøōõőṕŕřßśšşșťțûüùúūǘůűųẃẍÿýžźż·/_,:;'
+    const b = 'aaaaaaaaaacccddeeeeeeeegghiiiiiilmnnnnoooooooooprrsssssttuuuuuuuuuwxyyzzz------'
+    const p = new RegExp(a.split('').join('|'), 'g')
+
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-') // Заменяем пробелы на -
+        .replace(p, c => b.charAt(a.indexOf(c))) // Заменяем спецсимволы
+        .replace(/&/g, '-and-') // Заменяем & на 'and'
+        .replace(/[^\w\-]+/g, '') // Удаляем все не-буквенно-цифровые символы
+        .replace(/\-\-+/g, '-') // Заменяем несколько - на один -
+        .replace(/^-+/, '') // Убираем - в начале
+        .replace(/-+$/, '') // Убираем - в конце
+}
+
 const ensureDirectoryExistence = async (filePath) => {
     const dirname = path.dirname(filePath);
     try {
         await fs.access(dirname);
     } catch (e) {
-        console.log(`Directory does not exist, creating: ${dirname}`);
         await fs.mkdir(dirname, { recursive: true });
     }
 };
@@ -25,34 +40,31 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Метод не разрешен' });
     }
 
-    console.log('[upload.js] Received a file upload request.');
     const form = formidable({});
 
     try {
-        console.log('[upload.js] Parsing form data...');
         const [fields, files] = await form.parse(req);
-        
-        if (!files.file || !files.file[0]) {
-            console.error('[upload.js] Error: No file found in the request.');
-            return res.status(400).json({ error: 'Файл не найден в запросе.' });
-        }
-        
         const file = files.file[0];
-        console.log(`[upload.js] File received. Original name: ${file.originalFilename}, Temp path: ${file.filepath}`);
+
+        if (!file) {
+            return res.status(400).json({ error: 'Файл не найден' });
+        }
 
         const originalFilename = file.originalFilename || 'image.webp';
         const fileExtension = path.extname(originalFilename);
         const baseFilename = path.basename(originalFilename, fileExtension);
+        
+        // --- ИЗМЕНЕНО: Применяем slugify к имени файла ---
+        const sanitizedFilename = slugify(baseFilename);
+
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-        const newFilename = `${baseFilename}-${uniqueSuffix}.webp`;
+        const newFilename = `${sanitizedFilename}-${uniqueSuffix}.webp`; // Всегда сохраняем в .webp
 
         const publicFolderPath = path.join(process.cwd(), 'public', 'uploads');
         const newFilePath = path.join(publicFolderPath, newFilename);
 
-        console.log(`[upload.js] Ensuring directory exists: ${publicFolderPath}`);
         await ensureDirectoryExistence(newFilePath);
 
-        console.log(`[upload.js] Processing image with sharp and saving to: ${newFilePath}`);
         await sharp(file.filepath)
             .resize({
                 width: 1200,
@@ -62,16 +74,12 @@ export default async function handler(req, res) {
             })
             .webp({ quality: 80 })
             .toFile(newFilePath);
-        
-        console.log('[upload.js] File successfully saved.');
 
         const fileUrl = `/uploads/${newFilename}`;
-        console.log(`[upload.js] Returning file URL: ${fileUrl}`);
 
         res.status(200).json({ url: fileUrl });
-
     } catch (error) {
-        console.error('[upload.js] A CRITICAL ERROR occurred during file upload:', error);
-        res.status(500).json({ error: 'Критическая ошибка сервера при загрузке файла.', details: error.message });
+        console.error('Ошибка при загрузке файла:', error);
+        res.status(500).json({ error: 'Ошибка сервера при загрузке файла.' });
     }
 }

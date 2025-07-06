@@ -62,7 +62,7 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         const newErrors = {};
         if (!formData.title.trim()) newErrors.title = "Название обязательно";
         if (!formData.price || formData.price <= 0) newErrors.price = "Цена должна быть больше нуля";
-        if (!isEditing && !image.file) {
+        if (!isEditing && !image.file && !initialData?.image_url) {
             newErrors.image = "Изображение обязательно для нового тура";
         }
         setErrors(newErrors);
@@ -73,8 +73,7 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         e.preventDefault();
         if (!validate()) return;
 
-        // Если есть новый файл, загружаем его. Если нет, используем старый URL.
-        let finalImageUrl = initialData?.image_url;
+        let finalImageUrl = image.previewUrl;
 
         if (image.file) {
             const fileFormData = new FormData();
@@ -84,7 +83,6 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: fileFormData });
                 const uploadData = await uploadRes.json();
                 if (!uploadRes.ok) throw new Error(uploadData.error || 'Ошибка загрузки файла');
-                // API вернет относительный путь, который потом станет абсолютным в API туров
                 finalImageUrl = uploadData.url; 
             } catch (error) {
                 toast({ title: "Ошибка загрузки изображения", description: error.message, status: "error" });
@@ -100,7 +98,6 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
         onSubmit(finalData);
     };
 
-    // URL для превью может быть blob: (новый файл) или https: (старый)
     const previewUrl = image.previewUrl;
 
     return (
@@ -150,7 +147,7 @@ const TourForm = ({ initialData, onSubmit, isSubmitting, onCancel }) => {
 
                 </VStack>
 
-                <FormControl isInvalid={!!errors.image} isRequired={!isEditing}>
+                <FormControl isInvalid={!!errors.image} isRequired={!isEditing && !initialData?.image_url}>
                     <FormLabel>Изображение тура</FormLabel>
                     <Center
                         p={4}

@@ -24,7 +24,7 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
 
   const categoryDetails = getCategoryDetails(tour.category);
 
-  // --- ИЗМЕНЕНО: Используем URL напрямую, так как он теперь всегда абсолютный ---
+  // --- ИЗМЕНЕНО: Используем URL напрямую. Next.js сам разберется с относительными путями. ---
   const imageUrl = tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour';
 
   return (

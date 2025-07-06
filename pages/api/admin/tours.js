@@ -5,16 +5,6 @@ import path from 'path';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 
-// --- НОВОЕ: Вспомогательная функция для создания полного URL ---
-const getAbsoluteImageUrl = (relativeUrl) => {
-    if (!relativeUrl || relativeUrl.startsWith('http')) {
-        return relativeUrl;
-    }
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-    // Убедимся, что нет двойных слэшей
-    return `${baseUrl}${relativeUrl.startsWith('/') ? '' : '/'}${relativeUrl}`;
-};
-
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
 
@@ -43,14 +33,12 @@ export default async function handler(req, res) {
 
         case 'POST':
             try {
+                // --- ИЗМЕНЕНО: Просто получаем данные как есть ---
                 const { title, description, price, currency, category, image_url, published } = req.body;
                 if (!title || !price || !category || !image_url) {
                     return res.status(400).json({ message: 'Не все обязательные поля заполнены.' });
                 }
                 
-                // --- ИЗМЕНЕНО: Сохраняем абсолютный URL в базу ---
-                const absoluteImageUrl = getAbsoluteImageUrl(image_url);
-
                 const newTour = await prisma.tour.create({
                     data: {
                         title,
@@ -58,7 +46,7 @@ export default async function handler(req, res) {
                         price: parseFloat(price),
                         currency,
                         category,
-                        image_url: absoluteImageUrl, // Используем абсолютный URL
+                        image_url, // Сохраняем относительный путь, который пришел от /api/upload
                         published: published,
                         createdById: userId,
                         updatedById: userId,
@@ -73,14 +61,12 @@ export default async function handler(req, res) {
 
         case 'PUT':
             try {
+                // --- ИЗМЕНЕНО: Просто получаем данные как есть ---
                 const { id, title, description, price, currency, category, image_url, published } = req.body;
 
                 if (!id) {
                     return res.status(400).json({ message: 'ID тура не указан для обновления.' });
                 }
-
-                // --- ИЗМЕНЕНО: Сохраняем абсолютный URL в базу ---
-                const absoluteImageUrl = getAbsoluteImageUrl(image_url);
 
                 const updatedTour = await prisma.tour.update({
                     where: { id: id },
@@ -90,7 +76,7 @@ export default async function handler(req, res) {
                         price: parseFloat(price),
                         currency,
                         category,
-                        image_url: absoluteImageUrl, // Используем абсолютный URL
+                        image_url, // Сохраняем относительный или абсолютный путь как есть
                         published: published,
                         updatedById: userId,
                     },
@@ -137,7 +123,6 @@ export default async function handler(req, res) {
                 const tourToDelete = await prisma.tour.findUnique({ where: { id } });
                 if (!tourToDelete) return res.status(404).json({ message: 'Тур для удаления не найден' });
                 
-                // Удаление файла с диска, если URL относительный
                 if (tourToDelete.image_url && tourToDelete.image_url.startsWith('/')) {
                     const imagePath = path.join(process.cwd(), 'public', tourToDelete.image_url);
                      try {

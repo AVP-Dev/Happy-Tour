@@ -1,6 +1,7 @@
 // components/Header.js
 import { useState, useEffect } from 'react';
 import NextLink from 'next/link';
+import NextImage from 'next/image'; // Импортируем NextImage
 import { useRouter } from 'next/router';
 import {
     Box,
@@ -8,7 +9,7 @@ import {
     Container,
     Link,
     Button,
-    Image,
+    // Image, // Удаляем импорт Chakra UI Image, так как будем использовать NextImage
     Heading,
     HStack,
     VStack,
@@ -79,13 +80,21 @@ const Header = () => {
     const linkColor = isScrolled || isNotHomePage ? 'gray.700' : 'white';
     const textShadow = isScrolled || isNotHomePage ? 'none' : '1px 1px 3px rgba(0,0,0,0.4)';
 
-    // Этот Box уже использует семантический тег <header>. Изменения не требуются.
     return (
         <Box as="header" {...headerStyles}>
             <Container maxW="container.xl">
                 <Flex as="nav" align="center" justify="space-between" py={{ base: 1, md: 2 }}>
                     <Link as={NextLink} href="/" display="flex" alignItems="center" _hover={{ textDecoration: 'none' }}>
-                        <Image src="/img/logo.png" alt="Happy Tour Logo" h={{ base: '55px', md: '75px' }} />
+                        {/* ИЗМЕНЕНИЕ: Используем NextImage для логотипа */}
+                        <Box position="relative" h={{ base: '55px', md: '75px' }} w={{ base: '150px', md: '200px' }}> {/* Обертка для задания размеров */}
+                            <NextImage
+                                src="/img/logo.png"
+                                alt="Happy Tour Logo"
+                                layout="fill" // Используем layout="fill" для адаптивного размера внутри родителя
+                                objectFit="contain" // Убедимся, что логотип вписывается без обрезки
+                                priority // Загружаем логотип с высоким приоритетом, так как он виден на первом экране
+                            />
+                        </Box>
                         <Heading as="span" size={{ base: 'md', md: 'lg' }} color="brand.500" ml={2} lineHeight={1}>
                             Happy Tour
                         </Heading>

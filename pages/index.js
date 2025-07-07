@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import prisma from '../lib/prisma';
+import { trackGAEvent, trackYMGoal } from '../lib/analytics'; // Импортируем функции аналитики
 
 import {
     Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
@@ -78,16 +79,25 @@ export default function Home({ tours, reviews }) {
     const handleTourInquiry = (tour) => {
         setSelectedTour(tour);
         onOpenTourModal();
+        // ИЗМЕНЕНИЕ: Отслеживание события открытия модального окна заявки на тур
+        trackGAEvent('modal_open', { event_category: 'engagement', event_label: 'tour_inquiry_modal' });
+        trackYMGoal('tour_inquiry_modal_open');
     };
 
     const handleReadMoreReview = (review) => {
         setSelectedReview(review);
         onOpenReviewModal();
+        // ИЗМЕНЕНИЕ: Отслеживание события открытия модального окна просмотра отзыва
+        trackGAEvent('modal_open', { event_category: 'engagement', event_label: 'review_read_modal' });
+        trackYMGoal('review_read_modal_open');
     };
     
     const handleOpenAddReviewModal = () => {
         setSelectedReview(null);
         onOpenReviewModal();
+        // ИЗМЕНЕНИЕ: Отслеживание события клика по кнопке "Оставить отзыв"
+        trackGAEvent('button_click', { event_category: 'engagement', event_label: 'add_review_button' });
+        trackYMGoal('add_review_button_click');
     };
 
     const showNotification = (options) => {
@@ -110,7 +120,12 @@ export default function Home({ tours, reviews }) {
                 <meta name="description" content="Подбираем идеальные туры по всему миру. Горящие туры, популярные направления, выгодные предложения. Ваше путешествие мечты ждет!" />
             </Head>
 
-            <Hero onSearchClick={() => document.getElementById('tourvisor')?.scrollIntoView({ behavior: 'smooth' })} />
+            <Hero onSearchClick={() => {
+                document.getElementById('tourvisor')?.scrollIntoView({ behavior: 'smooth' });
+                // ИЗМЕНЕНИЕ: Отслеживание клика по кнопке "Подобрать тур" в Hero
+                trackGAEvent('button_click', { event_category: 'engagement', event_label: 'hero_search_tour_button' });
+                trackYMGoal('hero_search_tour_click');
+            }} />
 
             <Box as="section" id="tourvisor" py={sectionPadding}>
                 <Container maxW="container.xl">
@@ -124,7 +139,18 @@ export default function Home({ tours, reviews }) {
                     <SectionHeading>Горящие туры</SectionHeading>
                     <UniversalCarousel
                         items={hotTours}
-                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                        renderItem={(item, index) => (
+                            <TourCard 
+                                tour={item} 
+                                onTourInquiry={(tour) => {
+                                    handleTourInquiry(tour);
+                                    // ИЗМЕНЕНИЕ: Отслеживание клика по кнопке "Подробнее" на карточке тура
+                                    trackGAEvent('button_click', { event_category: 'engagement', event_label: 'tour_card_details', tour_id: tour.id, tour_title: tour.title });
+                                    trackYMGoal('tour_card_details_click', { tour_id: tour.id });
+                                }} 
+                                index={index} 
+                            />
+                        )}
                     />
                 </Container>
             </Box>
@@ -134,7 +160,18 @@ export default function Home({ tours, reviews }) {
                     <SectionHeading>Популярные направления</SectionHeading>
                     <UniversalCarousel
                         items={popularTours}
-                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                        renderItem={(item, index) => (
+                            <TourCard 
+                                tour={item} 
+                                onTourInquiry={(tour) => {
+                                    handleTourInquiry(tour);
+                                    // ИЗМЕНЕНИЕ: Отслеживание клика по кнопке "Подробнее" на карточке тура
+                                    trackGAEvent('button_click', { event_category: 'engagement', event_label: 'tour_card_details', tour_id: tour.id, tour_title: tour.title });
+                                    trackYMGoal('tour_card_details_click', { tour_id: tour.id });
+                                }} 
+                                index={index} 
+                            />
+                        )}
                     />
                 </Container>
             </Box>
@@ -144,7 +181,18 @@ export default function Home({ tours, reviews }) {
                     <SectionHeading>Выгодные предложения</SectionHeading>
                     <UniversalCarousel
                         items={specialOffers}
-                        renderItem={(item, index) => <TourCard tour={item} onTourInquiry={handleTourInquiry} index={index} />}
+                        renderItem={(item, index) => (
+                            <TourCard 
+                                tour={item} 
+                                onTourInquiry={(tour) => {
+                                    handleTourInquiry(tour);
+                                    // ИЗМЕНЕНИЕ: Отслеживание клика по кнопке "Подробнее" на карточке тура
+                                    trackGAEvent('button_click', { event_category: 'engagement', event_label: 'tour_card_details', tour_id: tour.id, tour_title: tour.title });
+                                    trackYMGoal('tour_card_details_click', { tour_id: tour.id });
+                                }} 
+                                index={index} 
+                            />
+                        )}
                     />
                 </Container>
             </Box>
@@ -171,7 +219,20 @@ export default function Home({ tours, reviews }) {
                 </Container>
             </Box>
             
-            <ContactSection id="contact-section" onFormSubmit={showNotification} />
+            {/* ИЗМЕНЕНИЕ: Добавлено отслеживание отправки формы ContactSection */}
+            <ContactSection 
+                id="contact-section" 
+                onFormSubmit={(options) => {
+                    showNotification(options);
+                    if (options.type === 'success') {
+                        trackGAEvent('form_submit', { event_category: 'forms', event_label: 'contact_form_success' });
+                        trackYMGoal('contact_form_submit_success');
+                    } else {
+                        trackGAEvent('form_error', { event_category: 'forms', event_label: 'contact_form_error', error_message: options.message });
+                        trackYMGoal('contact_form_submit_error');
+                    }
+                }} 
+            />
 
             <Modal isOpen={isTourModalOpen} onClose={onCloseTourModal} size="xl" isCentered>
                 <ModalOverlay />
@@ -184,7 +245,15 @@ export default function Home({ tours, reviews }) {
                                 tour={selectedTour}
                                 onFormSubmit={(options) => {
                                     showNotification(options);
-                                    if (options.type === 'success') onCloseTourModal();
+                                    if (options.type === 'success') {
+                                        onCloseTourModal();
+                                        // ИЗМЕНЕНИЕ: Отслеживание отправки формы заявки на тур
+                                        trackGAEvent('form_submit', { event_category: 'forms', event_label: 'tour_inquiry_form_success', tour_id: selectedTour.id, tour_title: selectedTour.title });
+                                        trackYMGoal('tour_inquiry_form_submit_success', { tour_id: selectedTour.id });
+                                    } else {
+                                        trackGAEvent('form_error', { event_category: 'forms', event_label: 'tour_inquiry_form_error', error_message: options.message, tour_id: selectedTour.id });
+                                        trackYMGoal('tour_inquiry_form_submit_error', { tour_id: selectedTour.id });
+                                    }
                                 }}
                                 onClose={onCloseTourModal}
                             />
@@ -210,6 +279,12 @@ export default function Home({ tours, reviews }) {
                                     showNotification(options);
                                     if (options.type === 'success') {
                                         onCloseReviewModal();
+                                        // ИЗМЕНЕНИЕ: Отслеживание отправки формы отзыва
+                                        trackGAEvent('form_submit', { event_category: 'forms', event_label: 'review_form_success' });
+                                        trackYMGoal('review_form_submit_success');
+                                    } else {
+                                        trackGAEvent('form_error', { event_category: 'forms', event_label: 'review_form_error', error_message: options.message });
+                                        trackYMGoal('review_form_submit_error');
                                     }
                                 }}
                             />

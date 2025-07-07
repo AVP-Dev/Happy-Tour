@@ -1,7 +1,6 @@
 // components/Footer.js
 import NextLink from 'next/link';
-import NextImage from 'next/image'; // Импортируем NextImage
-import { Box, Container, Link, Text, /* Image, */ VStack, HStack, SimpleGrid, Divider } from '@chakra-ui/react'; // Удаляем импорт Chakra UI Image
+import { Box, Container, Link, Text, Image, VStack, HStack, SimpleGrid, Divider } from '@chakra-ui/react';
 import { FaTelegramPlane, FaViber, FaWhatsapp, FaInstagram } from 'react-icons/fa';
 
 const Footer = () => {
@@ -12,6 +11,7 @@ const Footer = () => {
         { href: "https://www.instagram.com/happytour.by?igsh=ZHV6b3BjODFqMjZv", label: "Instagram", icon: FaInstagram },
     ];
 
+    // ИЗМЕНЕНИЕ: Добавлен `as="footer"` для семантической корректности.
     return (
         <Box as="footer" bg="#1a1a1a" color="white" borderTop="5px solid" borderColor="brand.500">
             <Container maxW="container.xl" py={{ base: 8, md: 10 }}>
@@ -20,15 +20,7 @@ const Footer = () => {
                         {/* Copyright and Logo */}
                         <VStack spacing={4} align={{ base: 'center', md: 'flex-start' }}>
                             <Link as={NextLink} href="/" display="flex" alignItems="center" _hover={{ opacity: 0.8 }}>
-                                {/* ИЗМЕНЕНИЕ: Используем NextImage для логотипа */}
-                                <Box position="relative" h="40px" w="150px"> {/* Обертка для задания размеров */}
-                                    <NextImage
-                                        src="/img/logo.png"
-                                        alt="Happy Tour Logo"
-                                        layout="fill" // Используем layout="fill" для адаптивного размера внутри родителя
-                                        objectFit="contain" // Убедимся, что логотип вписывается без обрезки
-                                    />
-                                </Box>
+                                <Image src="/img/logo.png" alt="Happy Tour Logo" h="40px" />
                                 <Text as="span" fontSize="1.5rem" fontWeight="700" ml={3} color="brand.400">
                                     Happy Tour
                                 </Text>

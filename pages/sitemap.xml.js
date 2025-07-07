@@ -1,77 +1,74 @@
-// pages/sitemap.xml.js
 import { SitemapStream, streamToPromise } from 'sitemap';
 import { createGzip } from 'zlib';
-import { Readable } from 'stream';
 import prisma from '../lib/prisma';
 
-/**
- * Эта страница не будет рендериться как компонент.
- * Вся логика выполняется на стороне сервера в getServerSideProps.
- * @returns {null}
- */
-const SitemapXml = () => null;
-
-export const getServerSideProps = async ({ res }) => {
+// getServerSideProps будет выполняться на стороне сервера при каждом запросе
+export async function getServerSideProps({ res }) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://happytour.by';
+    // Создаем новый поток для генерации карты сайта
+    const smStream = new SitemapStream({ hostname: 'https://happytour.by' });
+    const pipeline = smStream.pipe(createGzip());
+
+    // Добавляем статические страницы
+    const staticUrls = [
+      { url: '/', changefreq: 'daily', priority: 1.0 },
+      { url: '/offer', changefreq: 'monthly', priority: 0.8 },
+      { url: '/privacy', changefreq: 'monthly', priority: 0.5 },
+      // Добавьте другие статические страницы, если они есть
+    ];
+
+    staticUrls.forEach(url => {
+      smStream.write(url);
+    });
+
+    // Получаем динамические маршруты из базы данных (например, туры)
+    const tours = await prisma.tour.findMany({
+      where: {
+        published: true, // Убедитесь, что у вас есть такое поле или измените логику
+      },
+      select: {
+        id: true,
+        updatedAt: true, // Используем для lastmod
+      },
+    });
+
+    // Добавляем динамические страницы в карту сайта
+    tours.forEach(tour => {
+      smStream.write({
+        url: `/tour/${tour.id}`, // Убедитесь, что URL-структура верна
+        lastmod: tour.updatedAt,
+        changefreq: 'weekly',
+        priority: 0.9,
+      });
+    });
+
+    // Завершаем поток
+    smStream.end();
+
+    // Преобразуем поток в строку
+    const sitemap = await streamToPromise(pipeline);
 
     // Устанавливаем заголовки ответа
     res.setHeader('Content-Type', 'application/xml');
     res.setHeader('Content-Encoding', 'gzip');
 
-    // Получаем динамические маршруты туров из базы данных
-    const tours = await prisma.tour.findMany({
-      where: {
-        published: true,
-      },
-      select: {
-        slug: true,
-        updatedAt: true,
-      },
-    });
+    // Отправляем сгенерированную карту сайта
+    res.write(sitemap);
+    res.end();
 
-    const tourLinks = tours.map((tour) => ({
-      // Важно: убедитесь, что у вас есть страницы для туров по адресу /tours/[slug]
-      url: `/tours/${tour.slug}`,
-      changefreq: 'weekly',
-      priority: 0.8,
-      lastmod: tour.updatedAt.toISOString(), // Дата должна быть в формате ISO
-    }));
-
-    // Определяем статические страницы
-    const staticLinks = [
-      { url: '/', changefreq: 'daily', priority: 1.0 },
-      { url: '/offer', changefreq: 'monthly', priority: 0.5 },
-      { url: '/privacy', changefreq: 'monthly', priority: 0.5 },
-    ];
-
-    const allLinks = [...staticLinks, ...tourLinks];
-
-    // Создаем поток для генерации sitemap
-    const stream = new SitemapStream({ hostname: baseUrl });
-
-    // Создаем конвейер для сжатия в gzip и отправки в ответ
-    // Это более эффективно, чем буферизация всего файла в памяти
-    const pipeline = Readable.from(allLinks).pipe(stream).pipe(createGzip());
-
-    // Направляем сгенерированный и сжатый sitemap напрямую в ответ
-    pipeline.pipe(res).on('error', (e) => {
-      throw e;
-    });
-
-    // Ожидаем завершения потока
-    await streamToPromise(pipeline);
+    // Возвращаем пустые пропсы, так как страница не рендерит React-компонент
+    return { props: {} };
 
   } catch (error) {
-    console.error('Ошибка генерации Sitemap:', error);
+    console.error('Ошибка при генерации sitemap:', error);
+    // В случае ошибки отправляем статус 500
     res.statusCode = 500;
     res.end();
+    return { props: {} };
   }
+}
 
-  // Возвращаем пустые props, так как мы напрямую управляем ответом
-  return {
-    props: {},
-  };
-};
+// Компонент не нужен, так как getServerSideProps напрямую управляет ответом
+const SitemapPage = () => null;
 
-export default SitemapXml;
+export default SitemapPage;

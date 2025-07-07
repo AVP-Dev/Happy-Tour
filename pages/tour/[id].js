@@ -15,39 +15,38 @@ import {
   Spinner,
   Center
 } from '@chakra-ui/react';
-import { FaMapMarkerAlt, FaCalendarAlt, FaMoneyBillWave } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaMoneyBillWave } from 'react-icons/fa';
 import prisma from '../../lib/prisma';
-import Layout from '../../components/Layout';
 
 // Этот компонент будет отображать детальную информацию о туре
 const TourPage = ({ tour }) => {
-  // Если данные тура еще загружаются (на случай fallback) или не найдены
+  // Если данные тура еще загружаются или не найдены
   if (!tour) {
     return (
-      <Layout>
-        <Center h="50vh">
-          <Spinner size="xl" />
-        </Center>
-      </Layout>
+      <Center h="100vh">
+        <Spinner size="xl" />
+      </Center>
     );
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{tour.name} | Happy Tour</title>
-        <meta name="description" content={tour.description.substring(0, 160)} />
+        <meta name="description" content={tour.description ? tour.description.substring(0, 160) : ''} />
       </Head>
 
       <Box>
         {/* Главное изображение тура */}
-        <Box h={{ base: '300px', md: '500px' }} position="relative">
+        <Box h={{ base: '300px', md: '500px' }} position="relative" bg="gray.200">
           <Image
-            src={tour.mainImage || '/placeholder.jpg'}
+            src={tour.mainImage}
             alt={`Фотография тура ${tour.name}`}
             w="100%"
             h="100%"
             objectFit="cover"
+            // Надежная заглушка, если изображение не загрузится
+            fallbackSrc={`https://placehold.co/1200x500/E2E8F0/A0AEC0?text=Фото+тура`}
           />
           <Box
             position="absolute"
@@ -93,7 +92,6 @@ const TourPage = ({ tour }) => {
                 {tour.description}
               </Text>
               <Divider my={6} />
-              {/* Дополнительные детали, если они есть */}
             </VStack>
 
             {/* Боковая панель с ключевой информацией */}
@@ -105,6 +103,10 @@ const TourPage = ({ tour }) => {
               borderRadius="md"
               border="1px solid"
               borderColor="gray.200"
+              _dark={{ 
+                bg: 'gray.700',
+                borderColor: 'gray.600' 
+              }}
             >
               <Heading as="h3" size="md" textAlign="center">
                 Ключевая информация
@@ -113,12 +115,7 @@ const TourPage = ({ tour }) => {
               <HStack>
                 <FaMoneyBillWave size="1.5em" color="teal" />
                 <Text fontWeight="bold">Цена:</Text>
-                <Text>{tour.price} BYN</Text>
-              </HStack>
-              <HStack>
-                <FaCalendarAlt size="1.5em" color="orange" />
-                <Text fontWeight="bold">Продолжительность:</Text>
-                <Text>{tour.duration} дней</Text>
+                <Text>{tour.price} руб.</Text>
               </HStack>
               <HStack>
                 <FaMapMarkerAlt size="1.5em" color="blue" />
@@ -131,7 +128,7 @@ const TourPage = ({ tour }) => {
           </SimpleGrid>
         </Container>
       </Box>
-    </Layout>
+    </>
   );
 };
 
@@ -144,7 +141,6 @@ export async function getServerSideProps(context) {
       where: { id: id },
     });
 
-    // Если тур с таким ID не найден, показываем страницу 404
     if (!tour) {
       return {
         notFound: true,
@@ -158,7 +154,6 @@ export async function getServerSideProps(context) {
       updatedAt: tour.updatedAt.toISOString(),
     };
 
-    // Передаем данные тура в компонент страницы как props
     return {
       props: {
         tour: serializedTour,
@@ -166,7 +161,6 @@ export async function getServerSideProps(context) {
     };
   } catch (error) {
     console.error('Failed to fetch tour:', error);
-    // В случае ошибки на сервере, также показываем 404
     return {
       notFound: true,
     };

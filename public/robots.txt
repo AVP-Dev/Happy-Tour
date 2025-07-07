@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Запрещаем индексацию админ-панели
+Disallow: /admin/
+
+# Указываем путь к Sitemap
+Sitemap: https://happytour.by/sitemap.xml

@@ -7,7 +7,6 @@ export default async function handler(req, res) {
         return res.status(405).json({ message: 'Метод не разрешен' });
     }
 
-    // ИЗМЕНЕНИЕ: Принимаем единое поле 'contact'
     const { name, contact, message, recaptchaToken, tour } = req.body;
 
     if (!name || !contact) {
@@ -29,7 +28,6 @@ export default async function handler(req, res) {
         },
     });
 
-    // ИЗМЕНЕНИЕ: Обновляем шаблоны сообщений
     const emailHtml = `
         <h2>Новая заявка с сайта Happy Tour</h2>
         <p><strong>Имя:</strong> ${name}</p>
@@ -58,6 +56,8 @@ ${tour ? `
 
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+    // ИЗМЕНЕНИЕ: Получаем ID темы из переменных окружения
+    const TELEGRAM_TOPIC_ID = process.env.TELEGRAM_TOPIC_ID;
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
     try {
@@ -69,14 +69,18 @@ ${tour ? `
         });
 
         if (TELEGRAM_TOKEN && TELEGRAM_CHAT_ID) {
+            // ИЗМЕНЕНИЕ: Добавляем message_thread_id в тело запроса, если он есть
+            const telegramPayload = {
+                chat_id: TELEGRAM_CHAT_ID,
+                text: telegramMessage,
+                parse_mode: 'Markdown',
+                ...(TELEGRAM_TOPIC_ID && { message_thread_id: TELEGRAM_TOPIC_ID }),
+            };
+
             await fetch(telegramApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: telegramMessage,
-                    parse_mode: 'Markdown',
-                }),
+                body: JSON.stringify(telegramPayload),
             });
         }
 

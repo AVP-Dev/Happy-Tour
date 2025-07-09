@@ -36,7 +36,8 @@ export default function OfferPage() {
                 <title>Публичный договор (оферта) - Happy Tour</title>
                 <meta name="description" content="Публичный договор возмездного оказания туристических услуг ООО «ХэппиТрэвелКлаб»." />
             </Head>
-            <Box bg="white" py={{ base: 24, md: 32 }}>
+            {/* ИЗМЕНЕНИЕ: Убрал `bg="white"` чтобы фоновый паттерн был виден */}
+            <Box py={{ base: 24, md: 32 }}>
                 <Container maxW="container.lg">
                     <MainHeading>Публичный договор возмездного оказания туристических услуг</MainHeading>
                     

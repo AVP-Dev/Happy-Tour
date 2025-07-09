@@ -40,7 +40,8 @@ export default function PrivacyPage() {
                 <title>Политика конфиденциальности - Happy Tour</title>
                 <meta name="description" content="Политика конфиденциальности и соглашение на обработку персональных данных ООО «ХэппиТрэвелКлаб»." />
             </Head>
-            <Box bg="white" py={{ base: 24, md: 32 }}>
+            {/* ИЗМЕНЕНИЕ: Убрал `bg="white"` чтобы фоновый паттерн был виден */}
+            <Box py={{ base: 24, md: 32 }}>
                 <Container maxW="container.lg">
                     <MainHeading>Политика конфиденциальности</MainHeading>
                     <Subtitle>(Соглашение на обработку конфиденциальных личных данных)</Subtitle>

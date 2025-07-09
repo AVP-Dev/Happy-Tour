@@ -1,5 +1,5 @@
 // pages/api/contact.js
-import nodemailer from 'nodemailer';
+// ИЗМЕНЕНИЕ: Убрали импорт nodemailer
 import { validateRecaptcha } from '../../lib/recaptcha';
 
 export default async function handler(req, res) {
@@ -18,28 +18,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: recaptchaResult.message });
     }
 
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: true,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
-        },
-    });
-
-    const emailHtml = `
-        <h2>Новая заявка с сайта Happy Tour</h2>
-        <p><strong>Имя:</strong> ${name}</p>
-        <p><strong>Контакт:</strong> ${contact}</p>
-        <p><strong>Описание:</strong></p>
-        <p>${message.replace(/\n/g, '<br>') || 'Нет'}</p>
-        ${tour ? `
-            <hr>
-            <h3>Запрос по туру: ${tour.title}</h3>
-            <p><strong>Цена:</strong> ${tour.price} ${tour.currency}</p>
-        ` : ''}
-    `;
+    // ИЗМЕНЕНИЕ: Код для отправки email полностью удален.
 
     const telegramMessage = `
 *Новая заявка с сайта Happy Tour*
@@ -56,37 +35,41 @@ ${tour ? `
 
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-    // ИЗМЕНЕНИЕ: Получаем ID темы из переменных окружения
     const TELEGRAM_TOPIC_ID = process.env.TELEGRAM_TOPIC_ID;
+
+    // Проверяем, есть ли вообще способ отправить уведомление
+    if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
+        console.error("Критическая ошибка: Переменные для Telegram не установлены.");
+        return res.status(500).json({ message: 'Сервис уведомлений временно недоступен.' });
+    }
+
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
     try {
-        await transporter.sendMail({
-            from: `"Happy Tour" <${process.env.SMTP_USER}>`,
-            to: 'info@happytour.by',
-            subject: tour ? `Заявка на тур: ${tour.title}` : 'Новая заявка с сайта',
-            html: emailHtml,
+        // ИЗМЕНЕНИЕ: Отправка email удалена. Осталась только отправка в Telegram.
+        const telegramPayload = {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: telegramMessage,
+            parse_mode: 'Markdown',
+            ...(TELEGRAM_TOPIC_ID && { message_thread_id: TELEGRAM_TOPIC_ID }),
+        };
+
+        const telegramResponse = await fetch(telegramApiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(telegramPayload),
         });
 
-        if (TELEGRAM_TOKEN && TELEGRAM_CHAT_ID) {
-            // ИЗМЕНЕНИЕ: Добавляем message_thread_id в тело запроса, если он есть
-            const telegramPayload = {
-                chat_id: TELEGRAM_CHAT_ID,
-                text: telegramMessage,
-                parse_mode: 'Markdown',
-                ...(TELEGRAM_TOPIC_ID && { message_thread_id: TELEGRAM_TOPIC_ID }),
-            };
-
-            await fetch(telegramApiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(telegramPayload),
-            });
+        // Добавил проверку ответа от Telegram для лучшей отладки
+        if (!telegramResponse.ok) {
+            const telegramResult = await telegramResponse.json();
+            console.error("Telegram API Error:", telegramResult);
+            throw new Error('Не удалось отправить уведомление в Telegram.');
         }
 
         return res.status(200).json({ message: 'Спасибо! Ваша заявка отправлена. Мы свяжемся с вами в ближайшее время.' });
     } catch (error) {
-        console.error("Mail/Telegram Error:", error);
+        console.error("Telegram Error:", error.message);
         return res.status(500).json({ message: 'Произошла ошибка при отправке формы.' });
     }
 }

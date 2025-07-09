@@ -6,7 +6,6 @@ import {
   Heading,
   Text,
   Flex,
-  Badge,
   VStack,
   HStack,
   Divider,
@@ -25,7 +24,8 @@ import {
   ModalBody,
   useToast,
 } from '@chakra-ui/react';
-import { FaMapMarkerAlt, FaMoneyBillWave } from 'react-icons/fa';
+// ИЗМЕНЕНИЕ: Добавлены иконки для категорий
+import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 import prisma from '../../lib/prisma';
 import ContactForm from '../../components/ContactForm';
 
@@ -55,6 +55,23 @@ const TourPage = ({ tour }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
+  // ИЗМЕНЕНИЕ: Добавлена логика для определения деталей категории, как на главной
+  const getCategoryDetails = (category) => {
+    switch (category) {
+      case 'hot':
+        return { icon: FaHotjar, color: 'red', label: 'Горящий' };
+      case 'popular':
+        return { icon: FaStar, color: 'orange', label: 'Популярный' };
+      case 'special':
+        return { icon: FaGift, color: 'purple', label: 'Выгодный' };
+      default:
+        // Возвращаем пустой объект, если категория не задана, чтобы ничего не отображать
+        return null;
+    }
+  };
+
+  const categoryDetails = tour ? getCategoryDetails(tour.category) : null;
+
   if (!tour) {
     return (
       <Center h="100vh">
@@ -63,7 +80,6 @@ const TourPage = ({ tour }) => {
     );
   }
   
-  // Функция для показа уведомлений (успех/ошибка)
   const showNotification = (options) => {
     toast({
         title: options.type === 'success' ? 'Успешно!' : 'Ошибка!',
@@ -83,10 +99,10 @@ const TourPage = ({ tour }) => {
       </Head>
 
       <Box>
-        {/* ИЗМЕНЕНИЕ: Улучшенная секция с главным изображением */}
         <Box h={{ base: '300px', md: '500px' }} position="relative" bg="gray.200">
+          {/* ИЗМЕНЕНИЕ: Исправлен источник изображения на tour.image_url */}
           <NextImage
-            src={tour.mainImage || `https://placehold.co/1200x500/E2E8F0/A0AEC0?text=Happy+Tour`}
+            src={tour.image_url || `https://placehold.co/1200x500/E2E8F0/A0AEC0?text=Happy+Tour`}
             alt={`Фотография тура ${tour.name}`}
             layout="fill"
             objectFit="cover"
@@ -113,21 +129,13 @@ const TourPage = ({ tour }) => {
               <Heading as="h1" size={{ base: 'xl', md: '2xl' }} mb={4} textShadow="0 2px 4px rgba(0,0,0,0.5)">
                 {tour.name}
               </Heading>
-              <HStack spacing={4}>
-                <Badge colorScheme="teal" fontSize="md" p={2} variant="solid">
-                  {tour.country}
-                </Badge>
-                <Badge colorScheme="orange" fontSize="md" p={2} variant="solid">
-                  {tour.city}
-                </Badge>
-              </HStack>
+              {/* ИЗМЕНЕНИЕ: Удалены бейджи страны и города */}
             </Flex>
           </Container>
         </Box>
 
         <Container maxW="container.xl" py={10}>
           <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={{base: 10, lg: 8}}>
-            {/* ИЗМЕНЕНИЕ: Основной контент теперь тоже в "карточке" для консистентности */}
             <VStack spacing={6} align="stretch" gridColumn={{ base: 'auto', lg: 'span 2' }}>
               <Heading as="h2" size="lg">
                 Описание тура
@@ -139,7 +147,6 @@ const TourPage = ({ tour }) => {
               </Box>
             </VStack>
 
-            {/* ИЗМЕНЕНИЕ: Полностью переработанная боковая панель */}
             <VStack
               spacing={6}
               align="stretch"
@@ -160,18 +167,22 @@ const TourPage = ({ tour }) => {
                 <Text fontSize="5xl" fontWeight="extrabold" color="brand.600" lineHeight="1">
                   {tour.price}
                 </Text>
+                {/* ИЗМЕНЕНИЕ: Валюта теперь берется из данных тура */}
                 <Text fontSize="xl" color="gray.600">
-                  руб.
+                  {tour.currency}
                 </Text>
               </Flex>
 
               <Divider />
 
-              <InfoItem icon={FaMapMarkerAlt} label="Тип тура">
-                <Tag size="lg" variant="subtle" colorScheme="blue" borderRadius="full">
-                  {tour.tourType}
-                </Tag>
-              </InfoItem>
+              {/* ИЗМЕНЕНИЕ: Отображаем категорию тура, если она есть */}
+              {categoryDetails && (
+                <InfoItem icon={categoryDetails.icon} label="Категория">
+                  <Tag size="lg" variant="subtle" colorScheme={categoryDetails.color} borderRadius="full">
+                    {categoryDetails.label}
+                  </Tag>
+                </InfoItem>
+              )}
 
               <Button colorScheme="brand" size="lg" w="100%" mt={4} onClick={onOpen}>
                 Оставить заявку
@@ -181,7 +192,6 @@ const TourPage = ({ tour }) => {
         </Container>
       </Box>
 
-      {/* Модальное окно для формы заявки */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
         <ModalOverlay />
         <ModalContent>

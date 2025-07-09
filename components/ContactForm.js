@@ -1,6 +1,8 @@
 // components/ContactForm.js
 import { useState, useEffect, useCallback } from 'react';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+// ИЗМЕНЕНИЕ: Удаляем импорт useGoogleReCaptcha
+// import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import Script from 'next/script'; // Импортируем Script для динамической загрузки reCAPTCHA
 import {
     Box,
     Button,
@@ -14,21 +16,23 @@ import {
     Text,
     Heading,
     Image,
+    useToast, // Добавляем useToast для уведомлений
 } from '@chakra-ui/react';
 
 export default function ContactForm({ onFormSubmit, onClose, tour }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const initialMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
     
-    // ИЗМЕНЕНИЕ: Структура полей формы согласно твоим требованиям
     const [formData, setFormData] = useState({
         name: '',
         contact: '', // Единое поле для контакта
         message: initialMessage
     });
     const [errors, setErrors] = useState({});
+    const toast = useToast(); // Инициализируем useToast
 
-    const { executeRecaptcha } = useGoogleReCaptcha();
+    // ИЗМЕНЕНИЕ: Удаляем executeRecaptcha, будем использовать grecaptcha напрямую
+    // const { executeRecaptcha } = useGoogleReCaptcha();
 
     useEffect(() => {
         const newMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
@@ -43,7 +47,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         }
     };
 
-    // ИЗМЕНЕНИЕ: Логика валидации
     const validateForm = () => {
         const newErrors = {};
         if (!formData.name.trim()) {
@@ -61,13 +64,42 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (!validateForm() || !executeRecaptcha) return;
+        if (!validateForm()) return;
 
         setIsSubmitting(true);
-        const recaptchaToken = await executeRecaptcha('contact_form');
+
+        let recaptchaToken = '';
+        try {
+            // ИЗМЕНЕНИЕ: Мануальный вызов reCAPTCHA
+            if (typeof grecaptcha !== 'undefined' && grecaptcha.ready) {
+                await grecaptcha.ready(async function() {
+                    recaptchaToken = await grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'contact_form' });
+                });
+            } else {
+                toast({
+                    title: "Ошибка reCAPTCHA",
+                    description: "reCAPTCHA не загружена. Пожалуйста, попробуйте позже.",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
+                setIsSubmitting(false);
+                return;
+            }
+        } catch (recaptchaError) {
+            console.error("Ошибка при получении токена reCAPTCHA:", recaptchaError);
+            toast({
+                title: "Ошибка reCAPTCHA",
+                description: "Не удалось получить токен reCAPTCHA. Пожалуйста, попробуйте снова.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            setIsSubmitting(false);
+            return;
+        }
 
         try {
-            // ВАЖНО: API теперь будет получать поле 'contact'
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -85,10 +117,18 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [executeRecaptcha, formData, onFormSubmit, onClose]);
+    }, [formData, onFormSubmit, onClose, toast]);
 
     return (
         <Box as="form" onSubmit={handleSubmit} noValidate>
+            {/* ИЗМЕНЕНИЕ: Добавляем динамическую загрузку скрипта reCAPTCHA */}
+            <Script
+                src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
+                strategy="afterInteractive"
+                async
+                defer
+            />
+
             <VStack spacing={4}>
                 {tour && (
                     <Flex align="center" w="100%" p={3} bg="gray.50" borderRadius="md">

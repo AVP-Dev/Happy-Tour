@@ -79,9 +79,9 @@ const Header = () => {
     const linkColor = isScrolled || isNotHomePage ? 'gray.700' : 'white';
     const textShadow = isScrolled || isNotHomePage ? 'none' : '1px 1px 3px rgba(0,0,0,0.4)';
 
-    // Этот Box уже использует семантический тег <header>. Изменения не требуются.
+    // ИЗМЕНЕНИЕ: Добавлен className="Header" к корневому Box
     return (
-        <Box as="header" {...headerStyles}>
+        <Box as="header" className="Header" {...headerStyles}>
             <Container maxW="container.xl">
                 <Flex as="nav" align="center" justify="space-between" py={{ base: 1, md: 2 }}>
                     <Link as={NextLink} href="/" display="flex" alignItems="center" _hover={{ textDecoration: 'none' }}>

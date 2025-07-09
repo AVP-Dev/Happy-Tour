@@ -3,7 +3,8 @@ import { Box, Button, Container, Flex, Heading, Text, VStack } from '@chakra-ui/
 
 const Hero = ({ onSearchClick }) => {
     return (
-        <Box as="section" id="home" position="relative">
+        // ИЗМЕНЕНИЕ: Добавлен className="Hero" к корневому Box
+        <Box as="section" id="home" className="Hero" position="relative">
             <Flex
                 align="center"
                 justify="center"

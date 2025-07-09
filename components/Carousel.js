@@ -85,18 +85,8 @@ const UniversalCarousel = ({
   }, [swiperInstance]);
 
   return (
-    // ИЗМЕНЕНИЕ: Добавлен sx prop для переопределения стандартного стиля Swiper.
-    // Это позволяет кнопкам навигации и пагинации отображаться корректно,
-    // не будучи "обрезанными" контейнером карусели.
-    <Box 
-      position="relative" 
-      px={{ base: 0, md: 12 }}
-      sx={{
-        '.swiper': {
-          overflow: 'visible',
-        },
-      }}
-    >
+    // ИЗМЕНЕНИЕ: Убран sx prop, который ломал верстку страницы.
+    <Box position="relative" px={{ base: 0, md: 12 }}>
       <Swiper {...defaultSettings}>
         {items.map((item) => (
           <SwiperSlide key={item.id} style={{ height: 'auto' }}>
@@ -107,6 +97,7 @@ const UniversalCarousel = ({
         ))}
       </Swiper>
       
+      {/* Кнопка "назад" для навигации */}
       <IconButton
         ref={navigationPrevRef}
         aria-label="Previous slide"
@@ -116,10 +107,12 @@ const UniversalCarousel = ({
         top="50%"
         left={{ base: -2, md: 0 }}
         transform="translateY(-50%)"
-        zIndex="docked"
+        // ИЗМЕНЕНИЕ: Увеличен zIndex, чтобы кнопки были гарантированно поверх слайдов.
+        zIndex={20}
         boxShadow="md"
         display={{ base: 'none', md: 'flex' }}
       />
+      {/* Кнопка "вперед" для навигации */}
       <IconButton
         ref={navigationNextRef}
         aria-label="Next slide"
@@ -129,11 +122,13 @@ const UniversalCarousel = ({
         top="50%"
         right={{ base: -2, md: 0 }}
         transform="translateY(-50%)"
-        zIndex="docked"
+        // ИЗМЕНЕНИЕ: Увеличен zIndex, чтобы кнопки были гарантированно поверх слайдов.
+        zIndex={20}
         boxShadow="md"
         display={{ base: 'none', md: 'flex' }}
       />
       
+      {/* Элемент пагинации (точки) */}
       <HStack
         ref={paginationRef}
         justify="center"

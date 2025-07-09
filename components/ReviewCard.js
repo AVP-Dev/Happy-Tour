@@ -28,7 +28,9 @@ const ReviewCard = ({ review, onReadMore }) => {
       borderTop="4px solid"
       borderColor="brand.400"
       position="relative"
-      height={{ base: 'auto', md: '300px' }} // Фиксированная высота для десктопа
+      // ИЗМЕНЕНИЕ: Убрана фиксированная высота. Теперь карточка будет гибкой.
+      // height="100%" заставит ее растянуться до высоты самой высокой карточки в ряду.
+      height="100%"
       textAlign="left"
       _before={{
         content: '""',
@@ -42,16 +44,20 @@ const ReviewCard = ({ review, onReadMore }) => {
         zIndex: 0,
       }}
     >
-      <VStack spacing={4} align="stretch" flex="1" zIndex={1}>
+      {/* ИЗМЕНЕНИЕ: Внутренний VStack теперь тоже растягивается,
+          чтобы подвал всегда был прижат к низу. */}
+      <VStack spacing={4} align="stretch" flex="1" zIndex={1} direction="column">
         <Flex justify="space-between" align="center">
           <Heading as="h3" size="sm">{review.author}</Heading>
           {renderStars(review.rating)}
         </Flex>
 
+        {/* flexGrow={1} заставляет текст занимать все доступное пространство */}
         <Text fontStyle="italic" color="gray.600" noOfLines={5} flexGrow={1}>
           "{review.text}"
         </Text>
         
+        {/* mt="auto" прижимает этот блок к низу карточки */}
         <Flex justify="space-between" align="center" mt="auto">
             <Text fontSize="sm" color="gray.500">
                 {new Date(review.date).toLocaleDateString('ru-RU')}

@@ -36,12 +36,14 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
             transform: 'translateY(-5px)',
             boxShadow: 'xl',
         }}
-        height="100%"
+        height="100%" // Важно, чтобы карточки в ряду были одной высоты
         role="group"
     >
       <Box position="relative">
-        <AspectRatio ratio={16 / 9}>
-            {/* Используем tour.image_url, если он есть, иначе заглушку */}
+        {/* ИЗМЕНЕНИЕ: AspectRatio теперь является прямым контейнером для NextImage.
+            Это самый надежный способ зарезервировать точное место для изображения
+            до его загрузки, что полностью устраняет "прыжок" макета. */}
+        <AspectRatio ratio={16 / 9} w="100%">
             <NextImage
               src={tour.image_url || 'https://placehold.co/600x400/9AE6B4/276749?text=Happy+Tour'}
               alt={tour.title || 'Тур'}
@@ -49,7 +51,6 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
               objectFit="cover"
               priority={index < 2} 
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              style={{ borderRadius: '0.75rem 0.75rem 0 0' }}
             />
         </AspectRatio>
         <Tag
@@ -69,12 +70,10 @@ const TourCard = ({ tour, onTourInquiry, index }) => {
       </Box>
 
       <VStack flex="1" p={5} align="stretch" spacing={3}>
-        {/* Заголовок тура: ограничение в 2 строки */}
         <Heading as="h3" size="md" noOfLines={2} title={tour.title}>
           {tour.title}
         </Heading>
         
-        {/* Описание тура: убрано ограничение по строкам, чтобы текст помещался полностью */}
         <Text fontSize="sm" color="gray.600" flexGrow={1}>
           {tour.description}
         </Text>

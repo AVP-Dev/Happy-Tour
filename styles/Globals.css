@@ -62,14 +62,6 @@ body {
     overflow-x: hidden; /* Protection against accidental horizontal scrolling */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-
-    /* --- НОВОЕ: Добавление паттерна на фон --- */
-    background-image: url('/pattern-world-map-travel.webp'); /* Путь к твоему изображению */
-    background-repeat: repeat; /* Повторяем паттерн */
-    background-size: 250px auto; /* Уменьшаем размер паттерна, чтобы он был ненавязчивым. Можешь настроить это значение */
-    background-attachment: fixed; /* Фиксируем фон при прокрутке */
-    background-blend-mode: multiply; /* Смешиваем фон с цветом body для ненавязчивости */
-    background-color: rgba(248, 249, 250, 0.7); /* Добавляем полупрозрачный фон, чтобы паттерн был менее ярким */
 }
 
 /* --- ИЗМЕНЕНИЕ: Заголовки используют --font-family-headings (Montserrat) --- */
@@ -160,10 +152,4 @@ section {
 @keyframes modalFadeIn {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
-}
-
-/* --- НОВОЕ: Стили для исключения паттерна из Hero и Header --- */
-.Hero, .Header { /* Убедись, что у твоих компонентов Hero и Header есть соответствующие классы */
-    background-image: none !important; /* Удаляем фоновое изображение для этих блоков */
-    background-color: var(--white-color) !important; /* Возвращаем их исходный цвет фона */
 }

@@ -1,7 +1,7 @@
 // components/FloatingContact.js
 import {
     Box,
-    Flex, // ИСПРАВЛЕНО: Добавлен импорт Flex
+    Flex,
     IconButton,
     useDisclosure,
     Modal,
@@ -41,7 +41,8 @@ const FloatingContact = () => {
                     fontSize="2xl"
                     colorScheme="brand"
                     position="fixed"
-                    bottom="30px"
+                    // ИЗМЕНЕНИЕ: Увеличен отступ снизу, чтобы кнопка была выше значка reCAPTCHA.
+                    bottom="95px"
                     right="30px"
                     zIndex="sticky"
                     boxShadow="2xl"

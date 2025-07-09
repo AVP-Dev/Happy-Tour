@@ -85,7 +85,9 @@ const UniversalCarousel = ({
   }, [swiperInstance]);
 
   return (
-    <Box position="relative" px={{ base: 0, md: 12 }}>
+    // ИЗМЕНЕНИЕ: Добавлен нижний отступ (pb), чтобы создать место для точек пагинации.
+    // Это предотвратит их "обрезание" или наложение на следующий контент.
+    <Box position="relative" px={{ base: 0, md: 12 }} pb="50px">
       <Swiper {...defaultSettings}>
         {items.map((item) => (
           <SwiperSlide key={item.id} style={{ height: 'auto' }}>
@@ -96,7 +98,6 @@ const UniversalCarousel = ({
         ))}
       </Swiper>
       
-      {/* Кнопка "назад" для навигации */}
       <IconButton
         ref={navigationPrevRef}
         aria-label="Previous slide"
@@ -108,10 +109,8 @@ const UniversalCarousel = ({
         transform="translateY(-50%)"
         zIndex={20}
         boxShadow="md"
-        // ИЗМЕНЕНИЕ: Кнопки теперь скрыты на всех экранах
         display='none'
       />
-      {/* Кнопка "вперед" для навигации */}
       <IconButton
         ref={navigationNextRef}
         aria-label="Next slide"
@@ -123,11 +122,9 @@ const UniversalCarousel = ({
         transform="translateY(-50%)"
         zIndex={20}
         boxShadow="md"
-        // ИЗМЕНЕНИЕ: Кнопки теперь скрыты на всех экранах
         display='none'
       />
       
-      {/* Элемент пагинации (точки) */}
       <HStack
         ref={paginationRef}
         justify="center"

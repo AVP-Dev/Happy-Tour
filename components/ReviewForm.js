@@ -67,19 +67,20 @@ export default function ReviewForm({ onClose, onReviewSubmitted }) {
         e.preventDefault();
         if (!validateForm()) return;
         
+        // ИЗМЕНЕНИЕ: Аналогичная проверка на доступность executeRecaptcha.
         if (!executeRecaptcha) {
+            console.error('Функция executeRecaptcha недоступна.');
             onReviewSubmitted?.({ type: 'error', message: 'Ошибка загрузки reCAPTCHA. Попробуйте обновить страницу.' });
             return;
         }
 
         setIsSubmitting(true);
-        const recaptchaToken = await executeRecaptcha('review_form');
 
         try {
+            const recaptchaToken = await executeRecaptcha('review_form');
             const response = await fetch('/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // ИЗМЕНЕНИЕ: Отправляем токен под стандартизированным именем `recaptchaToken`
                 body: JSON.stringify({ ...formData, rating, recaptchaToken }),
             });
             const data = await response.json();
@@ -91,6 +92,7 @@ export default function ReviewForm({ onClose, onReviewSubmitted }) {
                 throw new Error(data.message || 'Произошла неизвестная ошибка.');
             }
         } catch (error) {
+            console.error('Ошибка при отправке отзыва:', error);
             onReviewSubmitted?.({ type: 'error', message: error.message });
         } finally {
             setIsSubmitting(false);

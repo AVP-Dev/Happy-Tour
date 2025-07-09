@@ -20,10 +20,9 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const initialMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
     
-    // ИЗМЕНЕНИЕ: Структура полей формы согласно твоим требованиям
     const [formData, setFormData] = useState({
         name: '',
-        contact: '', // Единое поле для контакта
+        contact: '',
         message: initialMessage
     });
     const [errors, setErrors] = useState({});
@@ -43,7 +42,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         }
     };
 
-    // ИЗМЕНЕНИЕ: Логика валидации
     const validateForm = () => {
         const newErrors = {};
         if (!formData.name.trim()) {
@@ -61,13 +59,20 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (!validateForm() || !executeRecaptcha) return;
+        if (!validateForm()) return;
+
+        // ИЗМЕНЕНИЕ: Добавлена явная проверка на доступность executeRecaptcha.
+        // Это ключевой момент для предотвращения ошибок в модальных окнах.
+        if (!executeRecaptcha) {
+            console.error('Функция executeRecaptcha недоступна.');
+            onFormSubmit?.({ type: 'error', message: 'Ошибка проверки reCAPTCHA. Попробуйте обновить страницу.' });
+            return;
+        }
 
         setIsSubmitting(true);
-        const recaptchaToken = await executeRecaptcha('contact_form');
-
+        
         try {
-            // ВАЖНО: API теперь будет получать поле 'contact'
+            const recaptchaToken = await executeRecaptcha('contact_form');
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -78,9 +83,11 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                 onFormSubmit?.({ type: 'success', message: data.message || 'Ваше сообщение успешно отправлено!' });
                 onClose?.();
             } else {
+                // Используем сообщение об ошибке с сервера, если оно есть
                 onFormSubmit?.({ type: 'error', message: data.message || 'Произошла ошибка.' });
             }
         } catch (error) {
+            console.error('Ошибка при отправке формы контактов:', error);
             onFormSubmit?.({ type: 'error', message: 'Не удалось связаться с сервером.' });
         } finally {
             setIsSubmitting(false);

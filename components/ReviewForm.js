@@ -1,8 +1,6 @@
 // components/ReviewForm.js
 import React, { useState, useCallback } from 'react';
-// ИЗМЕНЕНИЕ: Удаляем импорт useGoogleReCaptcha
-// import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import Script from 'next/script'; // Импортируем Script для динамической загрузки reCAPTCHA
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { FaStar } from 'react-icons/fa';
 import {
     Box,
@@ -16,7 +14,6 @@ import {
     HStack,
     Icon,
     IconButton,
-    useToast, // Добавляем useToast для уведомлений
 } from '@chakra-ui/react';
 
 const StarRating = ({ rating, setRating }) => {
@@ -47,9 +44,7 @@ export default function ReviewForm({ onClose, onReviewSubmitted }) {
     const [rating, setRating] = useState(5);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    // ИЗМЕНЕНИЕ: Удаляем executeRecaptcha, будем использовать grecaptcha напрямую
-    // const { executeRecaptcha } = useGoogleReCaptcha();
-    const toast = useToast(); // Инициализируем useToast
+    const { executeRecaptcha } = useGoogleReCaptcha();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -72,43 +67,19 @@ export default function ReviewForm({ onClose, onReviewSubmitted }) {
         e.preventDefault();
         if (!validateForm()) return;
         
-        setIsSubmitting(true);
-
-        let recaptchaToken = '';
-        try {
-            // ИЗМЕНЕНИЕ: Мануальный вызов reCAPTCHA
-            if (typeof grecaptcha !== 'undefined' && grecaptcha.ready) {
-                await grecaptcha.ready(async function() {
-                    recaptchaToken = await grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'review_form' });
-                });
-            } else {
-                toast({
-                    title: "Ошибка reCAPTCHA",
-                    description: "reCAPTCHA не загружена. Пожалуйста, попробуйте обновить страницу.",
-                    status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                });
-                setIsSubmitting(false);
-                return;
-            }
-        } catch (recaptchaError) {
-            console.error("Ошибка при получении токена reCAPTCHA:", recaptchaError);
-            toast({
-                title: "Ошибка reCAPTCHA",
-                description: "Не удалось получить токен reCAPTCHA. Пожалуйста, попробуйте снова.",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-            setIsSubmitting(false);
+        if (!executeRecaptcha) {
+            onReviewSubmitted?.({ type: 'error', message: 'Ошибка загрузки reCAPTCHA. Попробуйте обновить страницу.' });
             return;
         }
+
+        setIsSubmitting(true);
+        const recaptchaToken = await executeRecaptcha('review_form');
 
         try {
             const response = await fetch('/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                // ИЗМЕНЕНИЕ: Отправляем токен под стандартизированным именем `recaptchaToken`
                 body: JSON.stringify({ ...formData, rating, recaptchaToken }),
             });
             const data = await response.json();
@@ -124,18 +95,10 @@ export default function ReviewForm({ onClose, onReviewSubmitted }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [formData, rating, onReviewSubmitted, onClose, toast]);
+    }, [executeRecaptcha, formData, rating, onReviewSubmitted, onClose]);
 
     return (
         <Box as="form" onSubmit={handleSubmit} noValidate>
-            {/* ИЗМЕНЕНИЕ: Добавляем динамическую загрузку скрипта reCAPTCHA */}
-            <Script
-                src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-                strategy="afterInteractive"
-                async
-                defer
-            />
-
             <VStack spacing={4}>
                 <FormControl>
                     <FormLabel textAlign="center" width="100%">Ваша оценка</FormLabel>

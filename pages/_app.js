@@ -1,13 +1,16 @@
+// pages/_app.js
 import Head from 'next/head';
 import { ChakraProvider } from '@chakra-ui/react';
 import { SessionProvider } from 'next-auth/react';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import theme from '../theme';
 import Layout from '../components/Layout';
-import '../styles/Globals.css'; // Подключаем глобальные стили
+
+// Убедись, что здесь нет импорта для background.css или emotion/react
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
-    // Проверяем, является ли текущий маршрут админ-панелью
     const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
     return (
         <ChakraProvider theme={theme}>
@@ -15,17 +18,17 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <title>Happy Tour</title>
             </Head>
-            <SessionProvider session={session}>
-                {isAdminRoute ? (
-                    // Если это админка, рендерим компонент без основного Layout
-                    <Component {...pageProps} />
-                ) : (
-                    // Для всех остальных страниц используем основной Layout
-                    <Layout>
+            <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey}>
+                <SessionProvider session={session}>
+                    {isAdminRoute ? (
                         <Component {...pageProps} />
-                    </Layout>
-                )}
-            </SessionProvider>
+                    ) : (
+                        <Layout>
+                            <Component {...pageProps} />
+                        </Layout>
+                    )}
+                </SessionProvider>
+            </GoogleReCaptchaProvider>
         </ChakraProvider>
     );
 }

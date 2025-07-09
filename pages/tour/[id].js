@@ -7,11 +7,13 @@ import {
   Text,
   Flex,
   VStack,
-  Divider,
+  HStack,
   SimpleGrid,
   Spinner,
   Center,
   Button,
+  Icon,
+  Tag,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -21,12 +23,30 @@ import {
   ModalBody,
   useToast,
 } from '@chakra-ui/react';
+// ИЗМЕНЕНИЕ: Возвращаем иконки для категорий
+import { FaHotjar, FaStar, FaGift } from 'react-icons/fa';
 import prisma from '../../lib/prisma';
 import ContactForm from '../../components/ContactForm';
 
 const TourPage = ({ tour }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+
+  // ИЗМЕНЕНИЕ: Возвращаем логику для определения деталей категории
+  const getCategoryDetails = (category) => {
+    switch (category) {
+      case 'hot':
+        return { icon: FaHotjar, color: 'red', label: 'Горящий' };
+      case 'popular':
+        return { icon: FaStar, color: 'orange', label: 'Популярный' };
+      case 'special':
+        return { icon: FaGift, color: 'purple', label: 'Выгодный' };
+      default:
+        return null;
+    }
+  };
+
+  const categoryDetails = tour ? getCategoryDetails(tour.category) : null;
 
   if (!tour) {
     return (
@@ -89,13 +109,11 @@ const TourPage = ({ tour }) => {
         </Box>
 
         <Container maxW="container.xl" py={10}>
-          {/* ИЗМЕНЕНИЕ: Уменьшен отступ между колонками */}
           <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={{base: 10, lg: 6}}>
             <VStack spacing={4} align="stretch" gridColumn={{ base: 'auto', lg: 'span 2' }}>
               <Heading as="h2" size="lg">
                 Описание тура
               </Heading>
-              {/* ИЗМЕНЕНИЕ: Уменьшены внутренние отступы */}
               <Box p={6} bg="rgba(255, 255, 255, 0.85)" borderRadius="lg" boxShadow="md">
                 <Text fontSize="md" lineHeight="tall">
                   {tour.description}
@@ -103,11 +121,10 @@ const TourPage = ({ tour }) => {
               </Box>
             </VStack>
 
-            {/* ИЗМЕНЕНИЕ: Боковая панель стала компактнее */}
             <VStack
-              spacing={4} // Уменьшен отступ
+              spacing={4}
               align="stretch"
-              p={6} // Уменьшены внутренние отступы
+              p={6}
               bg="rgba(255, 255, 255, 0.85)"
               borderRadius="lg"
               boxShadow="md"
@@ -121,7 +138,6 @@ const TourPage = ({ tour }) => {
               
               <Flex direction="column" align="center" justify="center" bg="white" p={4} borderRadius="md" boxShadow="inner">
                 <Text fontSize="sm" color="gray.500">Цена от</Text>
-                {/* ИЗМЕНЕНИЕ: Уменьшен размер шрифта цены */}
                 <Text fontSize="4xl" fontWeight="extrabold" color="brand.600" lineHeight="1.1">
                   {tour.price}
                 </Text>
@@ -130,9 +146,17 @@ const TourPage = ({ tour }) => {
                 </Text>
               </Flex>
 
-              <Divider />
-
-              {/* ИЗМЕНЕНИЕ: Полностью удален блок с категорией тура */}
+              {/* ИЗМЕНЕНИЕ: Возвращаем тег с категорией тура */}
+              {categoryDetails && (
+                <Center>
+                  <Tag size="lg" variant="solid" colorScheme={categoryDetails.color} borderRadius="full">
+                    <HStack spacing={2}>
+                      <Icon as={categoryDetails.icon} />
+                      <Text>{categoryDetails.label}</Text>
+                    </HStack>
+                  </Tag>
+                </Center>
+              )}
 
               <Button colorScheme="brand" size="lg" w="100%" onClick={onOpen}>
                 Оставить заявку

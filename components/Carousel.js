@@ -85,7 +85,6 @@ const UniversalCarousel = ({
   }, [swiperInstance]);
 
   return (
-    // ИЗМЕНЕНИЕ: Убран sx prop, который ломал верстку страницы.
     <Box position="relative" px={{ base: 0, md: 12 }}>
       <Swiper {...defaultSettings}>
         {items.map((item) => (
@@ -107,10 +106,10 @@ const UniversalCarousel = ({
         top="50%"
         left={{ base: -2, md: 0 }}
         transform="translateY(-50%)"
-        // ИЗМЕНЕНИЕ: Увеличен zIndex, чтобы кнопки были гарантированно поверх слайдов.
         zIndex={20}
         boxShadow="md"
-        display={{ base: 'none', md: 'flex' }}
+        // ИЗМЕНЕНИЕ: Кнопки теперь скрыты на всех экранах
+        display='none'
       />
       {/* Кнопка "вперед" для навигации */}
       <IconButton
@@ -122,10 +121,10 @@ const UniversalCarousel = ({
         top="50%"
         right={{ base: -2, md: 0 }}
         transform="translateY(-50%)"
-        // ИЗМЕНЕНИЕ: Увеличен zIndex, чтобы кнопки были гарантированно поверх слайдов.
         zIndex={20}
         boxShadow="md"
-        display={{ base: 'none', md: 'flex' }}
+        // ИЗМЕНЕНИЕ: Кнопки теперь скрыты на всех экранах
+        display='none'
       />
       
       {/* Элемент пагинации (точки) */}

@@ -4,7 +4,7 @@ import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import Head from 'next/head';
 import Layout from '../components/Layout';
 import theme from '../theme';
-import '../styles/Globals.css';
+import '../styles/Globals.css'; // ВОЗВРАЩЕН ИМПОРТ ГЛОБАЛЬНЫХ СТИЛЕЙ
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');

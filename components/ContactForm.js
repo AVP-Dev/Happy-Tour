@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -12,11 +12,14 @@ import {
   Link,
   Text,
   FormErrorMessage,
+  Flex,
+  Heading,
+  Image,
 } from '@chakra-ui/react';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import NextLink from 'next/link';
 
-const ContactForm = ({ tourName, onClose }) => {
+export default function ContactForm({ onClose, tour }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -26,6 +29,12 @@ const ContactForm = ({ tourName, onClose }) => {
   const [errors, setErrors] = useState({});
   const toast = useToast();
   const { executeRecaptcha } = useGoogleReCaptcha();
+
+  useEffect(() => {
+    if (tour) {
+      setMessage(`Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.`);
+    }
+  }, [tour]);
 
   const validate = () => {
     const newErrors = {};
@@ -42,7 +51,7 @@ const ContactForm = ({ tourName, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
     if (!validate()) {
@@ -84,15 +93,16 @@ const ContactForm = ({ tourName, onClose }) => {
           phone,
           email,
           message,
-          tourName: tourName || 'Не указан',
+          tourName: tour ? tour.title : 'Не указан',
           token,
         }),
       });
 
+      const data = await response.json();
       if (response.ok) {
         toast({
           title: 'Заявка успешно отправлена',
-          description: 'Мы свяжемся с вами в ближайшее время.',
+          description: data.message || 'Мы свяжемся с вами в ближайшее время.',
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -107,8 +117,7 @@ const ContactForm = ({ tourName, onClose }) => {
           onClose();
         }
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Ошибка при отправке формы');
+        throw new Error(data.message || 'Ошибка при отправке формы');
       }
     } catch (error) {
       toast({
@@ -121,56 +130,54 @@ const ContactForm = ({ tourName, onClose }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [executeRecaptcha, name, phone, email, message, tour, isAgreed, onClose, toast]);
 
   return (
-    <Box as="form" onSubmit={handleSubmit}>
+    <Box as="form" onSubmit={handleSubmit} noValidate>
       <VStack spacing={4}>
-        <FormControl isRequired isInvalid={errors.name}>
-          <FormLabel>Имя</FormLabel>
-          <Input
-            placeholder="Ваше имя"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          {errors.name && <FormErrorMessage>{errors.name}</FormErrorMessage>}
+        {tour && (
+          <Flex align="center" w="100%" p={3} bg="gray.50" borderRadius="md">
+            <Image
+              src={tour.image_url || `https://placehold.co/100x100/48BB78/FFFFFF?text=Tour`}
+              alt={tour.title}
+              boxSize="60px"
+              borderRadius="md"
+              objectFit="cover"
+            />
+            <Box ml={3}>
+              <Heading as="h4" size="sm" noOfLines={2}>{tour.title}</Heading>
+              <Text fontWeight="bold" color="teal.600" fontSize="md">
+                от {tour.price?.toFixed(0)} {tour.currency}
+              </Text>
+            </Box>
+          </Flex>
+        )}
+
+        <FormControl isRequired isInvalid={!!errors.name}>
+          <FormLabel>Ваше имя</FormLabel>
+          <Input placeholder="Ваше имя" value={name} onChange={(e) => setName(e.target.value)} />
+          <FormErrorMessage>{errors.name}</FormErrorMessage>
         </FormControl>
 
-        <FormControl isRequired isInvalid={errors.phone}>
+        <FormControl isRequired isInvalid={!!errors.phone}>
           <FormLabel>Телефон</FormLabel>
-          <Input
-            placeholder="+7 (999) 999-99-99"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          {errors.phone && <FormErrorMessage>{errors.phone}</FormErrorMessage>}
+          {/* ИЗМЕНЕН ПРИМЕР НОМЕРА */}
+          <Input placeholder="+7 (999) 999-99-99" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <FormErrorMessage>{errors.phone}</FormErrorMessage>
         </FormControl>
 
         <FormControl>
           <FormLabel>Email (необязательно)</FormLabel>
-          <Input
-            placeholder="example@mail.com"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <Input placeholder="example@mail.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </FormControl>
-
+        
         <FormControl>
-          <FormLabel>Сообщение (необязательно)</FormLabel>
-          <Textarea
-            placeholder="Ваши пожелания"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
+          <FormLabel>Сообщение</FormLabel>
+          <Textarea placeholder="Ваши пожелания" value={message} onChange={(e) => setMessage(e.target.value)} rows={4} />
         </FormControl>
 
-        <FormControl isRequired isInvalid={errors.isAgreed}>
-          <Checkbox
-            isChecked={isAgreed}
-            onChange={(e) => setIsAgreed(e.target.checked)}
-          >
+        <FormControl isRequired isInvalid={!!errors.isAgreed}>
+          <Checkbox isChecked={isAgreed} onChange={(e) => setIsAgreed(e.target.checked)}>
             <Text fontSize="sm">
               Я согласен с{' '}
               <NextLink href="/privacy" passHref>
@@ -180,20 +187,14 @@ const ContactForm = ({ tourName, onClose }) => {
               </NextLink>
             </Text>
           </Checkbox>
-           {errors.isAgreed && <FormErrorMessage>{errors.isAgreed}</FormErrorMessage>}
+          <FormErrorMessage>{errors.isAgreed}</FormErrorMessage>
         </FormControl>
 
-        <Button
-          type="submit"
-          colorScheme="teal"
-          isLoading={isLoading}
-          width="full"
-        >
+        {/* ИЗМЕНЕНА ЦВЕТОВАЯ СХЕМА */}
+        <Button type="submit" colorScheme="teal" isLoading={isLoading} loadingText="Отправка..." width="100%" size="lg" mt={2}>
           Отправить заявку
         </Button>
       </VStack>
     </Box>
   );
-};
-
-export default ContactForm;
+}

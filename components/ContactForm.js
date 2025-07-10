@@ -28,7 +28,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         contact: '',
         message: initialMessage
     });
-    // Состояние для галочки политики конфиденциальности
     const [privacyChecked, setPrivacyChecked] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -42,7 +41,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        // Сбрасываем ошибку при изменении поля
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
@@ -50,7 +48,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
 
     const handleCheckboxChange = (e) => {
         setPrivacyChecked(e.target.checked);
-        // Сбрасываем ошибку при изменении
         if (errors.privacyPolicy) {
             setErrors(prev => ({ ...prev, privacyPolicy: null }));
         }
@@ -58,29 +55,30 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
 
     const validateForm = () => {
         const newErrors = {};
-        // Валидация имени
+        
+        // Name validation
         if (!formData.name.trim()) {
             newErrors.name = 'Пожалуйста, представьтесь.';
         } else if (formData.name.trim().length < 2) {
             newErrors.name = 'Имя должно содержать минимум 2 символа.';
         }
 
-        // Улучшенная валидация контакта (Телефон или Telegram)
-        const contactPattern = /^((\+?375\s?\(?(25|29|33|44)\)?\s?\d{3}-?\d{2}-?\d{2})|(@[a-zA-Z0-9_]{5,32}))$/;
+        // Contact validation (Phone +375, Email, or Telegram)
+        const contactPattern = /^((\+375(25|29|33|44)\d{7})|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|(@[a-zA-Z0-9_]{5,32}))$/;
         if (!formData.contact.trim()) {
             newErrors.contact = 'Укажите способ для связи.';
         } else if (!contactPattern.test(formData.contact.trim())) {
-            newErrors.contact = 'Введите корректный номер телефона или ник в Telegram (например, @ваш_ник).';
+            newErrors.contact = 'Введите корректный телефон (+375...), Email или ник в Telegram (@ваш_ник).';
         }
 
-        // Валидация сообщения
+        // Message validation
         if (!formData.message.trim()) {
             newErrors.message = 'Напишите, пожалуйста, ваше сообщение.';
         } else if (formData.message.trim().length < 10) {
             newErrors.message = 'Сообщение должно быть не менее 10 символов.';
         }
         
-        // Валидация галочки политики конфиденциальности
+        // Privacy policy validation
         if (!privacyChecked) {
             newErrors.privacyPolicy = 'Вы должны согласиться с политикой конфиденциальности.';
         }
@@ -94,7 +92,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         if (!validateForm()) return;
 
         if (!executeRecaptcha) {
-            console.error('Функция executeRecaptcha недоступна.');
             onFormSubmit?.({ type: 'error', message: 'Ошибка проверки reCAPTCHA. Попробуйте обновить страницу.' });
             return;
         }
@@ -111,7 +108,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
             const data = await res.json();
             if (res.ok) {
                 onFormSubmit?.({ type: 'success', message: data.message || 'Ваше сообщение успешно отправлено!' });
-                // Сброс формы
                 setFormData({ name: '', contact: '', message: initialMessage });
                 setPrivacyChecked(false);
                 onClose?.();
@@ -119,7 +115,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                 onFormSubmit?.({ type: 'error', message: data.message || 'Произошла ошибка.' });
             }
         } catch (error) {
-            console.error('Ошибка при отправке формы контактов:', error);
             onFormSubmit?.({ type: 'error', message: 'Не удалось связаться с сервером.' });
         } finally {
             setIsSubmitting(false);
@@ -154,8 +149,8 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                 </FormControl>
 
                 <FormControl isRequired isInvalid={!!errors.contact}>
-                    <FormLabel>Телефон или Telegram</FormLabel>
-                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="+375 (XX) XXX-XX-XX или @telegram_nick" />
+                    <FormLabel>Телефон, Email или Telegram</FormLabel>
+                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="+375xxxxxxxxx, email@..., @ник" />
                     <FormErrorMessage>{errors.contact}</FormErrorMessage>
                 </FormControl>
 
@@ -165,15 +160,17 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                     <FormErrorMessage>{errors.message}</FormErrorMessage>
                 </FormControl>
 
-                <FormControl isRequired isInvalid={!!errors.privacyPolicy}>
+                {/* UI fix for privacy policy checkbox */}
+                <FormControl isInvalid={!!errors.privacyPolicy}>
                     <Flex align="start">
-                         <Checkbox
+                        <Checkbox
                             id="privacyPolicy"
                             isChecked={privacyChecked}
                             onChange={handleCheckboxChange}
                             mt={1}
+                            colorScheme="brand"
                         />
-                        <FormLabel htmlFor="privacyPolicy" mb="0" ml={2} cursor="pointer" flex="1">
+                        <FormLabel htmlFor="privacyPolicy" mb="0" ml={2} cursor="pointer" flex="1" fontWeight="normal">
                              <Text fontSize="sm">
                                 Я согласен с{' '}
                                 <NextLink href="/privacy" passHref legacyBehavior>
@@ -185,7 +182,8 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                             </Text>
                         </FormLabel>
                     </Flex>
-                    <FormErrorMessage>{errors.privacyPolicy}</FormErrorMessage>
+                    {/* Manually displaying error message to avoid layout issues */}
+                    <FormErrorMessage mt={2}>{errors.privacyPolicy}</FormErrorMessage>
                 </FormControl>
 
                 <Button

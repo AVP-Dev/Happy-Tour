@@ -1,200 +1,150 @@
+// components/ContactForm.js
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  VStack,
-  useToast,
-  Checkbox,
-  Link,
-  Text,
-  FormErrorMessage,
-  Flex,
-  Heading,
-  Image,
-} from '@chakra-ui/react';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import NextLink from 'next/link';
+import {
+    Box,
+    Button,
+    FormControl,
+    FormLabel,
+    FormErrorMessage,
+    Input,
+    Textarea,
+    VStack,
+    Flex,
+    Text,
+    Heading,
+    Image,
+} from '@chakra-ui/react';
 
-export default function ContactForm({ onClose, tour }) {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [isAgreed, setIsAgreed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const toast = useToast();
-  const { executeRecaptcha } = useGoogleReCaptcha();
+export default function ContactForm({ onFormSubmit, onClose, tour }) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const initialMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
+    
+    const [formData, setFormData] = useState({
+        name: '',
+        contact: '',
+        message: initialMessage
+    });
+    const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    if (tour) {
-      setMessage(`Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.`);
-    }
-  }, [tour]);
+    const { executeRecaptcha } = useGoogleReCaptcha();
 
-  const validate = () => {
-    const newErrors = {};
-    if (!name.trim()) newErrors.name = "Поле 'Имя' обязательно для заполнения";
-    if (!phone.trim()) {
-      newErrors.phone = "Поле 'Телефон' обязательно для заполнения";
-    } else if (!/^\+?[0-9\s-()]{10,}$/.test(phone)) {
-      newErrors.phone = 'Неверный формат номера телефона';
-    }
-    if (!isAgreed) {
-      newErrors.isAgreed = 'Необходимо согласие на обработку данных';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    useEffect(() => {
+        const newMessage = tour ? `Здравствуйте, меня интересует тур "${tour.title}". Расскажите, пожалуйста, подробнее.` : '';
+        setFormData(prev => ({ ...prev, message: newMessage }));
+    }, [tour]);
 
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-
-    if (!validate()) {
-      if (!isAgreed) {
-        toast({
-            title: 'Подтвердите согласие',
-            description: 'Вы должны согласиться с политикой обработки персональных данных.',
-            status: 'warning',
-            duration: 5000,
-            isClosable: true,
-        });
-      }
-      return;
-    }
-
-    if (!executeRecaptcha) {
-      console.error('Execute recaptcha not yet available');
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось проверить reCAPTCHA. Попробуйте обновить страницу.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const token = await executeRecaptcha('contactForm');
-
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          phone,
-          email,
-          message,
-          tourName: tour ? tour.title : 'Не указан',
-          token,
-        }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        toast({
-          title: 'Заявка успешно отправлена',
-          description: data.message || 'Мы свяжемся с вами в ближайшее время.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-        setName('');
-        setPhone('');
-        setEmail('');
-        setMessage('');
-        setIsAgreed(false);
-        setErrors({});
-        if (onClose) {
-          onClose();
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
         }
-      } else {
-        throw new Error(data.message || 'Ошибка при отправке формы');
-      }
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось отправить заявку. Пожалуйста, попробуйте еще раз.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [executeRecaptcha, name, phone, email, message, tour, isAgreed, onClose, toast]);
+    };
 
-  return (
-    <Box as="form" onSubmit={handleSubmit} noValidate>
-      <VStack spacing={4}>
-        {tour && (
-          <Flex align="center" w="100%" p={3} bg="gray.50" borderRadius="md">
-            <Image
-              src={tour.image_url || `https://placehold.co/100x100/48BB78/FFFFFF?text=Tour`}
-              alt={tour.title}
-              boxSize="60px"
-              borderRadius="md"
-              objectFit="cover"
-            />
-            <Box ml={3}>
-              <Heading as="h4" size="sm" noOfLines={2}>{tour.title}</Heading>
-              <Text fontWeight="bold" color="teal.600" fontSize="md">
-                от {tour.price?.toFixed(0)} {tour.currency}
-              </Text>
-            </Box>
-          </Flex>
-        )}
+    const validateForm = () => {
+        const newErrors = {};
+        if (!formData.name.trim()) {
+            newErrors.name = 'Пожалуйста, представьтесь.';
+        }
+        if (!formData.contact.trim()) {
+            newErrors.contact = 'Укажите способ для связи.';
+        }
+        if (!formData.message.trim()) {
+            newErrors.message = 'Напишите, пожалуйста, ваше сообщение.';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
-        <FormControl isRequired isInvalid={!!errors.name}>
-          <FormLabel>Ваше имя</FormLabel>
-          <Input placeholder="Ваше имя" value={name} onChange={(e) => setName(e.target.value)} />
-          <FormErrorMessage>{errors.name}</FormErrorMessage>
-        </FormControl>
+    const handleSubmit = useCallback(async (e) => {
+        e.preventDefault();
+        if (!validateForm()) return;
 
-        <FormControl isRequired isInvalid={!!errors.phone}>
-          <FormLabel>Телефон</FormLabel>
-          {/* ИЗМЕНЕН ПРИМЕР НОМЕРА */}
-          <Input placeholder="+7 (999) 999-99-99" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <FormErrorMessage>{errors.phone}</FormErrorMessage>
-        </FormControl>
+        // ИЗМЕНЕНИЕ: Добавлена явная проверка на доступность executeRecaptcha.
+        // Это ключевой момент для предотвращения ошибок в модальных окнах.
+        if (!executeRecaptcha) {
+            console.error('Функция executeRecaptcha недоступна.');
+            onFormSubmit?.({ type: 'error', message: 'Ошибка проверки reCAPTCHA. Попробуйте обновить страницу.' });
+            return;
+        }
 
-        <FormControl>
-          <FormLabel>Email (необязательно)</FormLabel>
-          <Input placeholder="example@mail.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </FormControl>
+        setIsSubmitting(true);
         
-        <FormControl>
-          <FormLabel>Сообщение</FormLabel>
-          <Textarea placeholder="Ваши пожелания" value={message} onChange={(e) => setMessage(e.target.value)} rows={4} />
-        </FormControl>
+        try {
+            const recaptchaToken = await executeRecaptcha('contact_form');
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...formData, recaptchaToken })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                onFormSubmit?.({ type: 'success', message: data.message || 'Ваше сообщение успешно отправлено!' });
+                onClose?.();
+            } else {
+                // Используем сообщение об ошибке с сервера, если оно есть
+                onFormSubmit?.({ type: 'error', message: data.message || 'Произошла ошибка.' });
+            }
+        } catch (error) {
+            console.error('Ошибка при отправке формы контактов:', error);
+            onFormSubmit?.({ type: 'error', message: 'Не удалось связаться с сервером.' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, [executeRecaptcha, formData, onFormSubmit, onClose]);
 
-        <FormControl isRequired isInvalid={!!errors.isAgreed}>
-          <Checkbox isChecked={isAgreed} onChange={(e) => setIsAgreed(e.target.checked)}>
-            <Text fontSize="sm">
-              Я согласен с{' '}
-              <NextLink href="/privacy" passHref>
-                <Link color="teal.500" isExternal>
-                  политикой обработки персональных данных
-                </Link>
-              </NextLink>
-            </Text>
-          </Checkbox>
-          <FormErrorMessage>{errors.isAgreed}</FormErrorMessage>
-        </FormControl>
+    return (
+        <Box as="form" onSubmit={handleSubmit} noValidate>
+            <VStack spacing={4}>
+                {tour && (
+                    <Flex align="center" w="100%" p={3} bg="gray.50" borderRadius="md">
+                        <Image
+                            src={tour.image_url || `https://placehold.co/100x100/48BB78/FFFFFF?text=Tour`}
+                            alt={tour.title}
+                            boxSize="60px"
+                            borderRadius="md"
+                            objectFit="cover"
+                        />
+                        <Box ml={3}>
+                            <Heading as="h4" size="sm" noOfLines={2}>{tour.title}</Heading>
+                            <Text fontWeight="bold" color="brand.600" fontSize="md">
+                                от {tour.price?.toFixed(0)} {tour.currency}
+                            </Text>
+                        </Box>
+                    </Flex>
+                )}
 
-        {/* ИЗМЕНЕНА ЦВЕТОВАЯ СХЕМА */}
-        <Button type="submit" colorScheme="teal" isLoading={isLoading} loadingText="Отправка..." width="100%" size="lg" mt={2}>
-          Отправить заявку
-        </Button>
-      </VStack>
-    </Box>
-  );
+                <FormControl isRequired isInvalid={!!errors.name}>
+                    <FormLabel>Ваше имя</FormLabel>
+                    <Input name="name" value={formData.name} onChange={handleChange} />
+                    <FormErrorMessage>{errors.name}</FormErrorMessage>
+                </FormControl>
+
+                <FormControl isRequired isInvalid={!!errors.contact}>
+                    <FormLabel>Контакт (Telegram, Viber, Email или Телефон)</FormLabel>
+                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="@username, +375..., email@..." />
+                    <FormErrorMessage>{errors.contact}</FormErrorMessage>
+                </FormControl>
+
+                <FormControl isRequired isInvalid={!!errors.message}>
+                    <FormLabel>Описание</FormLabel>
+                    <Textarea name="message" value={formData.message} onChange={handleChange} rows={4} />
+                    <FormErrorMessage>{errors.message}</FormErrorMessage>
+                </FormControl>
+
+                <Button
+                    type="submit"
+                    colorScheme="brand"
+                    isLoading={isSubmitting}
+                    loadingText="Отправка..."
+                    width="100%"
+                    size="lg"
+                    mt={2}
+                >
+                    Отправить заявку
+                </Button>
+            </VStack>
+        </Box>
+    );
 }

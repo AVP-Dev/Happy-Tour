@@ -58,17 +58,18 @@ export default async function handler(req, res) {
         const titleEscaped = escapeHtml(tour.title);
         const priceEscaped = escapeHtml(String(tour.price));
         const currencyEscaped = escapeHtml(tour.currency);
+        // ИЗМЕНЕНИЕ: Добавлены тематические эмодзи в блок с информацией о туре
         tourInfo = `\n\n<b>---</b>\n` +
-                   `<b>Запрос по туру:</b> ${titleEscaped}\n` +
-                   `<b>Цена:</b> ${priceEscaped} ${currencyEscaped}`;
+                   `🎫 <b>Запрос по туру:</b> ${titleEscaped}\n` +
+                   `💰 <b>Цена:</b> ${priceEscaped} ${currencyEscaped}`;
     }
 
     // Construct the message using HTML for rich formatting
-    // ИЗМЕНЕНИЕ: Заголовок и сайт объединены в одну строку
-    const telegramMessage = `<b>🔥 Новая заявка с сайта HappyTour.by! 🔥</b>\n\n` +
-                            `<b>Имя:</b> ${nameEscaped}\n` +
-                            `<b>Контакт:</b> ${contactLink}\n` +
-                            `<b>Сообщение:</b> ${messageEscaped || 'Нет'}` +
+    // ИЗМЕНЕНИЕ: Добавлены тематические эмодзи
+    const telegramMessage = `<b>🌴 Новая заявка с сайта HappyTour.by! ✈️</b>\n\n` +
+                            `👤 <b>Имя:</b> ${nameEscaped}\n` +
+                            `📞 <b>Контакт:</b> ${contactLink}\n` +
+                            `💬 <b>Сообщение:</b> ${messageEscaped || 'Нет'}` +
                             `${tourInfo}`;
 
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;

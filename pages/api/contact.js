@@ -1,6 +1,37 @@
 // pages/api/contact.js
 import { validateRecaptcha } from '../../lib/recaptcha';
 
+/**
+ * Escapes HTML special characters in a string to prevent issues with Telegram's HTML parse mode.
+ * @param {string} text The text to escape.
+ * @returns {string} The escaped text.
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * Formats a contact string (phone or email) into a clickable HTML link for Telegram.
+ * @param {string} contact The contact string (phone number or email address).
+ * @returns {string} An HTML anchor tag.
+ */
+function formatContactLink(contact) {
+  const isEmail = contact.includes('@');
+  const escapedContact = escapeHtml(contact);
+
+  if (isEmail) {
+    return `<a href="mailto:${escapedContact}">${escapedContact}</a>`;
+  } else {
+    // Create a tel: link by removing non-numeric characters for the href attribute.
+    const phoneLink = contact.replace(/[^+\d]/g, '');
+    return `<a href="tel:${phoneLink}">${escapedContact}</a>`;
+  }
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Метод не разрешен' });
@@ -17,19 +48,33 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: recaptchaResult.message });
     }
 
-    // Формируем обновленное сообщение для Telegram
-    const telegramMessage = `*🔥 Новая заявка! 🔥*\n\n` +
-                            `*Сайт:* HappyTour.by\n` +
-                            `*Имя:* ${name}\n` +
-                            `*Контакт:* \`${contact}\`\n` + // Оборачиваем контакт в ` для удобного копирования
-                            `*Сообщение:* ${message || 'Нет'}\n` +
-                            `${tour ? `\n---\n*Запрос по туру:* ${tour.title}\n*Цена:* ${tour.price} ${tour.currency}\n` : ''}`;
+    // Escape user-provided data to ensure it's safely rendered in HTML
+    const nameEscaped = escapeHtml(name);
+    const messageEscaped = escapeHtml(message);
+    const contactLink = formatContactLink(contact);
+
+    let tourInfo = '';
+    if (tour) {
+        const titleEscaped = escapeHtml(tour.title);
+        // Ensure price and currency are treated as strings before escaping
+        const priceEscaped = escapeHtml(String(tour.price));
+        const currencyEscaped = escapeHtml(tour.currency);
+        tourInfo = `\n\n<pre>---\n` +
+                   `Запрос по туру: ${titleEscaped}\n` +
+                   `Цена: ${priceEscaped} ${currencyEscaped}</pre>`;
+    }
+
+    // Construct the message using HTML for rich formatting
+    const telegramMessage = `<b>🔥 Новая заявка с сайта <a href="https://happytour.by">HappyTour.by</a>! 🔥</b>\n\n` +
+                            `<b>Имя:</b> ${nameEscaped}\n` +
+                            `<b>Контакт:</b> ${contactLink}\n` +
+                            `<b>Сообщение:</b> ${messageEscaped || 'Нет'}` +
+                            `${tourInfo}`;
 
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
     const TELEGRAM_TOPIC_ID = process.env.TELEGRAM_TOPIC_ID;
 
-    // Проверяем, есть ли вообще способ отправить уведомление
     if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
         console.error("Критическая ошибка: Переменные для Telegram не установлены.");
         return res.status(500).json({ message: 'Сервис уведомлений временно недоступен.' });
@@ -41,7 +86,7 @@ export default async function handler(req, res) {
         const telegramPayload = {
             chat_id: TELEGRAM_CHAT_ID,
             text: telegramMessage,
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML', // Use HTML parse mode for clickable links
             ...(TELEGRAM_TOPIC_ID && { message_thread_id: TELEGRAM_TOPIC_ID }),
         };
 

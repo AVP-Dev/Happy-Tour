@@ -54,14 +54,14 @@ export default async function handler(req, res) {
     const contactLink = formatContactLink(contact);
 
     let tourInfo = '';
-    // ИЗМЕНЕНИЕ: Заменили <pre> на <b> и добавили более надежную проверку для tour.
-    if (tour && tour.title) {
+    if (tour) {
         const titleEscaped = escapeHtml(tour.title);
+        // Ensure price and currency are treated as strings before escaping
         const priceEscaped = escapeHtml(String(tour.price));
         const currencyEscaped = escapeHtml(tour.currency);
-        tourInfo = `\n\n<b>---</b>\n` +
-                   `<b>Запрос по туру:</b> ${titleEscaped}\n` +
-                   `<b>Цена:</b> ${priceEscaped} ${currencyEscaped}`;
+        tourInfo = `\n\n<pre>---\n` +
+                   `Запрос по туру: ${titleEscaped}\n` +
+                   `Цена: ${priceEscaped} ${currencyEscaped}</pre>`;
     }
 
     // Construct the message using HTML for rich formatting

@@ -1,5 +1,4 @@
 // pages/api/contact.js
-// ИЗМЕНЕНИЕ: Убрали импорт nodemailer
 import { validateRecaptcha } from '../../lib/recaptcha';
 
 export default async function handler(req, res) {
@@ -18,20 +17,13 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: recaptchaResult.message });
     }
 
-    // ИЗМЕНЕНИЕ: Код для отправки email полностью удален.
-
-    const telegramMessage = `
-*Новая заявка с сайта Happy Tour*
-
-*Имя:* ${name}
-*Контакт:* ${contact}
-*Описание:* ${message || 'Нет'}
-${tour ? `
----
-*Запрос по туру:* ${tour.title}
-*Цена:* ${tour.price} ${tour.currency}
-` : ''}
-    `;
+    // Формируем обновленное сообщение для Telegram
+    const telegramMessage = `*🔥 Новая заявка! 🔥*\n\n` +
+                            `*Сайт:* HappyTour.by\n` +
+                            `*Имя:* ${name}\n` +
+                            `*Контакт:* \`${contact}\`\n` + // Оборачиваем контакт в ` для удобного копирования
+                            `*Сообщение:* ${message || 'Нет'}\n` +
+                            `${tour ? `\n---\n*Запрос по туру:* ${tour.title}\n*Цена:* ${tour.price} ${tour.currency}\n` : ''}`;
 
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -46,7 +38,6 @@ ${tour ? `
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
     try {
-        // ИЗМЕНЕНИЕ: Отправка email удалена. Осталась только отправка в Telegram.
         const telegramPayload = {
             chat_id: TELEGRAM_CHAT_ID,
             text: telegramMessage,
@@ -60,7 +51,6 @@ ${tour ? `
             body: JSON.stringify(telegramPayload),
         });
 
-        // Добавил проверку ответа от Telegram для лучшей отладки
         if (!telegramResponse.ok) {
             const telegramResult = await telegramResponse.json();
             console.error("Telegram API Error:", telegramResult);
@@ -73,3 +63,6 @@ ${tour ? `
         return res.status(500).json({ message: 'Произошла ошибка при отправке формы.' });
     }
 }
+```
+
+Я сохранил всю твою логику, включая проверку reCAPTCHA и отправку в топик Telegram, просто изменил текст сообщения. Теперь ты будешь точно знать, откуда прилетел л

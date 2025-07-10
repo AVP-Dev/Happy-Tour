@@ -5,8 +5,6 @@ import Head from 'next/head';
 import Layout from '../components/Layout';
 import theme from '../theme';
 import '../styles/Globals.css';
-import { Analytics } from '@vercel/analytics/react';
-import CookieBanner from '../components/CookieBanner';
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
@@ -16,8 +14,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         <GoogleReCaptchaProvider
             reCaptchaKey={recaptchaSiteKey}
             scriptProps={{
-                async: false, // Важно для консистентности с defer
-                defer: true,  // Загружает скрипт после отрисовки страницы, не блокируя ее
+                async: false,
+                defer: true,
                 appendTo: 'head',
                 nonce: undefined
             }}
@@ -33,8 +31,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
                     ) : (
                         <Layout>
                             <Component {...pageProps} />
-                            <Analytics />
-                            <CookieBanner />
                         </Layout>
                     )}
                 </ChakraProvider>

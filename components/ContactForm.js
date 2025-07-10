@@ -63,12 +63,13 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
             newErrors.name = 'Имя должно содержать минимум 2 символа.';
         }
 
-        // Contact validation (Phone +375, Email, or Telegram)
-        const contactPattern = /^((\+375(25|29|33|44)\d{7})|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|(@[a-zA-Z0-9_]{5,32}))$/;
+        // Simplified Contact validation (Phone or Email)
+        // This regex checks for either a valid-looking phone number (allows +, digits, spaces, (), -) OR a valid email.
+        const contactPattern = /(^(\+?[\d\s()-]{9,15})$)|(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)/;
         if (!formData.contact.trim()) {
             newErrors.contact = 'Укажите способ для связи.';
         } else if (!contactPattern.test(formData.contact.trim())) {
-            newErrors.contact = 'Введите корректный телефон (+375...), Email или ник в Telegram (@ваш_ник).';
+            newErrors.contact = 'Введите корректный номер телефона или Email.';
         }
 
         // Message validation
@@ -149,8 +150,8 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                 </FormControl>
 
                 <FormControl isRequired isInvalid={!!errors.contact}>
-                    <FormLabel>Телефон, Email или Telegram</FormLabel>
-                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="+375xxxxxxxxx, email@..., @ник" />
+                    <FormLabel>Телефон или Email</FormLabel>
+                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="Номер телефона или email@..." />
                     <FormErrorMessage>{errors.contact}</FormErrorMessage>
                 </FormControl>
 
@@ -160,7 +161,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                     <FormErrorMessage>{errors.message}</FormErrorMessage>
                 </FormControl>
 
-                {/* UI fix for privacy policy checkbox */}
                 <FormControl isInvalid={!!errors.privacyPolicy}>
                     <Flex align="start">
                         <Checkbox
@@ -182,7 +182,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
                             </Text>
                         </FormLabel>
                     </Flex>
-                    {/* Manually displaying error message to avoid layout issues */}
                     <FormErrorMessage mt={2}>{errors.privacyPolicy}</FormErrorMessage>
                 </FormControl>
 

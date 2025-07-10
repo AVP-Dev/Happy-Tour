@@ -14,7 +14,10 @@ import {
     Text,
     Heading,
     Image,
+    Checkbox,
+    Link as ChakraLink,
 } from '@chakra-ui/react';
+import NextLink from 'next/link';
 
 export default function ContactForm({ onFormSubmit, onClose, tour }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,6 +28,8 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         contact: '',
         message: initialMessage
     });
+    // Состояние для галочки политики конфиденциальности
+    const [privacyChecked, setPrivacyChecked] = useState(false);
     const [errors, setErrors] = useState({});
 
     const { executeRecaptcha } = useGoogleReCaptcha();
@@ -37,22 +42,49 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        // Сбрасываем ошибку при изменении поля
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
     };
 
+    const handleCheckboxChange = (e) => {
+        setPrivacyChecked(e.target.checked);
+        // Сбрасываем ошибку при изменении
+        if (errors.privacyPolicy) {
+            setErrors(prev => ({ ...prev, privacyPolicy: null }));
+        }
+    };
+
     const validateForm = () => {
         const newErrors = {};
+        // Валидация имени
         if (!formData.name.trim()) {
             newErrors.name = 'Пожалуйста, представьтесь.';
+        } else if (formData.name.trim().length < 2) {
+            newErrors.name = 'Имя должно содержать минимум 2 символа.';
         }
+
+        // Улучшенная валидация контакта (Телефон или Telegram)
+        const contactPattern = /^((\+?375\s?\(?(25|29|33|44)\)?\s?\d{3}-?\d{2}-?\d{2})|(@[a-zA-Z0-9_]{5,32}))$/;
         if (!formData.contact.trim()) {
             newErrors.contact = 'Укажите способ для связи.';
+        } else if (!contactPattern.test(formData.contact.trim())) {
+            newErrors.contact = 'Введите корректный номер телефона или ник в Telegram (например, @ваш_ник).';
         }
+
+        // Валидация сообщения
         if (!formData.message.trim()) {
             newErrors.message = 'Напишите, пожалуйста, ваше сообщение.';
+        } else if (formData.message.trim().length < 10) {
+            newErrors.message = 'Сообщение должно быть не менее 10 символов.';
         }
+        
+        // Валидация галочки политики конфиденциальности
+        if (!privacyChecked) {
+            newErrors.privacyPolicy = 'Вы должны согласиться с политикой конфиденциальности.';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -61,8 +93,6 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         e.preventDefault();
         if (!validateForm()) return;
 
-        // ИЗМЕНЕНИЕ: Добавлена явная проверка на доступность executeRecaptcha.
-        // Это ключевой момент для предотвращения ошибок в модальных окнах.
         if (!executeRecaptcha) {
             console.error('Функция executeRecaptcha недоступна.');
             onFormSubmit?.({ type: 'error', message: 'Ошибка проверки reCAPTCHA. Попробуйте обновить страницу.' });
@@ -76,14 +106,16 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, recaptchaToken })
+                body: JSON.stringify({ ...formData, recaptchaToken, privacyPolicy: privacyChecked })
             });
             const data = await res.json();
             if (res.ok) {
                 onFormSubmit?.({ type: 'success', message: data.message || 'Ваше сообщение успешно отправлено!' });
+                // Сброс формы
+                setFormData({ name: '', contact: '', message: initialMessage });
+                setPrivacyChecked(false);
                 onClose?.();
             } else {
-                // Используем сообщение об ошибке с сервера, если оно есть
                 onFormSubmit?.({ type: 'error', message: data.message || 'Произошла ошибка.' });
             }
         } catch (error) {
@@ -92,7 +124,7 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [executeRecaptcha, formData, onFormSubmit, onClose]);
+    }, [executeRecaptcha, formData, privacyChecked, onFormSubmit, onClose, initialMessage]);
 
     return (
         <Box as="form" onSubmit={handleSubmit} noValidate>
@@ -117,20 +149,43 @@ export default function ContactForm({ onFormSubmit, onClose, tour }) {
 
                 <FormControl isRequired isInvalid={!!errors.name}>
                     <FormLabel>Ваше имя</FormLabel>
-                    <Input name="name" value={formData.name} onChange={handleChange} />
+                    <Input name="name" value={formData.name} onChange={handleChange} placeholder="Как к вам обращаться?" />
                     <FormErrorMessage>{errors.name}</FormErrorMessage>
                 </FormControl>
 
                 <FormControl isRequired isInvalid={!!errors.contact}>
-                    <FormLabel>Контакт (Telegram, Viber, Email или Телефон)</FormLabel>
-                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="@username, +375..., email@..." />
+                    <FormLabel>Телефон или Telegram</FormLabel>
+                    <Input name="contact" value={formData.contact} onChange={handleChange} placeholder="+375 (XX) XXX-XX-XX или @telegram_nick" />
                     <FormErrorMessage>{errors.contact}</FormErrorMessage>
                 </FormControl>
 
                 <FormControl isRequired isInvalid={!!errors.message}>
-                    <FormLabel>Описание</FormLabel>
-                    <Textarea name="message" value={formData.message} onChange={handleChange} rows={4} />
+                    <FormLabel>Сообщение</FormLabel>
+                    <Textarea name="message" value={formData.message} onChange={handleChange} rows={4} placeholder="Опишите ваш вопрос или пожелания" />
                     <FormErrorMessage>{errors.message}</FormErrorMessage>
+                </FormControl>
+
+                <FormControl isRequired isInvalid={!!errors.privacyPolicy}>
+                    <Flex align="start">
+                         <Checkbox
+                            id="privacyPolicy"
+                            isChecked={privacyChecked}
+                            onChange={handleCheckboxChange}
+                            mt={1}
+                        />
+                        <FormLabel htmlFor="privacyPolicy" mb="0" ml={2} cursor="pointer" flex="1">
+                             <Text fontSize="sm">
+                                Я согласен с{' '}
+                                <NextLink href="/privacy" passHref legacyBehavior>
+                                    <ChakraLink color="brand.500" isExternal>
+                                        политикой конфиденциальности
+                                    </ChakraLink>
+                                </NextLink>
+                                {' '}и даю согласие на обработку моих персональных данных.
+                            </Text>
+                        </FormLabel>
+                    </Flex>
+                    <FormErrorMessage>{errors.privacyPolicy}</FormErrorMessage>
                 </FormControl>
 
                 <Button

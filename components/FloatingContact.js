@@ -16,12 +16,15 @@ import {
     Text,
     VStack,
     Tooltip,
+    useToast, // Добавлен импорт useToast
 } from '@chakra-ui/react';
 import { FaCommentDots, FaTelegramPlane, FaViber, FaWhatsapp, FaInstagram } from 'react-icons/fa';
 import ContactForm from './ContactForm';
+import { trackGAEvent, trackYMGoal } from '../lib/analytics'; // Добавлен импорт для аналитики
 
 const FloatingContact = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const toast = useToast(); // Инициализация хука useToast для уведомлений
 
     const socialLinks = [
         { href: "https://t.me/happytour.by", label: "Telegram", icon: FaTelegramPlane, color: "#0088cc" },
@@ -29,6 +32,33 @@ const FloatingContact = () => {
         { href: "https://wa.me/375447886761", label: "WhatsApp", icon: FaWhatsapp, color: "#25d366" },
         { href: "https://www.instagram.com/happytour.by?igsh=ZHV6b3BjODFqMjZv", label: "Instagram", icon: FaInstagram, bgGradient: "linear(to-l, #833ab4, #fd1d1d, #fcb045)" },
     ];
+
+    /**
+     * Обработчик отправки формы.
+     * Показывает уведомление, отслеживает событие в аналитике и закрывает модальное окно при успехе.
+     * @param {{type: 'success' | 'error', message: string}} options - Результат отправки формы.
+     */
+    const handleFormSubmit = (options) => {
+        // Показываем уведомление (toast)
+        toast({
+            title: options.type === 'success' ? 'Успешно!' : 'Ошибка!',
+            description: options.message,
+            status: options.type,
+            duration: 5000,
+            isClosable: true,
+            position: 'top-right',
+        });
+
+        // Отправляем данные в системы аналитики
+        if (options.type === 'success') {
+            trackGAEvent('form_submit', { event_category: 'forms', event_label: 'floating_contact_form_success' });
+            trackYMGoal('floating_contact_form_submit_success');
+            onClose(); // Закрываем модальное окно при успешной отправке
+        } else {
+            trackGAEvent('form_error', { event_category: 'forms', event_label: 'floating_contact_form_error', error_message: options.message });
+            trackYMGoal('floating_contact_form_submit_error');
+        }
+    };
 
     return (
         <>
@@ -41,7 +71,6 @@ const FloatingContact = () => {
                     fontSize="2xl"
                     colorScheme="brand"
                     position="fixed"
-                    // ИЗМЕНЕНИЕ: Увеличен отступ снизу, чтобы кнопка была выше значка reCAPTCHA.
                     bottom="95px"
                     right="30px"
                     zIndex="sticky"
@@ -86,7 +115,10 @@ const FloatingContact = () => {
                                 <Divider />
                             </Flex>
 
-                            <ContactForm onClose={onClose} />
+                            {/* Изменено: Передаем новую функцию `handleFormSubmit` в `ContactForm` через пропс `onFormSubmit`.
+                              `ContactForm` теперь будет вызывать эту функцию после попытки отправки данных.
+                            */}
+                            <ContactForm onFormSubmit={handleFormSubmit} onClose={onClose} />
                         </VStack>
                     </ModalBody>
                 </ModalContent>
